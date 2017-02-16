@@ -17,6 +17,10 @@ function getPropertyType(type){
     }
 }
 
+/**
+ * Get a Resource or Property type from the specification.
+ * @param type object or null
+ */
 function getType(type){
     if(isPropertyTypeFormat(type)){
         return getPropertyType(type);
@@ -56,6 +60,12 @@ function isValidProperty(parentPropertyType, propertyName){
     return spec['Properties'].hasOwnProperty(propertyName);
 }
 
+/**
+ * Checks the resource type and returns true if the propertyName is required.
+ * @param parentPropertyType
+ * @param propertyName
+ * @return {boolean}
+ */
 function isRequiredProperty(parentPropertyType, propertyName){
     // Check if the parentPropertyType exists
     let spec = getType(parentPropertyType);

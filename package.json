@@ -12,7 +12,12 @@
     "gulp-sourcemaps": "latest",
     "babel-preset-es2015": "latest",
     "babel-register": "latest",
-    "babel-cli": "latest"
+    "babel-cli": "latest",
+    "mocha": "latest",
+    "chai": "latest"
+  },
+  "scripts": {
+    "test": "mocha --compilers js:babel-register --require babel-polyfill"
   },
   "engine": "node >= 6.x.x"
 }
