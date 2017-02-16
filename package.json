@@ -1,0 +1,18 @@
+{
+  "name": "cfn-lint",
+  "description": "CloudFormation Validator",
+  "author": "Marty Sweet <msweet2214@gmail.com>",
+  "dependencies": {
+    "babel-polyfill": "latest",
+    "winston": "latest"
+  },
+  "devDependencies": {
+    "gulp": "latest",
+    "gulp-babel": "latest",
+    "gulp-sourcemaps": "latest",
+    "babel-preset-es2015": "latest",
+    "babel-register": "latest",
+    "babel-cli": "latest"
+  },
+  "engine": "node >= 6.x.x"
+}
