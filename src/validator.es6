@@ -33,12 +33,17 @@ function validateWorkingInput(){
     // Ensure we are working from a clean slate
     exports.clearErrors();
 
+    // TODO: Check for base keys such as version
+
+    // TODO: Check keys for parameter are valid, ex. MinValue/MaxValue
+
     // Check parameters and assign outputs
     assignParametersOutput();
 
     // Assign outputs to all the resources
     assignResourcesOutputs();
     if(stopValidation) {
+        // Stop the validation early, we can't join stuff if we don't know what to expect
         logger.error("Stopping validation early as a resource type is invalid.");
         return errorObject;
     }
@@ -57,7 +62,7 @@ function assignParametersOutput(){
         return false; // This isn't an issue
     }
 
-    // For through each resource
+    // For through each parameter
     for(let param in workingInput['Parameters']) {
         if (workingInput['Parameters'].hasOwnProperty(param)) {
 
@@ -113,7 +118,14 @@ function addError(severity, message, resourceStack, help){
 
 function assignResourcesOutputs(){
     if(!workingInput.hasOwnProperty('Resources')){
-        addError('warn', 'Resources is not defined', [], null); // TODO: Check if this should be crit
+        addError('crit', 'Resources section is not defined', [], null);
+        stopValidation = true;
+        return false;
+    }
+
+    if(workingInput['Resources'].length == 0){
+        addError('crit', 'Resources is empty', [], null);
+        stopValidation = true;
         return false;
     }
 
@@ -184,6 +196,12 @@ function resolveReferences(){
     // We need to ensure the ref exists (or throw a critical error)
     // We need to process refs from parameters AND resources
 
+    // Loop through resources
+    for(let res in workingInput['Resources']) {
+        // Make a dependancy graph
+
+    }
+    // Check for any graph loops, throw CRIT if they exist, but we can continue
 }
 
 

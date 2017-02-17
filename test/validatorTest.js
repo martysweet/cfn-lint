@@ -39,6 +39,20 @@ describe('validator', () => {
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
 
+        it('missing section resources should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = require('./data/invalid/no_resources.json');
+            let result = validator.validateJsonObject(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+        });
+
+        it('empty section resources should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = require('./data/invalid/empty_resources.json');
+            let result = validator.validateJsonObject(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+        });
+
     });
 
 });
