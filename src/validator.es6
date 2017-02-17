@@ -27,8 +27,9 @@ exports.validateJsonObject = function validateJsonObject(obj){
 function validateWorkingInput(){
     // TODO: Check parameters and outputs
 
+
     // Assign outputs to all the resources
-    assignOutputs();
+    assignResourcesOutputs();
     if(stopValidation) {
         logger.error("Stopping validation early as a resource type is invalid.");
         return errorObject;
@@ -40,6 +41,31 @@ function validateWorkingInput(){
 
 
     return errorObject;
+
+}
+
+function assignParametersOutput(){
+    if(!workingInput.hasOwnProperty('Parameters')){
+        return false; // This isn't an issue
+    }
+
+    // For through each resource
+    for(let param in workingInput['Parameters']) {
+        if (workingInput['Parameters'].hasOwnProperty(param)) {
+
+            // Check if Type is defined
+            if (!workingInput['Parameters'][param].hasOwnProperty('Type')) {
+                // We are going to assume to string to continue validation, but will throw a critical
+                // TODO: Link to CFN Parameter Type documentation
+                addError('crit', `Parameter ${param} does not have a Type defined.`, ['Parameters', param], null);
+            }
+
+            // Check the Type of an array specification, otherwise assume string
+
+
+        }
+    }
+
 
 }
 
@@ -63,7 +89,7 @@ function addError(severity, message, resourceStack, help){
     logger.debug(`Error thrown: ${severity}: ${message} (${strResourceStack})`);
 }
 
-function assignOutputs(){
+function assignResourcesOutputs(){
     if(!workingInput.hasOwnProperty('Resources')){
         addError('warn', 'Resources is not defined', [], null); // TODO: Check if this should be crit
         return false;
@@ -131,6 +157,11 @@ function assignOutputs(){
 function resolveReferences(){
     // TODO: Go through and resolve...
     // TODO: Ref, Attr, Join,
+
+    // Here to aim to convert  "CidrIp" : { "Ref" : "SourceCidrForRDP" } to  "CidrIp" : "SourceCidrForRDP_Ref"
+    // We need to ensure the ref exists (or throw a critical error)
+    // We need to process refs from parameters AND resources
+
 }
 
 

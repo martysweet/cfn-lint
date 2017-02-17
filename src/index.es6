@@ -12,7 +12,7 @@ function main(){
     workingInput = require('../data/input.json');
 
     // process the input file
-    assignOutputs(workingInput);
+    assignResourcesOutputs(workingInput);
 
    // console.log(workingInput);
 }
