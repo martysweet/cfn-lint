@@ -1,8 +1,5 @@
 let workingInput = null;
 const logger = require('./logger');
-let resourcesSpec = require('./resourcesSpec');
-
-const mockArnPrefix = "arn:aws:mock:region:123456789012:";
 
 main();
 

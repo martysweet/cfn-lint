@@ -1,7 +1,9 @@
 let workingInput = null;
 let stopValidation = false;
-let errorObject = {"templateValid": false, "errors": {"info": [], "warn": [], "crit": []}};
+let errorObject = {"templateValid": true, "errors": {"info": [], "warn": [], "crit": []}};
+const resourcesSpec = require('./resourcesSpec');
 const logger = require('./logger');
+const mockArnPrefix = "arn:aws:mock:region:123456789012:";
 
 exports.validateJson = function validateJson(json){
     // TODO: Convert to object
@@ -55,10 +57,15 @@ function addError(severity, message, resourceStack, help){
     if(severity == 'crit'){
         errorObject.templateValid = false;
     }
+
+    // Debug
+    let strResourceStack = resourceStack.join(' > ');
+    logger.debug(`Error thrown: ${severity}: ${message} (${strResourceStack})`);
 }
 
 function assignOutputs(){
     if(!workingInput.hasOwnProperty('Resources')){
+        addError('warn', 'Resources is not defined', [], null); // TODO: Check if this should be crit
         return false;
     }
 
@@ -68,9 +75,12 @@ function assignOutputs(){
 
             // Check if Type is defined
             if(!workingInput['Resources'][res].hasOwnProperty('Type')){
-                // TODO: Throw validation error
-                // TODO: Set flag so we can't continue
-                logger.error(`Resource ${res} does not have a Type.`);
+                stopValidation = true;
+                addError('crit',
+                        `Resource ${res} does not have a Type.`,
+                        ['Resources', res],
+                        null // TODO: Go to the resources help page
+                );
                 continue;
             }
 
@@ -78,9 +88,11 @@ function assignOutputs(){
             let resourceType = workingInput['Resources'][res]['Type'];
             let spec = resourcesSpec.getType(workingInput['Resources'][res]['Type']);
             if(spec === null){
-                // TODO: Throw validation error
-                // TODO: Set flah so we can't continue
-                logger.error(`Resource ${res} has an invalid Type.`);
+                addError('crit',
+                    `Resource ${res} has an invalid Type of ${resourceType}.`,
+                    ['Resources', res],
+                    null // TODO: go to resources help page
+                );
                 continue;
             }
 
@@ -111,8 +123,6 @@ function assignOutputs(){
                     }
                 }
             }
-
-
         }
     }
 
