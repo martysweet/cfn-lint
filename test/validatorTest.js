@@ -7,6 +7,10 @@ describe('validator', () => {
 
     describe('validateJsonObject', () => {
 
+        beforeEach(() => {
+            validator.clearErrors();
+        });
+
         it('a valid template should return an object with validTemplate = true, no crit errors', () => {
             const input = require('./data/valid/1.json');
             let result = validator.validateJsonObject(input);
@@ -19,6 +23,20 @@ describe('validator', () => {
             let result = validator.validateJsonObject(input);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(2);
+        });
+
+        it('1 missing parameter type should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = require('./data/invalid/1_missing_parameter_type.json');
+            let result = validator.validateJsonObject(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+        });
+
+        it('1 invalid parameter type should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = require('./data/invalid/1_invalid_parameter_type.json');
+            let result = validator.validateJsonObject(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
         });
 
     });

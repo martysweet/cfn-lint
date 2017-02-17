@@ -1,9 +1,14 @@
 let workingInput = null;
 let stopValidation = false;
-let errorObject = {"templateValid": true, "errors": {"info": [], "warn": [], "crit": []}};
+let errorObject;
 const resourcesSpec = require('./resourcesSpec');
 const logger = require('./logger');
 const mockArnPrefix = "arn:aws:mock:region:123456789012:";
+const parameterTypesSpec = require('../data/aws_parameter_types.json');
+
+exports.clearErrors = function clearErrors(){
+    errorObject = {"templateValid": true, "errors": {"info": [], "warn": [], "crit": []}};
+};
 
 exports.validateJson = function validateJson(json){
     // TODO: Convert to object
@@ -25,8 +30,11 @@ exports.validateJsonObject = function validateJsonObject(obj){
 };
 
 function validateWorkingInput(){
-    // TODO: Check parameters and outputs
+    // Ensure we are working from a clean slate
+    exports.clearErrors();
 
+    // Check parameters and assign outputs
+    assignParametersOutput();
 
     // Assign outputs to all the resources
     assignResourcesOutputs();
@@ -54,19 +62,33 @@ function assignParametersOutput(){
         if (workingInput['Parameters'].hasOwnProperty(param)) {
 
             // Check if Type is defined
+            let parameterRefAttribute = `string_input_${param}`;
             if (!workingInput['Parameters'][param].hasOwnProperty('Type')) {
-                // We are going to assume to string to continue validation, but will throw a critical
+                // We are going to assume type if a string to continue validation, but will throw a critical
                 // TODO: Link to CFN Parameter Type documentation
                 addError('crit', `Parameter ${param} does not have a Type defined.`, ['Parameters', param], null);
+            }else{
+
+                let parameterType = workingInput['Parameters'][param]['Type'];
+
+                // Check if the parameter type is valid
+                if(!parameterTypesSpec.hasOwnProperty(parameterType)){
+                    // TODO: Link to CFN Parameter Type documentation
+                    addError('crit', `Parameter ${param} has an invalid type of ${parameterType}.`, ['Parameters', param], null);
+                }else{
+
+                        // Check the Type of an array specification, otherwise assume string
+                        if(parameterTypesSpec[parameterType] == "array"){
+                            parameterRefAttribute = ['param1', 'param2', 'param3'];
+                        }
+                    }
             }
 
-            // Check the Type of an array specification, otherwise assume string
-
-
+            // Assign an Attribute Ref regardless of any failures above
+            workingInput['Parameters'][param]['Attributes'] = {};
+            workingInput['Parameters'][param]['Attributes']['Ref'] = parameterRefAttribute;
         }
     }
-
-
 }
 
 function addError(severity, message, resourceStack, help){
