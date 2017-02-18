@@ -53,6 +53,20 @@ describe('validator', () => {
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
 
+        it('1 invalid resource reference should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = require('./data/invalid/1_invalid_resource_reference.json');
+            let result = validator.validateJsonObject(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+        });
+
+        it('1 invalid parameter reference should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = require('./data/invalid/1_invalid_parameter_reference.json');
+            let result = validator.validateJsonObject(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+        });
+
     });
 
 });

@@ -5,9 +5,11 @@ const resourcesSpec = require('./resourcesSpec');
 const logger = require('./logger');
 const mockArnPrefix = "arn:aws:mock:region:123456789012:";
 const parameterTypesSpec = require('../data/aws_parameter_types.json');
+const awsRefOverrides = require('../data/aws_ref_override.json');
 
 exports.clearErrors = function clearErrors(){
     errorObject = {"templateValid": true, "errors": {"info": [], "warn": [], "crit": []}};
+    stopValidation = false;
 };
 
 exports.validateJson = function validateJson(json){
@@ -134,6 +136,8 @@ function assignResourcesOutputs(){
         if(workingInput['Resources'].hasOwnProperty(res)){
 
             // Check if Type is defined
+            let resourceType = null;
+            let spec = null;
             if(!workingInput['Resources'][res].hasOwnProperty('Type')){
                 stopValidation = true;
                 addError('crit',
@@ -141,20 +145,19 @@ function assignResourcesOutputs(){
                         ['Resources', res],
                         null // TODO: Go to the resources help page
                 );
-                continue;
+            }else{
+                // Check if Type is valid
+                resourceType = workingInput['Resources'][res]['Type'];
+                spec = resourcesSpec.getType(workingInput['Resources'][res]['Type']);
+                if(spec === null){
+                    addError('crit',
+                        `Resource ${res} has an invalid Type of ${resourceType}.`,
+                        ['Resources', res],
+                        null // TODO: go to resources help page
+                    );
+                }
             }
 
-            // Check if Type is valid
-            let resourceType = workingInput['Resources'][res]['Type'];
-            let spec = resourcesSpec.getType(workingInput['Resources'][res]['Type']);
-            if(spec === null){
-                addError('crit',
-                    `Resource ${res} has an invalid Type of ${resourceType}.`,
-                    ['Resources', res],
-                    null // TODO: go to resources help page
-                );
-                continue;
-            }
 
             // Create a map for storing the output attributes for this Resource
             let refValue = "example-ref-" + res;
@@ -172,7 +175,7 @@ function assignResourcesOutputs(){
             workingInput['Resources'][res]['Attributes']['Ref'] = refValue;
 
             //  Go through the attributes of the specification, and assign them
-            if(spec.hasOwnProperty('Attributes')){
+            if(spec != null && spec.hasOwnProperty('Attributes')){
                 for(let attr in spec['Attributes']){
                     if(spec['Attributes'].hasOwnProperty(attr)) {
                         if (attr.indexOf('Arn') != -1) {
@@ -183,6 +186,8 @@ function assignResourcesOutputs(){
                     }
                 }
             }
+
+
         }
     }
 
@@ -196,12 +201,71 @@ function resolveReferences(){
     // We need to ensure the ref exists (or throw a critical error)
     // We need to process refs from parameters AND resources
 
-    // Loop through resources
-    for(let res in workingInput['Resources']) {
-        // Make a dependancy graph
+    placeInTemplate.push('Resources');
+    recursiveRef(workingInput['Resources']);
 
-    }
+    // Loop through resources
+    //for(let res in workingInput['Resources']) {
+
+        // Find Ref
+        // TODO: Make a dependency graph
+        //let ref = getRef(workingInput['Resources'][res]);
+        //if(ref == null){
+        //    addError('crit', 'Reference to is invalid', ['Resources', res], null);
+        //}
+
+    //}
     // Check for any graph loops, throw CRIT if they exist, but we can continue
+}
+
+let placeInTemplate = [];
+
+function recursiveRef(ref){
+    // Step into next attribute
+    for(let i=0; i < Object.keys(ref).length; i++){
+        if(typeof ref[Object.keys(ref)[i]] == "object" && Object.keys(ref)[i] != 'Attributes'){
+            placeInTemplate.push(Object.keys(ref)[i]);
+            recursiveRef(ref[Object.keys(ref)[i]]);
+        }else {
+            if (Object.keys(ref)[i] == "Ref") {
+                // Check if the value of the Ref exists
+                let refValue = ref[Object.keys(ref)[i]];
+                let resolvedVal = getRef(refValue);
+                if (resolvedVal == null) {
+                    addError('crit', `Referenced value ${refValue} does not exist`, placeInTemplate, null);
+                    resolvedVal = "INVALID_REF";
+                }
+
+                // Replace this key with it's value
+                ref["Ref"] = resolvedVal;
+
+                //todo workout how to overrwrite the Ref obj with string, using the stack?
+            }
+        }
+    }
+    placeInTemplate.pop();
+}
+
+
+
+function getRef(reference){
+    // Check in Resources
+    if(workingInput['Resources'].hasOwnProperty(reference)){
+        return workingInput['Resources'][reference]['Attributes']['Ref'];
+    }
+
+    // Check in Parameters
+    if(workingInput['Parameters'].hasOwnProperty(reference)){
+        return workingInput['Parameters'][reference]['Attributes']['Ref'];
+    }
+
+    // Check for customs refs
+    if(awsRefOverrides.hasOwnProperty(reference)){
+        return awsRefOverrides[reference];
+    }
+
+    // We have not found a ref
+    return null;
 }
 
 
