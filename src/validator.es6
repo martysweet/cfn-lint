@@ -202,6 +202,7 @@ function resolveReferences(){
     // We need to process refs from parameters AND resources
 
     placeInTemplate.push('Resources');
+    lastPositionInTemplate = workingInput['Resources'];
     recursiveRef(workingInput['Resources']);
 
     // Loop through resources
@@ -219,12 +220,16 @@ function resolveReferences(){
 }
 
 let placeInTemplate = [];
+let lastPositionInTemplate = null;
+let lastPositionInTemplateKey = null;
 
 function recursiveRef(ref){
     // Step into next attribute
     for(let i=0; i < Object.keys(ref).length; i++){
         if(typeof ref[Object.keys(ref)[i]] == "object" && Object.keys(ref)[i] != 'Attributes'){
             placeInTemplate.push(Object.keys(ref)[i]);
+            lastPositionInTemplate = ref;
+            lastPositionInTemplateKey = Object.keys(ref)[i];
             recursiveRef(ref[Object.keys(ref)[i]]);
         }else {
             if (Object.keys(ref)[i] == "Ref") {
@@ -237,15 +242,13 @@ function recursiveRef(ref){
                 }
 
                 // Replace this key with it's value
-                ref["Ref"] = resolvedVal;
+                lastPositionInTemplate[lastPositionInTemplateKey] = resolvedVal;
 
-                //todo workout how to overrwrite the Ref obj with string, using the stack?
             }
         }
     }
     placeInTemplate.pop();
 }
-
 
 
 function getRef(reference){
