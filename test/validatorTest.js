@@ -18,6 +18,13 @@ describe('validator', () => {
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
 
+        it('a valid template should return an object with validTemplate = true, no crit errors', () => {
+            const input = require('./data/valid/2.json');
+            let result = validator.validateJsonObject(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
         it('2 invalid resource types should return an object with validTemplate = false, 2 crit errors', () => {
             const input = require('./data/invalid/1_invalid_resource_type.json');
             let result = validator.validateJsonObject(input);
@@ -72,6 +79,13 @@ describe('validator', () => {
             let result = validator.validateJsonObject(input);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(2);
+        });
+
+        it('1 invalid Fn::GetAtt should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = require('./data/invalid/1_invalid_intrinsic_get_att.json');
+            let result = validator.validateJsonObject(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
         });
 
     });

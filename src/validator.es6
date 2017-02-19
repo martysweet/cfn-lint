@@ -7,6 +7,8 @@ const mockArnPrefix = "arn:aws:mock:region:123456789012:";
 const parameterTypesSpec = require('../data/aws_parameter_types.json');
 const awsRefOverrides = require('../data/aws_ref_override.json');
 
+// Todo: Allow override for RefOverrides ex. Regions
+
 exports.clearErrors = function clearErrors(){
     errorObject = {"templateValid": true, "errors": {"info": [], "warn": [], "crit": []}};
     stopValidation = false;
@@ -30,6 +32,7 @@ exports.validateJsonObject = function validateJsonObject(obj){
     workingInput = obj;
     return validateWorkingInput();
 };
+
 
 function validateWorkingInput(){
     // Ensure we are working from a clean slate
@@ -197,10 +200,6 @@ function resolveReferences(){
     // TODO: Go through and resolve...
     // TODO: Ref, Attr, Join,
 
-    // Here to aim to convert  "CidrIp" : { "Ref" : "SourceCidrForRDP" } to  "CidrIp" : "SourceCidrForRDP_Ref"
-    // We need to ensure the ref exists (or throw a critical error)
-    // We need to process refs from parameters AND resources
-
     // Resolve all Ref
     lastPositionInTemplate = workingInput;
     recursiveDecent(lastPositionInTemplate);
@@ -218,7 +217,7 @@ function recursiveDecent(ref){
     // Step into next attribute
     for(let i=0; i < Object.keys(ref).length; i++){
         let key = Object.keys(ref)[i];
-        let intrinsicFunctions = ['Ref', 'Fn::Base64', 'Fn::Join'];
+        let intrinsicFunctions = ['Ref', 'Fn::Base64', 'Fn::Join', 'Fn::GetAtt'];
 
         if(intrinsicFunctions.indexOf(key) != -1){
             let functionOutput = resolveIntrinsicFunction(ref, key);
@@ -248,6 +247,9 @@ function resolveIntrinsicFunction(ref, key){
             break;
         case 'Fn::Base64':
             return doIntrinsicBase64(ref, key);
+            break;
+        case 'Fn::GetAtt':
+            return doIntrinsicGetAtt(ref, key);
             break;
         default:
             return null;
@@ -296,6 +298,22 @@ function doIntrinsicJoin(ref, key){
     }
 }
 
+
+function doIntrinsicGetAtt(ref, key){
+    let toGet = ref[key];
+    if(toGet.length != 2){
+        addError("crit", "Invalid parameters for Fn::GetAtt", placeInTemplate, null); // TODO: Add GetAtt Doc
+        return "INVALID_GET_ATT"
+    }else{
+        let attr = getAtt(toGet[0], toGet[1]);
+        if(attr != null){
+            return attr;
+        }else{
+            return "INVALID_REFERENCE_OR_ATTR_ON_GET_ATT";
+        }
+    }
+}
+
 function fnJoin(join, parts){
     // Go through each parts and ensure they are resolved
     for(let p in parts){
@@ -308,6 +326,16 @@ function fnJoin(join, parts){
     }
 
     return parts.join(join);
+}
+
+function getAtt(reference, attribute){
+    if(workingInput['Resources'].hasOwnProperty(reference)){
+        if(workingInput['Resources'][reference]['Attributes'].hasOwnProperty(attribute)){
+            return workingInput['Resources'][reference]['Attributes'][attribute];
+        }
+    }
+    // Return null if not found
+    return null;
 }
 
 function getRef(reference){
