@@ -277,6 +277,10 @@ function doIntrinsicBase64(ref, key){
     let toEncode = ref[key];
     if(typeof toEncode != "string"){
         toEncode = resolveIntrinsicFunction(ref[key], Object.keys(ref[key])[0]);
+        if(typeof toEncode != "string"){
+            addError("crit", "Parameter of Fn::Base64 does not resolve to a string", placeInTemplate, null); // TODO: base64 doc
+            return "INVALID_FN_BASE64";
+        }
     }
     // Return base64
     return Buffer.from(toEncode).toString('base64');
@@ -298,13 +302,25 @@ function doIntrinsicJoin(ref, key){
     }
 }
 
-
 function doIntrinsicGetAtt(ref, key){
     let toGet = ref[key];
     if(toGet.length != 2){
         addError("crit", "Invalid parameters for Fn::GetAtt", placeInTemplate, null); // TODO: Add GetAtt Doc
         return "INVALID_GET_ATT"
     }else{
+        if(typeof toGet[0] != "string"){ // TODO Implement unit test for this
+            addError("crit", "Fn::GetAtt does not support functions for the logical resource name", placeInTemplate, null); // TODO: Add GetAtt Doc
+        }
+
+        // The AttributeName could be a Ref, so check if it needs resolving
+        if(typeof toGet[1] != "string"){
+            let keys = Object.keys(toGet[1]);
+            if(keys[0] == "Ref") { // TODO Implement unit test for this
+                toGet[1] = resolveIntrinsicFunction(toGet[1], "Ref");
+            }else{ // TODO Implement unit test for this
+                addError("crit", "Fn::GetAtt only supports Ref within the AttributeName", placeInTemplate, null); // TODO: Add GetAtt Doc
+            }
+        }
         let attr = fnGetAtt(toGet[0], toGet[1]);
         if(attr != null){
             return attr;
@@ -320,6 +336,7 @@ function fnJoin(join, parts){
         if(parts.hasOwnProperty(p)) {
             if (typeof parts[p] == "object") {
                 // Something needs resolving
+                // TODO Check the key is within the valid functions which can be called from a Fn::Join
                 parts[p] = resolveIntrinsicFunction(parts[p], Object.keys(parts[p])[0]);
             }
         }
