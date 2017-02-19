@@ -203,51 +203,45 @@ function resolveReferences(){
 
     placeInTemplate.push('Resources');
     lastPositionInTemplate = workingInput['Resources'];
-    recursiveRef(workingInput['Resources']);
+    recursiveDecent(workingInput['Resources'], recursiveRefCb);
 
-    // Loop through resources
-    //for(let res in workingInput['Resources']) {
-
-        // Find Ref
-        // TODO: Make a dependency graph
-        //let ref = getRef(workingInput['Resources'][res]);
-        //if(ref == null){
-        //    addError('crit', 'Reference to is invalid', ['Resources', res], null);
-        //}
-
-    //}
-    // Check for any graph loops, throw CRIT if they exist, but we can continue
 }
 
 let placeInTemplate = [];
 let lastPositionInTemplate = null;
 let lastPositionInTemplateKey = null;
 
-function recursiveRef(ref){
+function recursiveDecent(ref, callback){
     // Step into next attribute
     for(let i=0; i < Object.keys(ref).length; i++){
         if(typeof ref[Object.keys(ref)[i]] == "object" && Object.keys(ref)[i] != 'Attributes'){
             placeInTemplate.push(Object.keys(ref)[i]);
             lastPositionInTemplate = ref;
             lastPositionInTemplateKey = Object.keys(ref)[i];
-            recursiveRef(ref[Object.keys(ref)[i]]);
+            recursiveDecent(ref[Object.keys(ref)[i]], callback);
         }else {
-            if (Object.keys(ref)[i] == "Ref") {
-                // Check if the value of the Ref exists
-                let refValue = ref[Object.keys(ref)[i]];
-                let resolvedVal = getRef(refValue);
-                if (resolvedVal == null) {
-                    addError('crit', `Referenced value ${refValue} does not exist`, placeInTemplate, null);
-                    resolvedVal = "INVALID_REF";
-                }
-
-                // Replace this key with it's value
-                lastPositionInTemplate[lastPositionInTemplateKey] = resolvedVal;
-
-            }
+            callback(ref, Object.keys(ref)[i]);
         }
     }
     placeInTemplate.pop();
+}
+
+function recursiveRefCb(ref, key){
+
+    if (key == "Ref") {
+        // Check if the value of the Ref exists
+        let refValue = ref[key];
+        let resolvedVal = getRef(refValue);
+        if (resolvedVal == null) {
+            addError('crit', `Referenced value ${refValue} does not exist`, placeInTemplate, null);
+            resolvedVal = "INVALID_REF";
+        }
+
+        // Replace this key with it's value
+        lastPositionInTemplate[lastPositionInTemplateKey] = resolvedVal;
+
+    }
+
 }
 
 
