@@ -217,7 +217,7 @@ function recursiveDecent(ref){
     // Step into next attribute
     for(let i=0; i < Object.keys(ref).length; i++){
         let key = Object.keys(ref)[i];
-        let intrinsicFunctions = ['Ref', 'Fn::Base64', 'Fn::Join', 'Fn::GetAtt'];
+        let intrinsicFunctions = ['Ref', 'Fn::Base64', 'Fn::Join', 'Fn::GetAtt', 'Fn::FindInMap'];
 
         if(intrinsicFunctions.indexOf(key) != -1){
             let functionOutput = resolveIntrinsicFunction(ref, key);
@@ -250,6 +250,9 @@ function resolveIntrinsicFunction(ref, key){
             break;
         case 'Fn::GetAtt':
             return doIntrinsicGetAtt(ref, key);
+            break;
+        case 'Fn::FindInMap':
+            return doIntrinsicFindInMap(ref, key);
             break;
         default:
             return null;
@@ -330,6 +333,33 @@ function doIntrinsicGetAtt(ref, key){
     }
 }
 
+function doIntrinsicFindInMap(ref, key){
+    let toGet = ref[key];
+    if(toGet.length != 3){
+        addError("crit", "Invalid parameters for Fn::FindInMap", placeInTemplate, null); // TODO: Add FindInMap Doc
+        return "INVALID_FN_FIND_IN_MAP"
+    }else {
+
+        for(let x in toGet){
+            if(toGet.hasOwnProperty(x)) {
+                if (typeof toGet[x] != "string") {
+                    toGet[x] = resolveIntrinsicFunction(toGet[x], Object.keys(toGet[x])[0]);
+                }
+            }
+        }
+
+        // Find in map
+        let val = fnFindInMap(toGet[0], toGet[1], toGet[2]);
+        if(val == null){
+            addError("crit", `Could not find value in map ${toGet[0]}|${toGet[1]}|${toGet[2]}`, placeInTemplate, null);
+            return "INVALID_MAPPING";
+        }else{
+            return val;
+        }
+
+    }
+}
+
 function fnJoin(join, parts){
     // Go through each parts and ensure they are resolved
     for(let p in parts){
@@ -352,6 +382,19 @@ function fnGetAtt(reference, attribute){
         }
     }
     // Return null if not found
+    return null;
+}
+
+function fnFindInMap(map, first, second){
+    if(workingInput.hasOwnProperty('Mappings')){
+        if(workingInput['Mappings'].hasOwnProperty(map)){
+            if(workingInput['Mappings'][map].hasOwnProperty(first)){
+                if(workingInput['Mappings'][map][first].hasOwnProperty(second)){
+                    return workingInput['Mappings'][map][first][second];
+                }
+            }
+        }
+    }
     return null;
 }
 
