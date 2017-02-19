@@ -201,9 +201,12 @@ function resolveReferences(){
     // We need to ensure the ref exists (or throw a critical error)
     // We need to process refs from parameters AND resources
 
-    placeInTemplate.push('Resources');
-    lastPositionInTemplate = workingInput['Resources'];
-    recursiveDecent(workingInput['Resources'], recursiveRefCb);
+    // Resolve all Ref
+    lastPositionInTemplate = workingInput;
+    recursiveDecent(lastPositionInTemplate);
+
+
+    let stop = workingInput;
 
 }
 
@@ -211,22 +214,44 @@ let placeInTemplate = [];
 let lastPositionInTemplate = null;
 let lastPositionInTemplateKey = null;
 
-function recursiveDecent(ref, callback){
+function recursiveDecent(ref){
     // Step into next attribute
     for(let i=0; i < Object.keys(ref).length; i++){
-        if(typeof ref[Object.keys(ref)[i]] == "object" && Object.keys(ref)[i] != 'Attributes'){
-            placeInTemplate.push(Object.keys(ref)[i]);
+        let key = Object.keys(ref)[i];
+        if(typeof ref[key] == "object" && key != 'Attributes' && key != 'Fn::Join'){
+            placeInTemplate.push(key);
             lastPositionInTemplate = ref;
-            lastPositionInTemplateKey = Object.keys(ref)[i];
-            recursiveDecent(ref[Object.keys(ref)[i]], callback);
+            lastPositionInTemplateKey = key;
+            recursiveDecent(ref[key]);
         }else {
-            callback(ref, Object.keys(ref)[i]);
+            let functionOutput = resolveIntrinsicFunction(ref, key);
+            if(functionOutput !== null) {
+                // Overwrite the position with the resolved value
+                lastPositionInTemplate[lastPositionInTemplateKey] = functionOutput;
+            }
         }
     }
     placeInTemplate.pop();
 }
 
-function recursiveRefCb(ref, key){
+function resolveIntrinsicFunction(ref, key){
+    switch(key){
+        case 'Ref':
+            return doIntrinsicRef(ref, key);
+            break;
+        case 'Fn::Join':
+            return doIntrinsicJoin(ref, key);
+            break;
+        case 'Fn::Base64':
+            return doIntrinsicBase64(ref, key);
+            break;
+        default:
+            return null;
+            break;
+    }
+}
+
+function doIntrinsicRef(ref, key){
 
     if (key == "Ref") {
         // Check if the value of the Ref exists
@@ -237,13 +262,52 @@ function recursiveRefCb(ref, key){
             resolvedVal = "INVALID_REF";
         }
 
-        // Replace this key with it's value
-        lastPositionInTemplate[lastPositionInTemplateKey] = resolvedVal;
+        // Return the resolved value
+        return resolvedVal;
 
     }
 
 }
 
+function doIntrinsicBase64(ref, key){
+    // Only base64 encode strings
+    let toEncode = ref[key];
+    if(typeof toEncode != "string"){
+        toEncode = resolveIntrinsicFunction(ref, key);
+    }
+    // Return base64
+    return Buffer.from(toEncode).toString('base64');
+}
+
+function doIntrinsicJoin(ref, key){
+    // Ensure that all objects in the join array have been resolved to string, otherwise
+    // we need to resolve them.
+    // Expect 2 parameters
+    let join = ref[key][0];
+    let parts = ref[key][1] || null;
+    if(ref[key].length != 2 || parts == null){
+        addError('crit', 'Invalid parameters for Fn::Join', placeInTemplate, null); // TODO: Docs to Fn::Join
+        // Specify this as an invalid string
+        return "INVALID_JOIN";
+    }else{
+        // Join
+        return fnJoin(join, parts);
+    }
+}
+
+function fnJoin(join, parts){
+    // Go through each parts and ensure they are resolved
+    for(let p in parts){
+        if(parts.hasOwnProperty(p)) {
+            if (typeof parts[p] == "object") {
+                // Something needs resolving
+                parts[p] = resolveIntrinsicFunction(parts, p);
+            }
+        }
+    }
+
+    return parts.join(join);
+}
 
 function getRef(reference){
     // Check in Resources

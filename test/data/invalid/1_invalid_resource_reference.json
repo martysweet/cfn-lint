@@ -119,6 +119,10 @@
               "3-signal-success" : {
                 "command" : { "Fn::Join" : [ "", [
                   "cfn-signal.exe -e %ERRORLEVEL% \"",
+                  "cfn-hup" : {
+                    "enabled" : "true",
+                    "ensureRunning" : "true",
+                    "files" : ["c:\\cfn\\cfn-hup.conf", "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf"]
                   { "Fn::Base64" : { "Ref" : "WindowsServerWaitHandle" }},
                   "\""]]
                 }
@@ -127,10 +131,6 @@
 
             "services" : {
               "windows" : {
-                "cfn-hup" : {
-                  "enabled" : "true",
-                  "ensureRunning" : "true",
-                  "files" : ["c:\\cfn\\cfn-hup.conf", "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf"]
                 }
               }
             }
