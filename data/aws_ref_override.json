@@ -18,6 +18,6 @@
   "AWS::AccountId": "123456789012",
   "AWS::NotificationARNs": ["arn:aws:sns:us-east-1:123456789012:MyTopic"],
   "AWS::NoValue": "",
-  "AWS::Region": "eu-west-1",
-  "AWS::StackId": "arn"
+  "AWS::Region": "AWSREFREGION",
+  "AWS::StackId": "AWSREFSTACKID"
 }

@@ -218,18 +218,22 @@ function recursiveDecent(ref){
     // Step into next attribute
     for(let i=0; i < Object.keys(ref).length; i++){
         let key = Object.keys(ref)[i];
-        if(typeof ref[key] == "object" && key != 'Attributes' && key != 'Fn::Join'){
-            placeInTemplate.push(key);
-            lastPositionInTemplate = ref;
-            lastPositionInTemplateKey = key;
-            recursiveDecent(ref[key]);
-        }else {
+        let intrinsicFunctions = ['Ref', 'Fn::Base64', 'Fn::Join'];
+
+        if(intrinsicFunctions.indexOf(key) != -1){
             let functionOutput = resolveIntrinsicFunction(ref, key);
             if(functionOutput !== null) {
                 // Overwrite the position with the resolved value
                 lastPositionInTemplate[lastPositionInTemplateKey] = functionOutput;
             }
+        }else if(key != 'Attributes' && typeof ref[key] == "object"){
+            placeInTemplate.push(key);
+            lastPositionInTemplate = ref;
+            lastPositionInTemplateKey = key;
+            recursiveDecent(ref[key]);
         }
+
+
     }
     placeInTemplate.pop();
 }
@@ -253,19 +257,16 @@ function resolveIntrinsicFunction(ref, key){
 
 function doIntrinsicRef(ref, key){
 
-    if (key == "Ref") {
-        // Check if the value of the Ref exists
-        let refValue = ref[key];
-        let resolvedVal = getRef(refValue);
-        if (resolvedVal == null) {
-            addError('crit', `Referenced value ${refValue} does not exist`, placeInTemplate, null);
-            resolvedVal = "INVALID_REF";
-        }
-
-        // Return the resolved value
-        return resolvedVal;
-
+    // Check if the value of the Ref exists
+    let refValue = ref[key];
+    let resolvedVal = getRef(refValue);
+    if (resolvedVal == null) {
+        addError('crit', `Referenced value ${refValue} does not exist`, placeInTemplate, null);
+        resolvedVal = "INVALID_REF";
     }
+
+    // Return the resolved value
+    return resolvedVal;
 
 }
 
@@ -273,7 +274,7 @@ function doIntrinsicBase64(ref, key){
     // Only base64 encode strings
     let toEncode = ref[key];
     if(typeof toEncode != "string"){
-        toEncode = resolveIntrinsicFunction(ref, key);
+        toEncode = resolveIntrinsicFunction(ref[key], Object.keys(ref[key])[0]);
     }
     // Return base64
     return Buffer.from(toEncode).toString('base64');
@@ -301,7 +302,7 @@ function fnJoin(join, parts){
         if(parts.hasOwnProperty(p)) {
             if (typeof parts[p] == "object") {
                 // Something needs resolving
-                parts[p] = resolveIntrinsicFunction(parts, p);
+                parts[p] = resolveIntrinsicFunction(parts[p], Object.keys(parts[p])[0]);
             }
         }
     }
