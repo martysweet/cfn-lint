@@ -317,7 +317,7 @@ function getRef(reference){
     }
 
     // Check in Parameters
-    if(workingInput['Parameters'].hasOwnProperty(reference)){
+    if(workingInput['Parameters'] && workingInput['Parameters'].hasOwnProperty(reference)){
         return workingInput['Parameters'][reference]['Attributes']['Ref'];
     }
 

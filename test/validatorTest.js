@@ -67,6 +67,13 @@ describe('validator', () => {
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
 
+        it('2 invalid Fn::Join\'s should return an object with validTemplate = false, 2 crit errors', () => {
+            const input = require('./data/invalid/2_invalid_intrinsic_join.json');
+            let result = validator.validateJsonObject(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(2);
+        });
+
     });
 
 });

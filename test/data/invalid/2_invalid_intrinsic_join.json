@@ -67,7 +67,7 @@
       "Properties" : {
         "GroupDescription" : "Enable RDP",
         "SecurityGroupIngress" : [
-          {"IpProtocol" : "tcp", "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref" : "Sour11ceCidrForRDP" }}
+          {"IpProtocol" : "tcp", "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref" : "SourceCidrForRDP" }}
         ]
       }
     },
@@ -79,14 +79,10 @@
           "config" : {
             "files" : {
               "c:\\cfn\\cfn-hup.conf" : {
-                "content" : { "Fn::Join" : ["", [
-                  "[main]\n",
-                  "stack=", { "Ref" : "AWS::StackId" }, "\n",
-                  "region=", { "Ref" : "AWS::Region" }, "\n"
-                ]]}
+                "content" : { "Fn::Join" : [""]}
               },
               "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf" : {
-                "content": { "Fn::Join" : ["", [
+                "content": { "Fn::Join" : [[
                   "[cfn-auto-reloader-hook]\n",
                   "triggers=post.update\n",
                   "path=Resources.WindowsServer.Metadata.AWS::CloudFormation::Init\n",
