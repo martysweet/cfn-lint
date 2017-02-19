@@ -305,7 +305,7 @@ function doIntrinsicGetAtt(ref, key){
         addError("crit", "Invalid parameters for Fn::GetAtt", placeInTemplate, null); // TODO: Add GetAtt Doc
         return "INVALID_GET_ATT"
     }else{
-        let attr = getAtt(toGet[0], toGet[1]);
+        let attr = fnGetAtt(toGet[0], toGet[1]);
         if(attr != null){
             return attr;
         }else{
@@ -328,7 +328,7 @@ function fnJoin(join, parts){
     return parts.join(join);
 }
 
-function getAtt(reference, attribute){
+function fnGetAtt(reference, attribute){
     if(workingInput['Resources'].hasOwnProperty(reference)){
         if(workingInput['Resources'][reference]['Attributes'].hasOwnProperty(attribute)){
             return workingInput['Resources'][reference]['Attributes'][attribute];
