@@ -240,9 +240,10 @@ function recursiveDecent(ref){
             let inResourceProperty = (placeInTemplate[0] == "Resources" || placeInTemplate[2] == "Properties");
             let inResourceMetadata = (placeInTemplate[0] == "Resources" || placeInTemplate[2] == "Metadata");
             let inOutputs = (placeInTemplate[0] == "Outputs");
+            let inConditions = (placeInTemplate[0] == "Conditions");
             // TODO Check for usage inside update policy
 
-            if(!(inResourceProperty || inResourceMetadata || inOutputs)){
+            if(!(inResourceProperty || inResourceMetadata || inOutputs || inConditions)){
                 addError("crit", `Intrinsic function ${key} is not supported here`, placeInTemplate, null);
             }else {
                 // Resolve the function
@@ -282,6 +283,7 @@ function resolveIntrinsicFunction(ref, key){
             return doIntrinsicFindInMap(ref, key);
             break;
         default:
+            addError("warn", `Unhandled Intrinsic Function ${key}, this needs implementing. Some errors might be missed.`, placeInTemplate, null);
             return null;
             break;
     }

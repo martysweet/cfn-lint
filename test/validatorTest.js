@@ -26,6 +26,21 @@ describe('validator', () => {
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
 
+        it('a valid (3.json) template should return an object with validTemplate = true, no crit errors', () => {
+            const input = require('./data/valid/3.json');
+            let result = validator.validateJsonObject(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a valid (4.json) template should return an object with validTemplate = true, no crit errors', () => {
+            const input = require('./data/valid/4.json');
+            validator.addParameterValue('InstanceType', 't1.micro');
+            let result = validator.validateJsonObject(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
         it('2 invalid resource types should return an object with validTemplate = false, 2 crit errors', () => {
             const input = require('./data/invalid/1_invalid_resource_type.json');
             let result = validator.validateJsonObject(input);
