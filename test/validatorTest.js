@@ -121,9 +121,18 @@ describe('validator', () => {
 
         it('1 invalid GetAZs parameter should return an object with validTemplate = false, 1 crit errors', () => {
             const input = require('./data/invalid/1_invalid_get_azs_parameter.json');
+            validator.addParameterValue('InstanceType', 't1.micro');
             let result = validator.validateJsonObject(input);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
+        });
+
+        it('1 reference non AWS::Region GetAZs parameter should return an object with validTemplate = false, 1 warn errors', () => {
+            const input = require('./data/invalid/1_warning_ref_get_azs_parameter.json');
+            validator.addParameterValue('InstanceType', 't1.micro');
+            let result = validator.validateJsonObject(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['warn']).to.have.lengthOf(1);
         });
 
 

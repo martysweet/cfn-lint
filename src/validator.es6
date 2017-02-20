@@ -401,22 +401,30 @@ function doIntrinsicFindInMap(ref, key){
 
 function doIntrinsicGetAZs(ref, key){
     let toGet = ref[key];
+    let region = awsRefOverrides['AWS::Region'];
     // If the argument is not a string, check it's Ref and resolve
     if(typeof toGet != "string"){
-        let keys = Object.keys(toGet[0]);
-        if(keys == "Ref") {
-            toGet = resolveIntrinsicFunction(toGet, "Ref");
+        let key = Object.keys(toGet)[0];
+        if(key == "Ref") {
+            if(toGet[key] != 'AWS::Region'){
+                addError("warn", "Fn::GetAZs expects a region, ensure this reference returns a region", placeInTemplate, null);
+            }
+            region = resolveIntrinsicFunction(toGet, "Ref");
         }else{ // TODO Implement unit test for this
             addError("crit", "Fn::GetAZs only supports Ref or string as a parameter", placeInTemplate, null); // TODO: Add GetAtt Doc
+        }
+    }else{
+        if(toGet != ""){
+            region = toGet;
         }
     }
 
     // We now have a string, assume it's a real region
     // Lets create an array with 3 AZs
     let AZs = [];
-    AZs.push(toGet[0] + 'a');
-    AZs.push(toGet[0] + 'b');
-    AZs.push(toGet[0] + 'c');
+    AZs.push(region + 'a');
+    AZs.push(region + 'b');
+    AZs.push(region + 'c');
     return AZs;
 
 }

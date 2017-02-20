@@ -185,7 +185,7 @@
     "ElasticLoadBalancer" : {
       "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
       "Properties" : {
-        "AvailabilityZones" : { "Fn::GetAZs" : { "Fn::GetAtt" : "EC2Instance2.Something" } },
+        "AvailabilityZones" : { "Fn::GetAZs" : { "Ref" : "EC2Instance2" } },
         "CrossZone" : "true",
         "Instances" : [ { "Ref" : "EC2Instance1" },{ "Ref" : "EC2Instance2" } ],
         "LBCookieStickinessPolicy" : [{
