@@ -282,6 +282,9 @@ function resolveIntrinsicFunction(ref, key){
         case 'Fn::FindInMap':
             return doIntrinsicFindInMap(ref, key);
             break;
+        case 'Fn::GetAZs':
+            return doIntrinsicGetAZs(ref, key);
+            break;
         default:
             addError("warn", `Unhandled Intrinsic Function ${key}, this needs implementing. Some errors might be missed.`, placeInTemplate, null);
             return null;
@@ -394,6 +397,28 @@ function doIntrinsicFindInMap(ref, key){
         }
 
     }
+}
+
+function doIntrinsicGetAZs(ref, key){
+    let toGet = ref[key];
+    // If the argument is not a string, check it's Ref and resolve
+    if(typeof toGet != "string"){
+        let keys = Object.keys(toGet[0]);
+        if(keys == "Ref") {
+            toGet = resolveIntrinsicFunction(toGet, "Ref");
+        }else{ // TODO Implement unit test for this
+            addError("crit", "Fn::GetAZs only supports Ref or string as a parameter", placeInTemplate, null); // TODO: Add GetAtt Doc
+        }
+    }
+
+    // We now have a string, assume it's a real region
+    // Lets create an array with 3 AZs
+    let AZs = [];
+    AZs.push(toGet[0] + 'a');
+    AZs.push(toGet[0] + 'b');
+    AZs.push(toGet[0] + 'c');
+    return AZs;
+
 }
 
 function fnJoin(join, parts){
