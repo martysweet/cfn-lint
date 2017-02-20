@@ -6,6 +6,7 @@ const logger = require('./logger');
 const mockArnPrefix = "arn:aws:mock:region:123456789012:";
 const parameterTypesSpec = require('../data/aws_parameter_types.json');
 const awsRefOverrides = require('../data/aws_ref_override.json');
+const awsIntrinsicFunctions = require('../data/aws_intrinsic_functions.json');
 let parameterRuntimeOverride;
 // Todo: Allow override for RefOverrides ex. Regions
 
@@ -231,13 +232,25 @@ function recursiveDecent(ref){
     // Step into next attribute
     for(let i=0; i < Object.keys(ref).length; i++){
         let key = Object.keys(ref)[i];
-        let intrinsicFunctions = ['Ref', 'Fn::Base64', 'Fn::Join', 'Fn::GetAtt', 'Fn::FindInMap'];
 
-        if(intrinsicFunctions.indexOf(key) != -1){
-            let functionOutput = resolveIntrinsicFunction(ref, key);
-            if(functionOutput !== null) {
-                // Overwrite the position with the resolved value
-                lastPositionInTemplate[lastPositionInTemplateKey] = functionOutput;
+        // Resolve the function
+        if(awsIntrinsicFunctions.hasOwnProperty(key)){
+
+            // Check if an Intrinsic function is allowed here
+            let inResourceProperty = (placeInTemplate[0] == "Resources" || placeInTemplate[2] == "Properties");
+            let inResourceMetadata = (placeInTemplate[0] == "Resources" || placeInTemplate[2] == "Metadata");
+            let inOutputs = (placeInTemplate[0] == "Outputs");
+            // TODO Check for usage inside update policy
+
+            if(!(inResourceProperty || inResourceMetadata || inOutputs)){
+                addError("crit", `Intrinsic function ${key} is not supported here`, placeInTemplate, null);
+            }else {
+                // Resolve the function
+                let functionOutput = resolveIntrinsicFunction(ref, key);
+                if (functionOutput !== null) {
+                    // Overwrite the position with the resolved value
+                    lastPositionInTemplate[lastPositionInTemplateKey] = functionOutput;
+                }
             }
         }else if(key != 'Attributes' && typeof ref[key] == "object"){
             placeInTemplate.push(key);

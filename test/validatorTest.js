@@ -97,6 +97,13 @@ describe('validator', () => {
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
 
+        it('1 invalid Ref within Parameters should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = require('./data/invalid/1_intrinsic_function_in_parameters.json');
+            let result = validator.validateJsonObject(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+        });
+
     });
 
 });
