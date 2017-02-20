@@ -6,12 +6,13 @@ const logger = require('./logger');
 const mockArnPrefix = "arn:aws:mock:region:123456789012:";
 const parameterTypesSpec = require('../data/aws_parameter_types.json');
 const awsRefOverrides = require('../data/aws_ref_override.json');
-
+let parameterRuntimeOverride;
 // Todo: Allow override for RefOverrides ex. Regions
 
-exports.clearErrors = function clearErrors(){
+exports.resetValidator = function resetValidator(){
     errorObject = {"templateValid": true, "errors": {"info": [], "warn": [], "crit": []}};
     stopValidation = false;
+    parameterRuntimeOverride = {};
 };
 
 exports.validateJson = function validateJson(json){
@@ -33,10 +34,17 @@ exports.validateJsonObject = function validateJsonObject(obj){
     return validateWorkingInput();
 };
 
+exports.addParameterValue = function addParameterValue(parameter, value){
+    addParameterOverride(parameter, value);
+};
+
+function addParameterOverride(parameter, value){
+    parameterRuntimeOverride[parameter] = value;
+}
 
 function validateWorkingInput(){
     // Ensure we are working from a clean slate
-    exports.clearErrors();
+    //exports.resetValidator();
 
     // TODO: Check for base keys such as version
 
@@ -73,6 +81,12 @@ function assignParametersOutput(){
 
             // Check if Type is defined
             let parameterRefAttribute = `string_input_${param}`;
+
+            // Check if the Ref for the parameter has been defined at runtime
+            if(parameterRuntimeOverride.hasOwnProperty(param)){
+                parameterRefAttribute = parameterRuntimeOverride[param];
+            }
+
             if (!workingInput['Parameters'][param].hasOwnProperty('Type')) {
                 // We are going to assume type if a string to continue validation, but will throw a critical
                 // TODO: Link to CFN Parameter Type documentation
