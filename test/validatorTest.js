@@ -104,6 +104,13 @@ describe('validator', () => {
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
 
+        it('1 invalid Ref with not string parameter should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = require('./data/invalid/1_ref_not_string_param.json');
+            let result = validator.validateJsonObject(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+        });
+
     });
 
 });

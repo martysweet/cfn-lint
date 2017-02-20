@@ -289,12 +289,19 @@ function resolveIntrinsicFunction(ref, key){
 
 function doIntrinsicRef(ref, key){
 
-    // Check if the value of the Ref exists
     let refValue = ref[key];
-    let resolvedVal = getRef(refValue);
-    if (resolvedVal == null) {
-        addError('crit', `Referenced value ${refValue} does not exist`, placeInTemplate, null);
-        resolvedVal = "INVALID_REF";
+    let resolvedVal = "INVALID_REF";
+
+    // Check if it's of a String type
+    if(typeof refValue != "string"){
+        addError("crit", "Intrinsic Function Ref expects a string", placeInTemplate, null);
+    }else {
+        // Check if the value of the Ref exists
+        resolvedVal = getRef(refValue);
+        if (resolvedVal == null) {
+            addError('crit', `Referenced value ${refValue} does not exist`, placeInTemplate, null);
+            resolvedVal = "INVALID_REF";
+        }
     }
 
     // Return the resolved value
