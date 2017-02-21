@@ -62,4 +62,12 @@ Node Options: --harmony
 Extra Mocha Options: --compilers js:babel-register --require babel-polyfill
 Test Directory: <working dir>\test
 
+### Local testing of CLI
+
+```
+cd lib
+gulp babel && chmod +x index.js
+./index.js validate ../test/data/valid/3.json
+```
+
 ## Contributions

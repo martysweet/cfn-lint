@@ -7,7 +7,8 @@
     "winston": "latest",
     "js-yaml": "latest",
     "cloudformation-js-yaml-schema": "0.1.0",
-    "fs": "latest"
+    "fs": "latest",
+    "commander": "latest"
   },
   "devDependencies": {
     "gulp": "latest",

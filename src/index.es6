@@ -1,18 +1,32 @@
-let workingInput = null;
-const logger = require('./logger');
+#!/usr/bin/env node
 
-main();
+/**
+ * Module dependencies.
+ */
 
-function main(){
+let program = require('commander');
+let firstArg, secondArg = null;
 
-    // todo: read input file
+program
+    .version('0.0.1')
+    .arguments('<cmd> <file>')
+    .action(function (arg1, arg2) {
+        firstArg = arg1;
+        secondArg = arg2;
+    });
 
-    // convert to json if required
+program.parse(process.argv);
 
-    workingInput = require('../data/input.json');
+if (typeof firstArg === 'undefined') {
+    console.error('no command given!');
+    process.exit(1);
+}
 
-    // process the input file
-    assignResourcesOutputs(workingInput);
-
-   // console.log(workingInput);
+if(firstArg == "validate"){
+    const validator = require('./validator');
+    // TODO Add parameter override using flags
+    console.log(validator.validateFile(secondArg))
+}else if(firstArg == "docs"){
+    const docs = require('./docs');
+    console.log(docs.getDoc(secondArg))
 }

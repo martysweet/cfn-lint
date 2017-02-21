@@ -1,13 +1,14 @@
 let workingInput = null;
 let stopValidation = false;
-let errorObject;
+let errorObject = {"templateValid": true, "errors": {"info": [], "warn": [], "crit": []}};
 const resourcesSpec = require('./resourcesSpec');
 const logger = require('./logger');
+const parser = require('./parser');
 const mockArnPrefix = "arn:aws:mock:region:123456789012:";
 const parameterTypesSpec = require('../data/aws_parameter_types.json');
 const awsRefOverrides = require('../data/aws_ref_override.json');
 const awsIntrinsicFunctions = require('../data/aws_intrinsic_functions.json');
-let parameterRuntimeOverride;
+let parameterRuntimeOverride= {};
 // Todo: Allow override for RefOverrides ex. Regions
 
 exports.resetValidator = function resetValidator(){
@@ -16,18 +17,11 @@ exports.resetValidator = function resetValidator(){
     parameterRuntimeOverride = {};
 };
 
-exports.validateJson = function validateJson(json){
-    // TODO: Convert to object
-
+exports.validateFile = function validateFile(path){
+    // Convert to object, this will throw an exception on an error
+    workingInput = parser.openFile(path);
     // Let's go!
    return validateWorkingInput();
-};
-
-exports.validateYaml = function validateYaml(yaml){
-    // TODO: Convert to object
-    let json = {};
-    // Let's go!
-    return validateWorkingInput(json);
 };
 
 exports.validateJsonObject = function validateJsonObject(obj){
