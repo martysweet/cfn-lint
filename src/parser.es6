@@ -1,44 +1,57 @@
 import yaml from 'js-yaml';
-import { CLOUDFORMATION_SCHEMA, localTags, build as buildCfTags } from 'cloudformation-js-yaml-schema';
+import { CLOUDFORMATION_SCHEMA} from 'cloudformation-js-yaml-schema';
 import fs from 'fs';
 
 
 exports.openFile = function openFile(path){
-    return openYaml(path);
+
+    // Check the file path is valid
+    if (!fs.existsSync(path)) {
+        throw Error("Could not find file. Check the input path.");
+    }
+
+    // Try JSON loading
+    try {
+        return openJson(path);
+    }catch (e){
+
+    }
+
+    // Try YAML loading
+    try {
+        return openYaml(path);
+    }catch (e){
+        throw Error("Could not determine file type. Check your template is not malformed.");
+    }
+
 };
-
-function loadYamlSchema(){
-
-}
 
 function openYaml(path){
 
     // Try and load the Yaml
-    try {
-        console.log(path);
-        let yamlParse = yaml.safeLoad(fs.readFileSync(path, 'utf8'), {
-            filename: path,
-            schema: CLOUDFORMATION_SCHEMA,
-            onWarning: (warning) => {
-                console.error(warning);
-                //messages.push(processMessage('Warning', warning));
-                //messages.push(processMessage('Warning', warning));
-            }
-        });
+    let yamlParse = yaml.safeLoad(fs.readFileSync(path, 'utf8'), {
+        filename: path,
+        schema: CLOUDFORMATION_SCHEMA,
+        onWarning: (warning) => {
+            console.error(warning);
+        }
+    });
 
-        lastPlaceInTemplate = yamlParse;
-        cleanupYaml(yamlParse);
-        return yamlParse;
+    lastPlaceInTemplate = yamlParse;
+    cleanupYaml(yamlParse);
 
-    } catch (error) {
-        console.error(error);
-        //messages.push(processMessage('Error', error));
+    if(typeof yamlParse == 'object'){
+        return yamlParse
     }
 
-    return null;
+    // Yaml Parsing error
+    throw new Error("YAML could not be parsed.");
+
 }
 
 function openJson(path){
+
+    return JSON.parse(fs.readFileSync(path, 'utf8'));
 
 }
 
@@ -53,13 +66,6 @@ function cleanupYaml(ref){
             // Resolve the function
             if(ref[key].hasOwnProperty('class') && ref[key].hasOwnProperty('data')){
 
-                // If Data is a yaml resolution object, check it doesn't need resolving
-                if(typeof ref[key]['data'] != 'string' && ref[key]['data'].hasOwnProperty('data')) {
-                    lastPlaceInTemplate = ref[key];
-                    lastKeyInTemplate = 'data';
-                    cleanupYaml(ref[key]['data']);
-                }
-
                 // We have a Yaml generated object
 
                 // Define the name of the intrinsic function
@@ -68,8 +74,7 @@ function cleanupYaml(ref){
                     outputKeyName = "Fn::" + ref[key]["class"];
                 }
 
-                console.log("Yaml Generated Property" + outputKeyName);
-
+                // Convert the object to expected object type
                 let outputData = null;
                 let data = ref[key]['data'];
                 // Specify the data of the key outputKeyName: {}
@@ -81,7 +86,12 @@ function cleanupYaml(ref){
                         outputData = data;
                     }
                 }else{
-
+                    // If Data is a yaml resolution object, check it doesn't need resolving
+                    lastPlaceInTemplate = ref[key];
+                    lastKeyInTemplate = 'data';
+                    cleanupYaml(data);
+                    // Set the resolved object
+                    outputData = data;
                 }
 
                 ref[key] = {};

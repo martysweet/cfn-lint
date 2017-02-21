@@ -6,7 +6,7 @@
     "babel-polyfill": "latest",
     "winston": "latest",
     "js-yaml": "latest",
-    "cloudformation-js-yaml-schema": "latest",
+    "cloudformation-js-yaml-schema": "0.1.0",
     "fs": "latest"
   },
   "devDependencies": {
