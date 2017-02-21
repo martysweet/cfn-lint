@@ -414,7 +414,7 @@ function doIntrinsicGetAZs(ref, key){
             addError("crit", "Fn::GetAZs only supports Ref or string as a parameter", placeInTemplate, null); // TODO: Add GetAtt Doc
         }
     }else{
-        if(toGet != ""){
+        if(toGet != ""){    // TODO: Implement unit test
             region = toGet;
         }
     }

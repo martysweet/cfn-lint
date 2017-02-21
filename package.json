@@ -4,7 +4,10 @@
   "author": "Marty Sweet <msweet2214@gmail.com>",
   "dependencies": {
     "babel-polyfill": "latest",
-    "winston": "latest"
+    "winston": "latest",
+    "js-yaml": "latest",
+    "cloudformation-js-yaml-schema": "latest",
+    "fs": "latest"
   },
   "devDependencies": {
     "gulp": "latest",
