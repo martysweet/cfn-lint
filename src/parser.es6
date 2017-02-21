@@ -7,7 +7,7 @@ exports.openFile = function openFile(path){
 
     // Check the file path is valid
     if (!fs.existsSync(path)) {
-        throw Error("Could not find file. Check the input path.");
+        throw Error(`Could not find file ${path}. Check the input path.`);
     }
 
     // Try JSON loading

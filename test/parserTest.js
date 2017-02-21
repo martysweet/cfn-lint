@@ -28,7 +28,7 @@ describe('parser', () =>{
 
         it('invalid file path should throw an Error', () => {
             let fn = function(){ parser.openFile("some_invalid_path"); };
-            expect(fn).to.throw(/Could not find file. Check the input path./);
+            expect(fn).to.throw(/Could not find file/);
         });
 
 
