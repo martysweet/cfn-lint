@@ -10,6 +10,8 @@ the invalid templates which will throw errors can be found in the [tests/invalid
 
 The tool can be used over the commandline using `cfn-lint`, or can be used as a module within another JavaScript application.
 
+*Note: This tool is currently case-sensitive in relation to AWS CloudFormation types, for example aws::lambda::function != AWS::Lambda::Function.*
+
 ### Example Commands
 `cfn-lint validate my_template.yaml`
 
@@ -19,7 +21,9 @@ The tool can be used over the commandline using `cfn-lint`, or can be used as a 
 
 `cfn-lint docs AWS::Lambda::Function` 
 
-`cfn-lint docs AWS::Lambda::Function.code`
+`cfn-lint docs AWS::Lambda::Function.Code`
+
+`cfn-lint docs AWS::Lambda::Function.Code.S3Bucket`
 
 
 ### Cloudformation Checks
