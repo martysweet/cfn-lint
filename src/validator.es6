@@ -58,8 +58,9 @@ function validateWorkingInput(){
 
     // Use the outputs assigned to resources to resolve references
     resolveReferences();
-    // TODO: See if this would ever set the stopValidation flag
 
+    // Go through the hopefully resolved properties of each resource
+    checkResourceProperties();
 
     return errorObject;
 
@@ -536,5 +537,34 @@ function getRef(reference){
     return null;
 }
 
+function checkResourceProperties(){
+    let resources = workingInput['Resources'];
+    for(let res in resources){
+        if(resources.hasOwnProperty(res) && resources[res].hasOwnProperty('Properties')) {
+            let resourceType = resources[res]['Type'];
+            // TODO Check if any required properties are missing
 
+            for (let prop in res['Properties']) {
+                if(res['Properties'].hasOwnProperty(prop)) {
+                    checkResourceProperty(resourceType, res, prop);
+                }
+            }
+        }
+    }
+}
+
+function checkResourceProperty(resourceType, ref, key){
+
+    // Using the Key, the the Resource Type, get the expected Property type
+    // resourceSpec get type of property using resourceType and property name
+
+    // Check if the property is a string
+
+        // Check if the property resolves to an ARN
+
+    // If the property is an array, check the value of each item in the array
+
+    // If the property has a Type of Something.XYZ, check the property is an object and recurse into it
+
+}
 
