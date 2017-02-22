@@ -279,6 +279,8 @@ function resolveIntrinsicFunction(ref, key){
         case 'Fn::GetAZs':
             return doIntrinsicGetAZs(ref, key);
             break;
+        case 'Fn::Sub':
+            return doIntrinsicSub(ref, key);
         default:
             addError("warn", `Unhandled Intrinsic Function ${key}, this needs implementing. Some errors might be missed.`, placeInTemplate, null);
             return null;
@@ -421,6 +423,59 @@ function doIntrinsicGetAZs(ref, key){
     AZs.push(region + 'c');
     return AZs;
 
+}
+
+function doIntrinsicSub(ref, key){
+    let toGet = ref[key];
+    let replacementStr = null;
+    // We have a simple replace
+    if(typeof toGet == 'string'){
+        replacementStr = toGet;
+    }else{
+        // We should have an array
+        if(toGet.hasOwnProperty(0)){
+            if(typeof toGet[0] == 'string'){
+                replacementStr = toGet[0];
+            }else{
+                // TODO Implement recursive resolving of all the parameters
+            }
+        }else{
+            addError('crit', 'Fn::Sub function malformed, first array element should be present', placeInTemplate, null);
+        }
+        replacementStr = "TO_BE_IMPLEMENTED";
+    }
+
+    // Extract the replacement parts
+    let regex = /\${([A-Za-z:.!]+)/gm
+    let matches = [];
+    let match;
+    while (match = regex.exec(replacementStr)) {
+        matches.push(match[1]);
+    }
+
+    // Resolve the replacement and replace into string using Ref or GetAtt
+    for(let m of matches){
+        let replacementVal = "";
+
+        if(m.indexOf('!') == 1){
+            // Literal Value
+            replacementVal = m;
+        }else if(m.indexOf('.') != -1){
+            // Use Fn::GetAtt
+            let parts = m.split('.');
+            replacementVal = fnGetAtt(parts[0], parts[1]);
+        }else{
+            // Use Ref
+            replacementVal = getRef(m);
+        }
+
+        // Do a string replace on the string
+        replacementStr = replacementStr.replace("${" + m + "}", replacementVal);
+
+    }
+
+    // Set the resolved value as a string
+    return replacementStr;
 }
 
 function fnJoin(join, parts){

@@ -12,6 +12,6 @@
   "Fn::Join": {},
   "Fn::Select": {},
   "Fn::Split": {},
-  "Fn::Sub": {},
+  "Fn::Sub": { "supportedFunctions": ["Fn::Base64", "Fn::FindInMap", "Fn::GetAtt", "Fn::GetAZs", "Fn::If", "Fn::Join", "Fn::Select", "Ref"]},
   "Ref": {}
 }
