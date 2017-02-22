@@ -1,0 +1,21 @@
+{
+  "Outputs": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/outputs-section-structure.html",
+  "Resources": "",
+  "Metadata": "",
+  "Parameters": "",
+  "Fn::Base64": "",
+  "Fn::And": "",
+  "Fn::Equals": "",
+  "Fn::If": "",
+  "Fn::Not": "",
+  "Fn:Or": "",
+  "Fn::FindInMap": "",
+  "Fn:GetAtt": "",
+  "Fn::GetAZs": "",
+  "Fn::ImportValue": "",
+  "Fn::Join": "",
+  "Fn::Select": "",
+  "Fn::Split": "",
+  "Fn::Sub": "",
+  "Ref": ""
+}

@@ -544,6 +544,7 @@ function checkResourceProperties(){
             let resourceType = resources[res]['Type'];
             // TODO Check if any required properties are missing
 
+            // TODO How to handle optional required parameters
             for (let prop in res['Properties']) {
                 if(res['Properties'].hasOwnProperty(prop)) {
                     checkResourceProperty(resourceType, res, prop);

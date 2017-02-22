@@ -8,7 +8,8 @@
     "js-yaml": "latest",
     "cloudformation-js-yaml-schema": "0.1.0",
     "fs": "latest",
-    "commander": "latest"
+    "commander": "latest",
+    "opn": "latest"
   },
   "devDependencies": {
     "gulp": "latest",
