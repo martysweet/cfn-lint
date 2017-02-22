@@ -9,17 +9,7 @@ exports.getDoc = function getDoc(search, browse = true){
 
     // TODO: Make the searching case insensitive
 
-    let docs = [];
-    docs = searchExtraDocs(search);
-
-    if(docs.length == 0){
-        docs = searchInResources(search);
-    }
-
-    if(docs.length == 0){
-        let urlencoded = encodeURI(search);
-        docs = [ `http://docs.aws.amazon.com/search/doc-search.html?searchPath=documentation-guide&searchQuery=${urlencoded}&x=0&y=0&this_doc_product=AWS+CloudFormation&this_doc_guide=User+Guide&doc_locale=en_us#facet_doc_product=AWS%20CloudFormation&facet_doc_guide=User%20Guide` ];
-    }
+    let docs = exports.getUrls(search);
 
     if(browse){
         for(let u of docs) {
@@ -30,6 +20,25 @@ exports.getDoc = function getDoc(search, browse = true){
     let j = docs.join(", ");
     return `Opening ${j} in your browser...`;
 
+};
+
+exports.getUrls = function getUrls(search = ''){
+
+    if(search == null) search = '';
+
+    let docs = searchExtraDocs(search);
+
+    if(docs.length == 0){
+        docs = searchInResources(search);
+    }
+
+    if(docs.length == 0){
+        let urlencoded = encodeURI(search);
+        docs = [ `http://docs.aws.amazon.com/search/doc-search.html?searchPath=documentation-guide&searchQuery=${urlencoded}&x=0&y=0&this_doc_product=AWS+CloudFormation&this_doc_guide=User+Guide&doc_locale=en_us#facet_doc_product=AWS%20CloudFormation&facet_doc_guide=User%20Guide` ];
+    }
+
+
+    return docs;
 };
 
 function searchInResources(search){
@@ -78,7 +87,7 @@ function searchInResources(search){
 
     }
 
-    return null;
+    return [];
 }
 
 function searchExtraDocs(search){

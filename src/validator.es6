@@ -8,6 +8,7 @@ const mockArnPrefix = "arn:aws:mock:region:123456789012:";
 const parameterTypesSpec = require('../data/aws_parameter_types.json');
 const awsRefOverrides = require('../data/aws_ref_override.json');
 const awsIntrinsicFunctions = require('../data/aws_intrinsic_functions.json');
+const docs = require('./docs');
 let parameterRuntimeOverride= {};
 // Todo: Allow override for RefOverrides ex. Regions
 
@@ -86,7 +87,7 @@ function assignParametersOutput(){
             if (!workingInput['Parameters'][param].hasOwnProperty('Type')) {
                 // We are going to assume type if a string to continue validation, but will throw a critical
                 // TODO: Link to CFN Parameter Type documentation
-                addError('crit', `Parameter ${param} does not have a Type defined.`, ['Parameters', param], null);
+                addError('crit', `Parameter ${param} does not have a Type defined.`, ['Parameters', param], "Parameters");
             }else{
 
                 let parameterType = workingInput['Parameters'][param]['Type'];
@@ -94,7 +95,7 @@ function assignParametersOutput(){
                 // Check if the parameter type is valid
                 if(!parameterTypesSpec.hasOwnProperty(parameterType)){
                     // TODO: Link to CFN Parameter Type documentation
-                    addError('crit', `Parameter ${param} has an invalid type of ${parameterType}.`, ['Parameters', param], null);
+                    addError('crit', `Parameter ${param} has an invalid type of ${parameterType}.`, ['Parameters', param], "Parameters");
                 }else{
 
                         // Check the Type of an array specification, otherwise assume string
@@ -115,7 +116,7 @@ function addError(severity, message, resourceStack, help){
     let obj = {
         'message': message,
         'resource': resourceStack.join(' > '),
-        'help': help
+        'documentation': docs.getUrls(help).join(', ')
     };
 
     // Set the information
@@ -133,13 +134,13 @@ function addError(severity, message, resourceStack, help){
 
 function assignResourcesOutputs(){
     if(!workingInput.hasOwnProperty('Resources')){
-        addError('crit', 'Resources section is not defined', [], null);
+        addError('crit', 'Resources section is not defined', [], "Resources");
         stopValidation = true;
         return false;
     }
 
     if(workingInput['Resources'].length == 0){
-        addError('crit', 'Resources is empty', [], null);
+        addError('crit', 'Resources is empty', [], "Resources");
         stopValidation = true;
         return false;
     }
@@ -156,7 +157,7 @@ function assignResourcesOutputs(){
                 addError('crit',
                         `Resource ${res} does not have a Type.`,
                         ['Resources', res],
-                        null // TODO: Go to the resources help page
+                        "Resources"
                 );
             }else{
                 // Check if Type is valid
@@ -166,7 +167,7 @@ function assignResourcesOutputs(){
                     addError('crit',
                         `Resource ${res} has an invalid Type of ${resourceType}.`,
                         ['Resources', res],
-                        null // TODO: go to resources help page
+                        "Resources"
                     );
                 }
             }
@@ -239,7 +240,7 @@ function recursiveDecent(ref){
             // TODO Check for usage inside update policy
 
             if(!(inResourceProperty || inResourceMetadata || inOutputs || inConditions)){
-                addError("crit", `Intrinsic function ${key} is not supported here`, placeInTemplate, null);
+                addError("crit", `Intrinsic function ${key} is not supported here`, placeInTemplate, key);
             }else {
                 // Resolve the function
                 let functionOutput = resolveIntrinsicFunction(ref, key);
@@ -283,7 +284,7 @@ function resolveIntrinsicFunction(ref, key){
         case 'Fn::Sub':
             return doIntrinsicSub(ref, key);
         default:
-            addError("warn", `Unhandled Intrinsic Function ${key}, this needs implementing. Some errors might be missed.`, placeInTemplate, null);
+            addError("warn", `Unhandled Intrinsic Function ${key}, this needs implementing. Some errors might be missed.`, placeInTemplate, "Functions");
             return null;
             break;
     }
@@ -296,12 +297,12 @@ function doIntrinsicRef(ref, key){
 
     // Check if it's of a String type
     if(typeof refValue != "string"){
-        addError("crit", "Intrinsic Function Ref expects a string", placeInTemplate, null);
+        addError("crit", "Intrinsic Function Ref expects a string", placeInTemplate, "Ref");
     }else {
         // Check if the value of the Ref exists
         resolvedVal = getRef(refValue);
         if (resolvedVal == null) {
-            addError('crit', `Referenced value ${refValue} does not exist`, placeInTemplate, null);
+            addError('crit', `Referenced value ${refValue} does not exist`, placeInTemplate, "Ref");
             resolvedVal = "INVALID_REF";
         }
     }
@@ -317,7 +318,7 @@ function doIntrinsicBase64(ref, key){
     if(typeof toEncode != "string"){
         toEncode = resolveIntrinsicFunction(ref[key], Object.keys(ref[key])[0]);
         if(typeof toEncode != "string"){
-            addError("crit", "Parameter of Fn::Base64 does not resolve to a string", placeInTemplate, null); // TODO: base64 doc
+            addError("crit", "Parameter of Fn::Base64 does not resolve to a string", placeInTemplate, "Fn::Base64");
             return "INVALID_FN_BASE64";
         }
     }
@@ -332,7 +333,7 @@ function doIntrinsicJoin(ref, key){
     let join = ref[key][0];
     let parts = ref[key][1] || null;
     if(ref[key].length != 2 || parts == null){
-        addError('crit', 'Invalid parameters for Fn::Join', placeInTemplate, null); // TODO: Docs to Fn::Join
+        addError('crit', 'Invalid parameters for Fn::Join', placeInTemplate, "Fn::Join");
         // Specify this as an invalid string
         return "INVALID_JOIN";
     }else{
@@ -344,11 +345,11 @@ function doIntrinsicJoin(ref, key){
 function doIntrinsicGetAtt(ref, key){
     let toGet = ref[key];
     if(toGet.length != 2){
-        addError("crit", "Invalid parameters for Fn::GetAtt", placeInTemplate, null); // TODO: Add GetAtt Doc
+        addError("crit", "Invalid parameters for Fn::GetAtt", placeInTemplate, "Fn::GetAtt");
         return "INVALID_GET_ATT"
     }else{
         if(typeof toGet[0] != "string"){ // TODO Implement unit test for this
-            addError("crit", "Fn::GetAtt does not support functions for the logical resource name", placeInTemplate, null); // TODO: Add GetAtt Doc
+            addError("crit", "Fn::GetAtt does not support functions for the logical resource name", placeInTemplate, "Fn::GetAtt");
         }
 
         // The AttributeName could be a Ref, so check if it needs resolving
@@ -357,7 +358,7 @@ function doIntrinsicGetAtt(ref, key){
             if(keys[0] == "Ref") { // TODO Implement unit test for this
                 toGet[1] = resolveIntrinsicFunction(toGet[1], "Ref");
             }else{ // TODO Implement unit test for this
-                addError("crit", "Fn::GetAtt only supports Ref within the AttributeName", placeInTemplate, null); // TODO: Add GetAtt Doc
+                addError("crit", "Fn::GetAtt only supports Ref within the AttributeName", placeInTemplate, "Fn::GetAtt");
             }
         }
         let attr = fnGetAtt(toGet[0], toGet[1]);
@@ -372,7 +373,7 @@ function doIntrinsicGetAtt(ref, key){
 function doIntrinsicFindInMap(ref, key){
     let toGet = ref[key];
     if(toGet.length != 3){
-        addError("crit", "Invalid parameters for Fn::FindInMap", placeInTemplate, null); // TODO: Add FindInMap Doc
+        addError("crit", "Invalid parameters for Fn::FindInMap", placeInTemplate, "Fn::FindInMap");
         return "INVALID_FN_FIND_IN_MAP"
     }else {
 
@@ -387,7 +388,7 @@ function doIntrinsicFindInMap(ref, key){
         // Find in map
         let val = fnFindInMap(toGet[0], toGet[1], toGet[2]);
         if(val == null){
-            addError("crit", `Could not find value in map ${toGet[0]}|${toGet[1]}|${toGet[2]}`, placeInTemplate, null);
+            addError("crit", `Could not find value in map ${toGet[0]}|${toGet[1]}|${toGet[2]}`, placeInTemplate, "Fn::FindInMap");
             return "INVALID_MAPPING";
         }else{
             return val;
@@ -404,11 +405,11 @@ function doIntrinsicGetAZs(ref, key){
         let key = Object.keys(toGet)[0];
         if(key == "Ref") {
             if(toGet[key] != 'AWS::Region'){
-                addError("warn", "Fn::GetAZs expects a region, ensure this reference returns a region", placeInTemplate, null);
+                addError("warn", "Fn::GetAZs expects a region, ensure this reference returns a region", placeInTemplate, "Fn::GetAZs");
             }
             region = resolveIntrinsicFunction(toGet, "Ref");
         }else{ // TODO Implement unit test for this
-            addError("crit", "Fn::GetAZs only supports Ref or string as a parameter", placeInTemplate, null); // TODO: Add GetAtt Doc
+            addError("crit", "Fn::GetAZs only supports Ref or string as a parameter", placeInTemplate, "Fn::GetAZs");
         }
     }else{
         if(toGet != ""){    // TODO: Implement unit test
@@ -441,7 +442,7 @@ function doIntrinsicSub(ref, key){
                 // TODO Implement recursive resolving of all the parameters
             }
         }else{
-            addError('crit', 'Fn::Sub function malformed, first array element should be present', placeInTemplate, null);
+            addError('crit', 'Fn::Sub function malformed, first array element should be present', placeInTemplate, "Fn::Sub");
         }
         replacementStr = "TO_BE_IMPLEMENTED";
     }
