@@ -12,14 +12,14 @@ describe('validator', () => {
         });
 
         it('a valid (1.json) template should return an object with validTemplate = true, no crit errors', () => {
-            const input = require('./data/valid/1.json');
+            const input = require('./data/valid/json/1.json');
             let result = validator.validateJsonObject(input);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
 
         it('a valid (2.json) template should return an object with validTemplate = true, no crit errors', () => {
-            const input = require('./data/valid/2.json');
+            const input = require('./data/valid/json/2.json');
             validator.addParameterValue('InstanceType', 't1.micro');
             let result = validator.validateJsonObject(input);
             expect(result).to.have.deep.property('templateValid', true);
@@ -27,14 +27,14 @@ describe('validator', () => {
         });
 
         it('a valid (3.json) template should return an object with validTemplate = true, no crit errors', () => {
-            const input = require('./data/valid/3.json');
+            const input = require('./data/valid/json/3.json');
             let result = validator.validateJsonObject(input);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
 
         it('a valid (4.json) template should return an object with validTemplate = true, no crit errors', () => {
-            const input = require('./data/valid/4.json');
+            const input = require('./data/valid/json/4.json');
             validator.addParameterValue('InstanceType', 't1.micro');
             let result = validator.validateJsonObject(input);
             expect(result).to.have.deep.property('templateValid', true);
