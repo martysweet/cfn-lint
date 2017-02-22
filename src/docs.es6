@@ -9,50 +9,60 @@ exports.getDoc = function getDoc(search, browse = true){
 
     // TODO: Make the searching case insensitive
 
-    let doc = searchExtraDocs(search);
+    let docs = [];
+    docs = searchExtraDocs(search);
 
-    if(doc === null){
-        doc = searchInResources(search);
+    if(docs.length == 0){
+        docs = searchInResources(search);
     }
 
-    if(doc === null){
+    if(docs.length == 0){
         let urlencoded = encodeURI(search);
-        doc = `http://docs.aws.amazon.com/search/doc-search.html?searchPath=documentation-guide&searchQuery=${urlencoded}&x=0&y=0&this_doc_product=AWS+CloudFormation&this_doc_guide=User+Guide&doc_locale=en_us#facet_doc_product=AWS%20CloudFormation&facet_doc_guide=User%20Guide`
+        docs = [ `http://docs.aws.amazon.com/search/doc-search.html?searchPath=documentation-guide&searchQuery=${urlencoded}&x=0&y=0&this_doc_product=AWS+CloudFormation&this_doc_guide=User+Guide&doc_locale=en_us#facet_doc_product=AWS%20CloudFormation&facet_doc_guide=User%20Guide` ];
     }
 
     if(browse){
-        opn(doc);
+        for(let u of docs) {
+            opn(u);
+        }
     }
 
-    return `Opening ${doc} in your browser...`;
+    let j = docs.join(", ");
+    return `Opening ${j} in your browser...`;
 
 };
 
 function searchInResources(search){
-    let dotCount = (search.match(/\./g) || []).length;;
+    let dotCount = (search.match(/\./g) || []).length;
+
 
     if(dotCount == 0){
 
         // Resource Type
         if(awsResources['ResourceTypes'].hasOwnProperty(search)){
-            return awsResources['ResourceTypes'][search]['Documentation'];
+            return [ awsResources['ResourceTypes'][search]['Documentation'] ];
         }
 
     }else if(dotCount == 1){
 
+        let urls = new Array();
+
         // Check PropertyTypes
         if(awsResources['PropertyTypes'].hasOwnProperty(search)){
-            return awsResources['PropertyTypes'][search]['Documentation'];
+            urls.push(awsResources['PropertyTypes'][search]['Documentation']);
         }
 
         // Split and check Resource, then a property of that resource
         let split = search.split('.');
         if(awsResources['ResourceTypes'].hasOwnProperty(split[0])){
             if(awsResources['ResourceTypes'][split[0]]['Properties'].hasOwnProperty(split[1])){
-                return awsResources['ResourceTypes'][split[0]]['Properties'][split[1]]['Documentation'];
+                urls.push(awsResources['ResourceTypes'][split[0]]['Properties'][split[1]]['Documentation']);
             }
         }
 
+        if(urls.length > 0){
+            return urls;
+        }
 
     }else if(dotCount == 2){
 
@@ -62,9 +72,10 @@ function searchInResources(search){
 
         if(awsResources['PropertyTypes'].hasOwnProperty(propertyType)){
             if(awsResources['PropertyTypes'][propertyType]['Properties'].hasOwnProperty(split[2])){
-                return awsResources['PropertyTypes'][propertyType]['Properties'][split[2]]['Documentation'];
+                return [ awsResources['PropertyTypes'][propertyType]['Properties'][split[2]]['Documentation'] ];
             }
         }
+
     }
 
     return null;
@@ -72,8 +83,8 @@ function searchInResources(search){
 
 function searchExtraDocs(search){
     if(awsExtraDocs.hasOwnProperty(search)){
-        return awsExtraDocs[search];
+        return [ awsExtraDocs[search] ];
     }else{
-        return null;
+        return [];
     }
 }
