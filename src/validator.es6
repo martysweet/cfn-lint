@@ -53,7 +53,9 @@ function validateWorkingInput(){
     assignResourcesOutputs();
     if(stopValidation) {
         // Stop the validation early, we can't join stuff if we don't know what to expect
-        logger.error("Stopping validation early as a resource type is invalid.");
+        if(process.env.DEBUG) {
+            logger.error("Stopping validation early as a resource type is invalid.");
+        }
         return errorObject;
     }
 
@@ -128,8 +130,10 @@ function addError(severity, message, resourceStack, help){
     }
 
     // Debug
-    let strResourceStack = resourceStack.join(' > ');
-    logger.debug(`Error thrown: ${severity}: ${message} (${strResourceStack})`);
+    if(process.env.DEBUG) {
+        let strResourceStack = resourceStack.join(' > ');
+        logger.debug(`Error thrown: ${severity}: ${message} (${strResourceStack})`);
+    }
 }
 
 function assignResourcesOutputs(){
@@ -388,7 +392,10 @@ function doIntrinsicFindInMap(ref, key){
         // Find in map
         let val = fnFindInMap(toGet[0], toGet[1], toGet[2]);
         if(val == null){
-            addError("crit", `Could not find value in map ${toGet[0]}|${toGet[1]}|${toGet[2]}`, placeInTemplate, "Fn::FindInMap");
+            addError("crit",
+                `Could not find value in map ${toGet[0]}|${toGet[1]}|${toGet[2]}. Have you tried specifying input parameters?`,
+                placeInTemplate,
+                "Fn::FindInMap");
             return "INVALID_MAPPING";
         }else{
             return val;

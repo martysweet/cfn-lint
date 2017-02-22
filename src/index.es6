@@ -6,15 +6,21 @@
 
 let program = require('commander');
 let colors = require('colors');
-let firstArg, secondArg = null;
+let firstArg, secondArg, params = null;
+
+function list(val) {
+    return val.split(',');
+}
 
 program
     .version('0.0.1')
     .arguments('<cmd> <file>')
+    .option('-p, --parameters <items>', 'List of params', list)
     .action(function (arg1, arg2) {
         firstArg = arg1;
         secondArg = arg2;
     });
+
 
 program.parse(process.argv);
 
@@ -25,7 +31,15 @@ if (typeof firstArg === 'undefined') {
 
 if(firstArg == "validate"){
     const validator = require('./validator');
-    // TODO Add parameter override using flags
+
+    if(program.parameters){
+        for(let param of program.parameters){
+            // Set the parameter
+            let kv = param.split('=');
+            validator.addParameterValue(kv[0], kv[1]);
+        }
+    }
+
     let result = validator.validateFile(secondArg);
 
     // Show the errors

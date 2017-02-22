@@ -11,9 +11,11 @@ the invalid templates which will throw errors can be found in the [tests/invalid
 The tool can be used over the commandline using `cfn-lint`, or can be used as a module within another JavaScript application.
 
 ### Example Commands
-`cfn-lint validate-template my_template.yaml` 
+`cfn-lint validate my_template.yaml`
 
-`cfn-lint validate-template my_template.json`
+`cfn-lint validate my_template.json`
+
+`cfn-lint validate my_template.yaml --parameters key="my value",key2=value2,key3=3`
 
 `cfn-lint docs AWS::Lambda::Function` 
 
@@ -64,10 +66,11 @@ Test Directory: <working dir>\test
 
 ### Local testing of CLI
 
+Environmental Variables
+* DEBUG - Set to receive runtime debug messages
+
 ```
-cd lib
-gulp babel && chmod +x index.js
-./index.js validate ../test/data/valid/3.json
+node ./lib/index.js validate test/data/invalid/1_warning_ref_get_azs_parameter.json -p InstanceType="t1.micro"
 ```
 
 ## Contributions
