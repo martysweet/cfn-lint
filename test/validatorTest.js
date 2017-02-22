@@ -42,63 +42,63 @@ describe('validator', () => {
         });
 
         it('2 invalid resource types should return an object with validTemplate = false, 2 crit errors', () => {
-            const input = require('./data/invalid/1_invalid_resource_type.json');
+            const input = require('./data/invalid/json/1_invalid_resource_type.json');
             let result = validator.validateJsonObject(input);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(2);
         });
 
         it('1 missing parameter type should return an object with validTemplate = false, 1 crit errors', () => {
-            const input = require('./data/invalid/1_missing_parameter_type.json');
+            const input = require('./data/invalid/json/1_missing_parameter_type.json');
             let result = validator.validateJsonObject(input);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
 
         it('1 invalid parameter type should return an object with validTemplate = false, 1 crit errors', () => {
-            const input = require('./data/invalid/1_invalid_parameter_type.json');
+            const input = require('./data/invalid/json/1_invalid_parameter_type.json');
             let result = validator.validateJsonObject(input);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
 
         it('missing section resources should return an object with validTemplate = false, 1 crit errors', () => {
-            const input = require('./data/invalid/no_resources.json');
+            const input = require('./data/invalid/json/no_resources.json');
             let result = validator.validateJsonObject(input);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
 
         it('empty section resources should return an object with validTemplate = false, 1 crit errors', () => {
-            const input = require('./data/invalid/empty_resources.json');
+            const input = require('./data/invalid/json/empty_resources.json');
             let result = validator.validateJsonObject(input);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
 
         it('1 invalid resource reference should return an object with validTemplate = false, 1 crit errors', () => {
-            const input = require('./data/invalid/1_invalid_resource_reference.json');
+            const input = require('./data/invalid/json/1_invalid_resource_reference.json');
             let result = validator.validateJsonObject(input);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
 
         it('1 invalid parameter reference should return an object with validTemplate = false, 1 crit errors', () => {
-            const input = require('./data/invalid/1_invalid_parameter_reference.json');
+            const input = require('./data/invalid/json/1_invalid_parameter_reference.json');
             let result = validator.validateJsonObject(input);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
 
         it('2 invalid Fn::Join\'s should return an object with validTemplate = false, 2 crit errors', () => {
-            const input = require('./data/invalid/2_invalid_intrinsic_join.json');
+            const input = require('./data/invalid/json/2_invalid_intrinsic_join.json');
             let result = validator.validateJsonObject(input);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(2);
         });
 
         it('1 invalid Fn::GetAtt should return an object with validTemplate = false, 1 crit errors', () => {
-            const input = require('./data/invalid/1_invalid_intrinsic_get_att.json');
+            const input = require('./data/invalid/json/1_invalid_intrinsic_get_att.json');
             validator.addParameterValue('InstanceType', 't1.micro');
             let result = validator.validateJsonObject(input);
             expect(result).to.have.deep.property('templateValid', false);
@@ -106,21 +106,21 @@ describe('validator', () => {
         });
 
         it('1 invalid Fn::FindInMap should return an object with validTemplate = false, 1 crit errors', () => {
-            const input = require('./data/invalid/1_invalid_intrinsic_mappings.json');
+            const input = require('./data/invalid/json/1_invalid_intrinsic_mappings.json');
             let result = validator.validateJsonObject(input);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
 
         it('1 invalid Ref within Parameters should return an object with validTemplate = false, 1 crit errors', () => {
-            const input = require('./data/invalid/1_intrinsic_function_in_parameters.json');
+            const input = require('./data/invalid/json/1_intrinsic_function_in_parameters.json');
             let result = validator.validateJsonObject(input);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
 
         it('1 invalid GetAZs parameter should return an object with validTemplate = false, 1 crit errors', () => {
-            const input = require('./data/invalid/1_invalid_get_azs_parameter.json');
+            const input = require('./data/invalid/json/1_invalid_get_azs_parameter.json');
             validator.addParameterValue('InstanceType', 't1.micro');
             let result = validator.validateJsonObject(input);
             expect(result).to.have.deep.property('templateValid', false);
@@ -128,7 +128,7 @@ describe('validator', () => {
         });
 
         it('1 reference non AWS::Region GetAZs parameter should return an object with validTemplate = false, 1 warn errors', () => {
-            const input = require('./data/invalid/1_warning_ref_get_azs_parameter.json');
+            const input = require('./data/invalid/json/1_warning_ref_get_azs_parameter.json');
             validator.addParameterValue('InstanceType', 't1.micro');
             let result = validator.validateJsonObject(input);
             expect(result).to.have.deep.property('templateValid', true);
