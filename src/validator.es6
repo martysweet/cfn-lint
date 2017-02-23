@@ -545,16 +545,16 @@ function getRef(reference){
     return null;
 }
 
-function checkResourceProperties(){
+function checkResourceProperties() {
     let resources = workingInput['Resources'];
-    for(let res in resources){
-        if(resources.hasOwnProperty(res) && resources[res].hasOwnProperty('Properties')) {
+    for (let res in resources) {
+        if (resources.hasOwnProperty(res) && resources[res].hasOwnProperty('Properties')) {
             let resourceType = resources[res]['Type'];
             // TODO Check if any required properties are missing
 
             // TODO How to handle optional required parameters
             for (let prop in res['Properties']) {
-                if(res['Properties'].hasOwnProperty(prop)) {
+                if (res['Properties'].hasOwnProperty(prop)) {
                     checkResourceProperty(resourceType, res, prop);
                 }
             }
@@ -562,18 +562,62 @@ function checkResourceProperties(){
     }
 }
 
-function checkResourceProperty(resourceType, ref, key){
+function checkResourceProperty(resourcePropType, ref, key){
 
     // Using the Key, the the Resource Type, get the expected Property type
     // resourceSpec get type of property using resourceType and property name
+    if(resourceSpec.isValidProperty(resourcePropType, key)){
 
-    // Check if the property is a string
+        // Check if the property is a string
+        let isPrimitiveProperty = resourcesSpec.isPrimitiveProperty(resourcePropType, key);
 
-        // Check if the property resolves to an ARN
-
-    // If the property is an array, check the value of each item in the array
-
-    // If the property has a Type of Something.XYZ, check the property is an object and recurse into it
+        // Check if list of primitives
+        if(resourcesSpec.isPropertyTypeList(resourcePropType, key)) {
+            // Check if the given property is an array
+            if(typeof ref[key] == 'object' && ref[key].constructor === Array){
+                for(let item in ref[key]){
+                    if(ref[key].hasOwnProperty(item)) {
+                        checkProperty(resourcePropType, ref[key], item, isPrimitiveProperty);
+                    }
+                }
+            }else{
+                addError("crit", `Expecting a list for ${key}`, placeInTemplate, `${resourcePropType}.${key}`);
+            }
+        }else{
+            // Expect a single value or object if isPrimitiveProperty == false
+            if(typeof ref[key] == 'object' && (typeof ref[key == 'string'] && isPrimitiveProperty === false)){
+                checkProperty(resourcePropType, ref, key, isPrimitiveProperty);
+            }
+        }
+    }else{
+        addError("crit", ` ${key} is not a valid property of ${resourcePropType}`, placeInTemplate, resourcePropType);
+    }
 
 }
 
+function checkProperty(resourcePropType, ref, key, isPrimitive){
+
+    if(!isPrimitive){
+        // Recursive solve this property
+        if(false){
+            // TODO Implement ARN Checking
+        }else{
+            let k = ref[key];
+            addError("crit", `${key} is expecting an Arn, '${k}' given.`, placeInTemplate, `${resourcePropType}.${key}`);
+        }
+    }else{
+
+        // Check for ARNs
+        if(resourcesSpec.isArnProperty(ref[key])){
+
+        }
+
+        // Switch statment to check primitive types
+
+    }
+    // Check each item for ARN validation
+    // Check if the property need to resolve to an ARN
+
+
+    // Check each item against primitive type, bool/long/string, if custom type, recurse
+}

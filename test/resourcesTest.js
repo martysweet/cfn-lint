@@ -67,7 +67,7 @@ describe('resourceSpec', () =>{
 
     });
 
-    describe('isPrimitiveProperty', () => {
+    describe('isSinglePrimitivePropertyType', () => {
 
         it('should return True for AWS::Lambda::Function > Description', () => {
             let result = resourceSpec.isPrimitiveProperty("AWS::Lambda::Function", "Description");

@@ -88,7 +88,7 @@ function isArnProperty(propertyName){
     return (propertyName.indexOf('Arn') != -1);
 }
 
-function isPrimitiveProperty(parentPropertyType, propertyName){
+function isSinglePrimitivePropertyType(parentPropertyType, propertyName){
     // Check if the parentPropertyType exists
     let spec = getType(parentPropertyType);
     if(spec === null){
@@ -105,9 +105,24 @@ function isPrimitiveProperty(parentPropertyType, propertyName){
     }
 }
 
+function isPropertyTypeList(parentPropertyType, key){
+    // Get the type
+    let spec = getType(parentPropertyType);
+
+    // Check if Type == List
+    return (spec !== null && spec['Properties'][key].hasOwnProperty('Type') && spec['Properties'][key]['Type'] == "List");
+}
+
+
+function getSpecialPropertyType(){
+
+}
+
 exports.getType = getType;
 exports.isValidProperty = isValidProperty;
 exports.isRequiredProperty = isRequiredProperty;
-exports.isPrimitiveProperty = isPrimitiveProperty;
+exports.isPrimitiveProperty = isSinglePrimitivePropertyType;
 exports.isArnProperty = isArnProperty;
 exports.getRefOverride = getRefOverride;
+exports.isPropertyTypeList = isPropertyTypeList;
+exports.getPropertySpec = getPropertySpec;
