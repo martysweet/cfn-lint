@@ -88,7 +88,6 @@ function assignParametersOutput(){
 
             if (!workingInput['Parameters'][param].hasOwnProperty('Type')) {
                 // We are going to assume type if a string to continue validation, but will throw a critical
-                // TODO: Link to CFN Parameter Type documentation
                 addError('crit', `Parameter ${param} does not have a Type defined.`, ['Parameters', param], "Parameters");
             }else{
 
@@ -96,7 +95,6 @@ function assignParametersOutput(){
 
                 // Check if the parameter type is valid
                 if(!parameterTypesSpec.hasOwnProperty(parameterType)){
-                    // TODO: Link to CFN Parameter Type documentation
                     addError('crit', `Parameter ${param} has an invalid type of ${parameterType}.`, ['Parameters', param], "Parameters");
                 }else{
 
@@ -548,14 +546,14 @@ function getRef(reference){
 function checkResourceProperties() {
     let resources = workingInput['Resources'];
     for (let res in resources) {
-        if (resources.hasOwnProperty(res) && resources[res].hasOwnProperty('Properties')) {
-            let resourceType = resources[res]['Type'];
-            // TODO Check if any required properties are missing
+        if (resources.hasOwnProperty(res) && resourcesSpec.getType(resources[res]['Type']) !== null) {
+            if(resources[res].hasOwnProperty('Properties')) {
+                let resourceType = resources[res]['Type'];
+                // TODO Check if any required properties are missing
 
-            // TODO How to handle optional required parameters
-            for (let prop in res['Properties']) {
-                if (res['Properties'].hasOwnProperty(prop)) {
-                    checkResourceProperty(resourceType, res, prop);
+                // TODO How to handle optional required parameters
+                for (let [prop, value] of Object.entries(resources[res]['Properties'])) {
+                    checkResourceProperty(resourceType, resources[res]['Properties'], prop);
                 }
             }
         }
@@ -566,7 +564,7 @@ function checkResourceProperty(resourcePropType, ref, key){
 
     // Using the Key, the the Resource Type, get the expected Property type
     // resourceSpec get type of property using resourceType and property name
-    if(resourceSpec.isValidProperty(resourcePropType, key)){
+    if(resourcesSpec.isValidProperty(resourcePropType, key)){
 
         // Check if the property is a string
         let isPrimitiveProperty = resourcesSpec.isPrimitiveProperty(resourcePropType, key);
@@ -581,6 +579,7 @@ function checkResourceProperty(resourcePropType, ref, key){
                     }
                 }
             }else{
+                // TODO: Check DuplicatesAllowed
                 addError("crit", `Expecting a list for ${key}`, placeInTemplate, `${resourcePropType}.${key}`);
             }
         }else{
@@ -595,15 +594,17 @@ function checkResourceProperty(resourcePropType, ref, key){
 
 }
 
-function checkProperty(resourcePropType, ref, key, isPrimitive){
 
+// Checks a single element of a property
+function checkProperty(resourcePropType, ref, key, isPrimitive){
+console.log("check");
     if(!isPrimitive){
         // Recursive solve this property
         if(false){
             // TODO Implement ARN Checking
         }else{
             let k = ref[key];
-            addError("crit", `${key} is expecting an Arn, '${k}' given.`, placeInTemplate, `${resourcePropType}.${key}`);
+            //addError("crit", `${key} is expecting an Arn, '${k}' given.`, placeInTemplate, `${resourcePropType}.${key}`);
         }
     }else{
 

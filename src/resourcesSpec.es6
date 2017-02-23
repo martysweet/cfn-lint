@@ -125,4 +125,3 @@ exports.isPrimitiveProperty = isSinglePrimitivePropertyType;
 exports.isArnProperty = isArnProperty;
 exports.getRefOverride = getRefOverride;
 exports.isPropertyTypeList = isPropertyTypeList;
-exports.getPropertySpec = getPropertySpec;

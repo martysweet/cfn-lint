@@ -29,6 +29,7 @@ describe('validator', () => {
         it('a valid (3.json) template should return an object with validTemplate = true, no crit errors', () => {
             const input = require('./data/valid/json/3.json');
             let result = validator.validateJsonObject(input);
+            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
@@ -44,6 +45,7 @@ describe('validator', () => {
         it('2 invalid resource types should return an object with validTemplate = false, 2 crit errors', () => {
             const input = require('./data/invalid/json/1_invalid_resource_type.json');
             let result = validator.validateJsonObject(input);
+            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(2);
         });
