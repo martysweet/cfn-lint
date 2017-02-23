@@ -137,6 +137,13 @@ describe('validator', () => {
             expect(result['errors']['warn']).to.have.lengthOf(1);
         });
 
+        it('1 invalid arn property should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = './test/data/invalid/yaml/invalid_arn.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+        });
+
 
     });
 

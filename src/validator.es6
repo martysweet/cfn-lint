@@ -600,17 +600,13 @@ function checkProperty(resourcePropType, ref, key, isPrimitive){
 console.log("check");
     if(!isPrimitive){
         // Recursive solve this property
-        if(false){
-            // TODO Implement ARN Checking
-        }else{
-            let k = ref[key];
-            //addError("crit", `${key} is expecting an Arn, '${k}' given.`, placeInTemplate, `${resourcePropType}.${key}`);
-        }
+
     }else{
 
         // Check for ARNs
-        if(resourcesSpec.isArnProperty(ref[key])){
-
+        if(resourcesSpec.isArnProperty(key) && ref[key].indexOf('aws:arn') == -1){
+            let k = ref[key];
+            addError("crit", `${key} is expecting an Arn, '${k}' given.`, placeInTemplate, `${resourcePropType}.${key}`);
         }
 
         // Switch statment to check primitive types

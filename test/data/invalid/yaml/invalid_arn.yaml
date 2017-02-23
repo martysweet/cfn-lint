@@ -1,0 +1,9 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Resources:
+  Rule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Getting very confused
+      RoleArn: Something that isnt an Arn
+      ScheduleExpression: rate(5)
