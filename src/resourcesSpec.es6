@@ -30,7 +30,11 @@ function getType(type){
 }
 
 function isPropertyTypeFormat(type){
-    return (type.indexOf('.') != -1)
+    if(typeof type == 'string') {
+        return (type.indexOf('.') != -1);
+    }else{
+        throw Error("Invalid type given " + type);
+    }
 }
 
 function getRefOverride(resourceType){
@@ -114,7 +118,26 @@ function isPropertyTypeList(parentPropertyType, key){
 }
 
 
-function getSpecialPropertyType(){
+function getSpecialPropertyType(type, key){
+    let spec = getType(type);
+
+    if(spec['Properties'].hasOwnProperty(key)){
+        if(spec['Properties'][key].hasOwnProperty('ItemType')){
+            return type + '.' + spec['Properties'][key]['ItemType'];
+        }else{
+            if(spec['Properties'][key].hasOwnProperty('Type') && spec['Properties'][key]['Type']){
+                return type + '.' + spec['Properties'][key]['Type'];
+            }
+        }
+    }
+
+    return 'Unknown';
+}
+
+function isPrimitiveTypeList(type, key) {
+    let spec = getType(type);
+
+    return spec['Properties'].hasOwnProperty(key) && spec['Properties'][key].hasOwnProperty('PrimitiveItemType');
 
 }
 
@@ -125,3 +148,5 @@ exports.isPrimitiveProperty = isSinglePrimitivePropertyType;
 exports.isArnProperty = isArnProperty;
 exports.getRefOverride = getRefOverride;
 exports.isPropertyTypeList = isPropertyTypeList;
+exports.getSpecialPropertyType = getSpecialPropertyType;
+exports.isPrimitiveTypeList = isPrimitiveTypeList;

@@ -544,19 +544,52 @@ function getRef(reference){
 }
 
 function checkResourceProperties() {
+
+    // Go into resources
+    placeInTemplate.push('Resources');
     let resources = workingInput['Resources'];
+
+    // Go through each resource
     for (let res in resources) {
+
+        // Check the property exists
         if (resources.hasOwnProperty(res) && resourcesSpec.getType(resources[res]['Type']) !== null) {
+
+            // Add the resource name to stack
+            placeInTemplate.push(res);
+
+            // Do property validation if Properties in present
             if(resources[res].hasOwnProperty('Properties')) {
+
+                // Add Properties to the location stack
+                placeInTemplate.push('Properties');
                 let resourceType = resources[res]['Type'];
+
                 // TODO Check if any required properties are missing
 
                 // TODO How to handle optional required parameters
-                for (let [prop, value] of Object.entries(resources[res]['Properties'])) {
-                    checkResourceProperty(resourceType, resources[res]['Properties'], prop);
-                }
+
+                // Process each Property
+                checkEachProperty(resourceType, resources[res], 'Properties');
+
+                // Remove Properties
+                placeInTemplate.pop();
             }
+
+            // Remove resources
+            placeInTemplate.pop();
         }
+    }
+
+    // Remove Resource
+    placeInTemplate.pop();
+}
+
+function checkEachProperty(resourceType, ref, key){
+    for (let [prop, value] of Object.entries(ref[key])) {
+        placeInTemplate.push(prop);
+        checkResourceProperty(resourceType, ref[key], prop);
+        placeInTemplate.pop();
     }
 }
 
@@ -575,7 +608,12 @@ function checkResourceProperty(resourcePropType, ref, key){
             if(typeof ref[key] == 'object' && ref[key].constructor === Array){
                 for(let item in ref[key]){
                     if(ref[key].hasOwnProperty(item)) {
-                        checkProperty(resourcePropType, ref[key], item, isPrimitiveProperty);
+                        if (resourcesSpec.isPrimitiveTypeList(resourcePropType, key)) {
+
+                        }else{
+                            let specialType = resourcesSpec.getSpecialPropertyType(resourcePropType, key);
+                            checkProperty(resourcePropType, ref[key], item, isPrimitiveProperty, specialType);
+                        }
                     }
                 }
             }else{
@@ -584,25 +622,32 @@ function checkResourceProperty(resourcePropType, ref, key){
             }
         }else{
             // Expect a single value or object if isPrimitiveProperty == false
-            if((typeof ref[key] == 'object' && !isPrimitiveProperty) || (typeof ref[key] == 'string' && isPrimitiveProperty)){
-                checkProperty(resourcePropType, ref, key, isPrimitiveProperty);
+            if(typeof ref[key] == 'object' && !isPrimitiveProperty) {
+                let specialType = resourcesSpec.getSpecialPropertyType(resourcePropType, key);
+                checkProperty(resourcePropType, ref, key, isPrimitiveProperty, specialType);
+            }else if(typeof ref[key] == 'string' && isPrimitiveProperty){
+                checkProperty(resourcePropType, ref, key, isPrimitiveProperty, null);
             }else{
                 addError('warn', `Unhandled property for ${key}`, placeInTemplate, `${resourcePropType}.${key}`);
             }
         }
     }else{
-        addError("crit", ` ${key} is not a valid property of ${resourcePropType}`, placeInTemplate, resourcePropType);
+        addError("crit", `${key} is not a valid property of ${resourcePropType}`, placeInTemplate, resourcePropType);
     }
 
 }
 
 
 // Checks a single element of a property
-function checkProperty(resourcePropType, ref, key, isPrimitive){
-console.log("check");
-    if(!isPrimitive){
-        // Recursive solve this property
+function checkProperty(resourcePropType, ref, key, isPrimitiveType, specialType){
 
+    if(!isPrimitiveType){
+        // Recursive solve this property
+        for(let k in ref[key]) {
+            if(ref[key].hasOwnProperty(k)) {
+                checkResourceProperty(specialType, ref[key], k);
+            }
+        }
     }else{
 
         // Check for ARNs

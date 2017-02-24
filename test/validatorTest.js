@@ -5,15 +5,18 @@ const validator = require('../src/validator');
 
 describe('validator', () => {
 
+    beforeEach(() => {
+        validator.resetValidator();
+    });
+
+
     describe('validateJsonObject', () => {
 
-        beforeEach(() => {
-            validator.resetValidator();
-        });
 
         it('a valid (1.json) template should return an object with validTemplate = true, no crit errors', () => {
             const input = require('./data/valid/json/1.json');
             let result = validator.validateJsonObject(input);
+            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
@@ -133,9 +136,15 @@ describe('validator', () => {
             const input = require('./data/invalid/json/1_warning_ref_get_azs_parameter.json');
             validator.addParameterValue('InstanceType', 't1.micro');
             let result = validator.validateJsonObject(input);
+            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['warn']).to.have.lengthOf(1);
         });
+
+    });
+
+
+    describe('propertyValidation', () => {
 
         it('1 invalid arn property should return an object with validTemplate = false, 1 crit errors', () => {
             const input = './test/data/invalid/yaml/invalid_arn.yaml';
@@ -145,13 +154,24 @@ describe('validator', () => {
             expect(result['errors']['crit'][0]['message']).to.contain('is expecting an Arn');
         });
 
-        it('1 invalid property name should return an object with validTemplate = false, 1 crit errors', () => {
-            const input = './test/data/invalid/yaml/invalid_property_name.yaml';
+        it('1 invalid property name of ResourceType should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = './test/data/invalid/yaml/invalid_resourcetype_property_name.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]['message']).to.contain('is not a valid property of');
+            expect(result['errors']['crit'][0]['resource']).to.contain('Resources > Rule');
+        });
+
+        it('1 invalid property name of PropertyType should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = './test/data/invalid/yaml/invalid_propertytype_property_name.yaml';
             let result = validator.validateFile(input);
             console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
-            expect(result['errors']['crit'][0]['message']).to.contain('is not a valid property of');
+
+            expect(result['errors']['crit'][0]['message']).to.contain('S3Buckettttt is not a valid property of AWS::Lambda::Function.Code');
+
         });
 
 
@@ -159,9 +179,6 @@ describe('validator', () => {
 
 
     describe('validateYamlFile', ()=> {
-        beforeEach(() => {
-            validator.resetValidator();
-        });
 
         it('a valid (1.json) template should return an object with validTemplate = true, no crit errors', () => {
             const input = 'test/data/valid/yaml/1.yaml';
