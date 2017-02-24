@@ -31,7 +31,7 @@ function getType(type){
 
 function isPropertyTypeFormat(type){
     if(typeof type == 'string') {
-        return (type.indexOf('.') != -1);
+        return (type.indexOf('.') != -1) || type == 'Tag';
     }else{
         throw Error("Invalid type given " + type);
     }
@@ -123,6 +123,9 @@ function getSpecialPropertyType(type, key){
 
     if(spec['Properties'].hasOwnProperty(key)){
         if(spec['Properties'][key].hasOwnProperty('ItemType')){
+            if(spec['Properties'][key]['ItemType'] == 'Tag'){
+                return 'Tag';
+            }
             return type + '.' + spec['Properties'][key]['ItemType'];
         }else{
             if(spec['Properties'][key].hasOwnProperty('Type') && spec['Properties'][key]['Type']){

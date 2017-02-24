@@ -169,9 +169,15 @@ describe('validator', () => {
             console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
-
             expect(result['errors']['crit'][0]['message']).to.contain('S3Buckettttt is not a valid property of AWS::Lambda::Function.Code');
+        });
 
+        it('1 invalid property name of Tag list should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = './test/data/invalid/yaml/invalid_ec2_tags_property_name.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]['message']).to.contain('Keyyyyy is not a valid property of');
         });
 
 

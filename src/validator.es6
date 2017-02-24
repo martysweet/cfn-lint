@@ -643,11 +643,26 @@ function checkProperty(resourcePropType, ref, key, isPrimitiveType, specialType)
 
     if(!isPrimitiveType){
         // Recursive solve this property
-        for(let k in ref[key]) {
-            if(ref[key].hasOwnProperty(k)) {
-                checkResourceProperty(specialType, ref[key], k);
+        // If we have a List
+        if(typeof ref[key] == 'object' && ref[key].constructor === Array) {
+            for (let k in ref[key]) {
+                if(ref[key].hasOwnProperty(k)){
+                    for (let a in ref[key][k]) {
+                        if(ref[key][k].hasOwnProperty(a)) {
+                            checkResourceProperty(specialType, ref[key][k], a);
+                        }
+                    }
+                }
+            }
+        }else{
+            // If we have an object
+            for(let k in ref[key]) {
+                if(ref[key].hasOwnProperty(k)) {
+                    checkResourceProperty(specialType, ref[key], k);
+                }
             }
         }
+
     }else{
 
         // Check for ARNs
