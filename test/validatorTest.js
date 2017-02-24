@@ -142,6 +142,16 @@ describe('validator', () => {
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]['message']).to.contain('is expecting an Arn');
+        });
+
+        it('1 invalid property name should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = './test/data/invalid/yaml/invalid_property_name.yaml';
+            let result = validator.validateFile(input);
+            console.log(result['errors']['crit']);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]['message']).to.contain('is not a valid property of');
         });
 
 

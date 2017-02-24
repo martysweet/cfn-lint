@@ -606,7 +606,7 @@ console.log("check");
     }else{
 
         // Check for ARNs
-        if(resourcesSpec.isArnProperty(key) && ref[key].indexOf('aws:arn') == -1){
+        if(resourcesSpec.isArnProperty(key) && ref[key].indexOf('arn:aws') != 0){ // First position in string
             let k = ref[key];
             addError("crit", `${key} is expecting an Arn, '${k}' given.`, placeInTemplate, `${resourcePropType}.${key}`);
         }
