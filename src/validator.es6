@@ -584,8 +584,10 @@ function checkResourceProperty(resourcePropType, ref, key){
             }
         }else{
             // Expect a single value or object if isPrimitiveProperty == false
-            if(typeof ref[key] == 'object' && (typeof ref[key == 'string'] && isPrimitiveProperty === false)){
+            if((typeof ref[key] == 'object' && !isPrimitiveProperty) || (typeof ref[key] == 'string' && isPrimitiveProperty)){
                 checkProperty(resourcePropType, ref, key, isPrimitiveProperty);
+            }else{
+                addError('warn', `Unhandled property for ${key}`, placeInTemplate, `${resourcePropType}.${key}`);
             }
         }
     }else{
