@@ -125,4 +125,4 @@ would return a string similar to `"My i-0a0a0a0a0a`.
 
 ## Contributions
 
-We love contributions! Please check out our [Contributor's Guide](CONTRIBUTING.md) for more information on how our projects are organized and how to get started.
+Please check out the [Contributor's Guide](CONTRIBUTING.md) for more information on how to get started.

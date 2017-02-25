@@ -23,9 +23,9 @@ tool you should aim for a minimum of 2 tests per feature:
 * One which causes the template validation to succeed
 
 Each test should have it's own Cloudformation file, either JSON or YAML and should be named clearly about the test it should
-fail, for example `1_ref_not_strinf_param.json`. If your feature has many possible failure scenarios, please create tests for all of these.
+fail, for example `1_ref_not_string_param.json`. If your feature has many possible failure scenarios, please create tests for all of these.
 
-###### Submitting Pull Requests
+## Submitting Pull Requests
 
 0. If you don't know how to fork and PR, [see here](https://help.github.com/articles/about-pull-requests/).
 1. Fork the repo.
