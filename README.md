@@ -105,7 +105,8 @@ Environmental Variables
 * DEBUG - Set to receive runtime debug messages
 
 ```
-node ./lib/index.js validate test/data/invalid/1_warning_ref_get_azs_parameter.json -p InstanceType="t1.micro"
+$ npm link
+$ cfn-lint <some command>
 ```
 
 ### Resource Attribute Mocking

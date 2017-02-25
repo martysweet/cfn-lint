@@ -23,7 +23,16 @@
     "chai": "latest"
   },
   "scripts": {
-    "test": "mocha --compilers js:babel-register --require babel-polyfill"
+    "build": "babel src --presets babel-preset-es2015 --out-dir lib",
+    "test": "mocha --compilers js:babel-register --require babel-polyfill",
+    "prepublish": "npm run build"
   },
-  "engine": "node >= 6.x.x"
+  "engine": "node >= 6.x.x",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/martysweet/cfn-lint.git"
+  },
+  "bin": {
+    "cfn-lint": "./lib/index.js"
+  }
 }

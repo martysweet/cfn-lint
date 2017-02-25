@@ -602,11 +602,11 @@ function checkResourceProperties() {
 }
 
 function checkEachProperty(resourceType, ref, key){
-    for (let [prop, value] of Object.entries(ref[key])) {
+    Object.keys(ref[key]).forEach((prop) => {
         placeInTemplate.push(prop);
         checkResourceProperty(resourceType, ref[key], prop);
         placeInTemplate.pop();
-    }
+    });
 }
 
 function checkResourceProperty(resourcePropType, ref, key){
