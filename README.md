@@ -1,7 +1,6 @@
 # cfn-lint
 Hopefully a comprehensive CloudFormation Linting tool, just what you need to speed development
 
-## What does it do?
 `cfn-lint` is a tool used to improve your CloudFormation development cycle. If you are here, you are probably
 fed up of waiting for 10 minutes or more before CloudFormation gives you an error due to a typo. This tool aims to 
 remove that waste of time. The tool takes the CloudFormation template, and resolves all the Intrinsic functions 
@@ -12,7 +11,16 @@ The tool can be used over the commandline using `cfn-lint`, or can be used as a 
 
 *Note: This tool is currently case-sensitive in relation to AWS CloudFormation types, for example aws::lambda::function != AWS::Lambda::Function.*
 
-### Example Commands
+## Installation
+
+You can install with `npm`:
+
+```
+$ npm install -g cfn-lint
+```
+
+
+## How to use?
 `cfn-lint validate my_template.yaml`
 
 `cfn-lint validate my_template.json`
@@ -29,7 +37,7 @@ The tool can be used over the commandline using `cfn-lint`, or can be used as a 
 ### What can cfn-lint do?
 * Read JSON + YAML (Including YAML short form)
 * Detect missing properties
-* Detect misspelt properties
+* Detect invalid property names
 * Detect invalid Ref
 * Detect invalid mappings
 * Detect invalid format
@@ -43,7 +51,8 @@ The tool can be used over the commandline using `cfn-lint`, or can be used as a 
 * Go to the documentation from Command Line (see above examples)
 
 
-### What does cfn-lint not yet support?
+### What does cfn-lint not currently support?
+* Detect invalid property types
 * Condition support
 * Fn::ImportValue
 * Fn::Select
