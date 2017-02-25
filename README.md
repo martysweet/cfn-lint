@@ -1,4 +1,5 @@
 # cfn-lint
+[![CircleCI](https://circleci.com/gh/martysweet/cfn-lint.svg?style=svg)](https://circleci.com/gh/martysweet/cfn-lint)
 Hopefully a comprehensive CloudFormation Linting tool, just what you need to speed development
 
 `cfn-lint` is a tool used to improve your CloudFormation development cycle. If you are here, you are probably
