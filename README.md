@@ -26,13 +26,35 @@ The tool can be used over the commandline using `cfn-lint`, or can be used as a 
 `cfn-lint docs AWS::Lambda::Function.Code.S3Bucket`
 
 
-### Cloudformation Checks
+### What can cfn-lint do?
+* Read JSON + YAML (Including YAML short form)
+* Detect missing properties
+* Detect misspelt properties
+* Detect invalid Ref
+* Detect invalid mappings
+* Detect invalid format
+* Fn::FindInMap
+* Fn::GetAtt
+* Fn::GetAZs
+* Fn::Join
+* Fn::Base64
+* Fn::Sub (Only direct substitution currently supported e.g. `${MyParam}`)
+* Ref
+* Go to the documentation from Command Line (see above examples)
 
-#### Intrinsic Functions
 
-#### Resource Attributes
+### What does cfn-lint not yet support?
+* Condition support
+* Fn::ImportValue
+* Fn::Select
+* Fn::Split
+* Fn::Sub (Only direct substitution currently supported e.g. `${MyParam}`)
+* Fn::And
+* Fn::Equals
+* Fn::If (Currently first element is taken regardless of the condition)
+* Fn::Not
+* Fn::Or
 
-A critical error will be thrown if an invalid resource property is defined or a resource does not specify a property which is required.
 
 ## FAQ
 
@@ -77,4 +99,21 @@ Environmental Variables
 node ./lib/index.js validate test/data/invalid/1_warning_ref_get_azs_parameter.json -p InstanceType="t1.micro"
 ```
 
+### Resource Attribute Mocking
+In order to simulate the intrinsic functions to catch errors before deployment,
+attributes for Properties and Resources are mocked. This can be seen within the 
+`assignResourcesOutputs()` and `assignParameterOutputs()` of [validator.es6](src/validator.es6).
+A resource will always have a Ref of `mock-ref-RESOURCENAME` and will be attached other
+attributes which can be used with the `Fn::GetAtt` function. This allows for checking
+if attributes exist for a specific resource before deploying the template for real.
+
+### Intrinsic Functions
+
+Each intrinsic function has a signature of `doIntrinsicXYZ(ref, key)` and is called by the
+`resolveIntrinsicFunction(ref, key)` function. The `doIntrinsic..` function should return
+the resolved value of the function. For example, for Fn::Sub, an input of `"My ${MyInstance}"`
+would return a string similar to `"My i-0a0a0a0a0a`.
+
 ## Contributions
+
+We love contributions! Please check out our [Contributor's Guide](CONTRIBUTING.md) for more information on how our projects are organized and how to get started.

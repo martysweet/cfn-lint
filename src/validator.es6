@@ -46,6 +46,8 @@ function validateWorkingInput(){
 
     // TODO: Check keys for parameter are valid, ex. MinValue/MaxValue
 
+    // TODO: Evaluate Conditions
+
     // Check parameters and assign outputs
     assignParametersOutput();
 
@@ -176,7 +178,7 @@ function assignResourcesOutputs(){
 
 
             // Create a map for storing the output attributes for this Resource
-            let refValue = "example-ref-" + res;
+            let refValue = "mock-ref-" + res;
             let refOverride = resourcesSpec.getRefOverride(resourceType);
             if(refOverride !== null){
                 if(refOverride == "arn"){
@@ -285,6 +287,8 @@ function resolveIntrinsicFunction(ref, key){
             break;
         case 'Fn::Sub':
             return doIntrinsicSub(ref, key);
+        case 'Fn::If':
+            return doIntrinsicIf(ref, key);
         default:
             addError("warn", `Unhandled Intrinsic Function ${key}, this needs implementing. Some errors might be missed.`, placeInTemplate, "Functions");
             return null;
@@ -484,6 +488,18 @@ function doIntrinsicSub(ref, key){
     // Set the resolved value as a string
     return replacementStr;
 }
+
+// TODO: Needs implementing properly
+function doIntrinsicIf(ref, key){
+    let toGet = ref[key];
+
+    // Check the value of the condition
+
+    // Set the 1st or 2nd param as according to the condition
+
+    return toGet[1];
+}
+
 
 function fnJoin(join, parts){
     // Go through each parts and ensure they are resolved
