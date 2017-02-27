@@ -1,5 +1,3 @@
-AWSTemplateFormatVersion: '2010-09-09'
-
 Resources:
 
   Instance:
@@ -11,8 +9,3 @@ Resources:
       InstanceType: "t1.micro"
       AvailabilityZone: "eu-west-1"
       ImageId: "ami-aaaaaaa"
-      Tags:
-      - Key: environment
-        Value: p
-      - Keyyyyy: Name
-        Value: test

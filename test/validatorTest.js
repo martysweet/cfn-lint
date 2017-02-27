@@ -144,6 +144,27 @@ describe('validator', () => {
     });
 
 
+    describe('templateVersion', () => {
+
+        it('1 invalid template version should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = './test/data/invalid/yaml/invalid_template_format_version.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]['message']).to.contain('AWSTemplateFormationVersion should be');
+        });
+
+        it('1 missing template version should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = './test/data/invalid/yaml/missing_template_format_version.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]['message']).to.contain('Missing AWSTemplateFormatVersion in template');
+        });
+
+
+    });
+
     describe('propertyValidation', () => {
 
         it('1 invalid arn property should return an object with validTemplate = false, 1 crit errors', () => {

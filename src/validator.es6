@@ -42,7 +42,15 @@ function validateWorkingInput(){
     // Ensure we are working from a clean slate
     //exports.resetValidator();
 
-    // TODO: Check for base keys such as version
+    // Check AWS Template Formation Version
+    if(workingInput.hasOwnProperty(['AWSTemplateFormatVersion'])){
+        if(workingInput['AWSTemplateFormatVersion'] != '2010-09-09'){
+            addError('crit', 'AWSTemplateFormationVersion should be "2010-09-09"', ['AWSTemplateFormatVersion'], 'AWSTemplateFormatVersion');
+        }
+    }else{
+        addError('crit', 'Missing AWSTemplateFormatVersion in template', [], 'AWSTemplateFormatVersion');
+    }
+
 
     // TODO: Check keys for parameter are valid, ex. MinValue/MaxValue
 
