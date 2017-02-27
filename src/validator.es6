@@ -497,17 +497,53 @@ function doIntrinsicSub(ref, key){
     return replacementStr;
 }
 
-// TODO: Needs implementing properly
 function doIntrinsicIf(ref, key){
     let toGet = ref[key];
 
     // Check the value of the condition
+    if(toGet.length == 3){
+
+        // Check toGet[0] is a valid condition
+        if(!workingInput['Conditions'][toGet[0]] || !workingInput['Conditions'].hasOwnProperty(toGet[0])){
+            addError('crit', `Fn::If must reference a valid condition`, placeInTemplate, 'Fn::If');
+        }else {
+
+            let condition = false;
+            // Check the valid of the condition, returning argument 1 on true or 2 on failure
+            if(workingInput['Conditions'][toGet[0]].hasOwnProperty('Attributes') &&
+                workingInput['Conditions'][toGet[0]]['Attributes'].hasOwnProperty('Value')){
+                let condition = workingInput['Conditions'][toGet[0]]['Attributes']['Value'];
+            }   // If invalid, we will default to false, a previous error would have been thrown
+
+            // Set the value
+            let value = null;
+            if(condition){
+                value = toGet[1];
+            }else{
+                value = toGet[2];
+            }
+
+            if(typeof value != "string") {
+                let keys = Object.keys(value);
+                if (awsIntrinsicFunctions['Fn::If']['supportedFunctions'].indexOf(keys[0]) != -1) {
+                    return resolveIntrinsicFunction(value, keys[0]);
+                }else{
+                    addError('crit', `Fn::If does not allow ${keys[0]} as a nested function`, placeInTemplate, 'Fn::If');
+                }
+            }else{
+                return value;
+            }
+
+        }
+
+    }else{
+        addError('crit', `Fn::If must have 3 arguments, only ${toGet.length} given.`, placeInTemplate, 'Fn::If');
+    }
 
     // Set the 1st or 2nd param as according to the condition
 
-    return toGet[1];
+    return "INVALID_IF_STATEMENT";
 }
-
 
 function fnJoin(join, parts){
     // Go through each parts and ensure they are resolved
@@ -642,7 +678,9 @@ function checkResourceProperty(resourcePropType, ref, key){
                 }
             }else{
                 // TODO: Check DuplicatesAllowed
-                addError("crit", `Expecting a list for ${key}`, placeInTemplate, `${resourcePropType}.${key}`);
+                if(typeof ref[key] != 'string' && ref[key] != '') { // Allow an empty string instead of a list
+                    addError("crit", `Expecting a list for ${key}`, placeInTemplate, `${resourcePropType}.${key}`);
+                }
             }
         }else{
             // Expect a single value or object if isPrimitiveProperty == false

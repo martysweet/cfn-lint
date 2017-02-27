@@ -2,7 +2,7 @@
   "Fn::Base64": {},
   "Fn::And": {},
   "Fn::Equals": {},
-  "Fn::If": {},
+  "Fn::If": {"supportedFunctions": ["Fn::Base64", "Fn::FindInMap", "Fn::GetAtt", "Fn::GetAZs", "Fn::If", "Fn::Join", "Fn::Select", "Ref"]},
   "Fn::Not": {},
   "Fn:Or": {},
   "Fn::FindInMap": {},

@@ -49,6 +49,7 @@ $ npm install -g cfn-lint
 * Fn::Join
 * Fn::Base64
 * Fn::Sub (Only direct substitution currently supported e.g. `${MyParam}`)
+* Fn::If
 * Ref
 * Go to the documentation from Command Line (see above examples)
 
@@ -62,7 +63,6 @@ $ npm install -g cfn-lint
 * Fn::Sub (Only direct substitution currently supported e.g. `${MyParam}`)
 * Fn::And
 * Fn::Equals
-* Fn::If (Currently first element is taken regardless of the condition)
 * Fn::Not
 * Fn::Or
 

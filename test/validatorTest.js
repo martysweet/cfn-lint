@@ -146,6 +146,26 @@ describe('validator', () => {
 
     describe('templateVersion', () => {
 
+        it('1 invalid if condition arguments should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = './test/data/invalid/yaml/invalid_if_statement_arguments.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]['message']).to.contain('Fn::If must have 3 arguments');
+        });
+
+        it('1 invalid if condition should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = './test/data/invalid/yaml/invalid_if_statement_condition.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]['message']).to.contain('Fn::If must reference a valid condition');
+        });
+
+    });
+
+    describe('templateVersion', () => {
+
         it('1 invalid template version should return an object with validTemplate = false, 1 crit errors', () => {
             const input = './test/data/invalid/yaml/invalid_template_format_version.yaml';
             let result = validator.validateFile(input);
