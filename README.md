@@ -50,22 +50,21 @@ $ npm install -g cfn-lint
 * Fn::Base64
 * Fn::Sub (Only direct substitution currently supported e.g. `${MyParam}`)
 * Fn::If
+* Fn::Equals
+* Fn::Not
+* Fn::Or
+* Fn::And
+* Condition support
 * Ref
 * Go to the documentation from Command Line (see above examples)
 
 
 ### What does cfn-lint not currently support?
 * Detect invalid property types
-* Condition support
 * Fn::ImportValue
 * Fn::Select
 * Fn::Split
 * Fn::Sub (Only direct substitution currently supported e.g. `${MyParam}`)
-* Fn::And
-* Fn::Equals
-* Fn::Not
-* Fn::Or
-
 
 ## FAQ
 

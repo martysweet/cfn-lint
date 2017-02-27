@@ -54,10 +54,12 @@ function validateWorkingInput(){
 
     // TODO: Check keys for parameter are valid, ex. MinValue/MaxValue
 
-    // TODO: Evaluate Conditions
 
     // Check parameters and assign outputs
     assignParametersOutput();
+
+    // Evaluate Conditions
+    assignConditionsOutputs();
 
     // Assign outputs to all the resources
     assignResourcesOutputs();
@@ -142,6 +144,60 @@ function addError(severity, message, resourceStack, help){
         let strResourceStack = resourceStack.join(' > ');
         logger.debug(`Error thrown: ${severity}: ${message} (${strResourceStack})`);
     }
+}
+
+function assignConditionsOutputs(){
+
+    let allowedIntrinsicFunctions = ['Fn::And', 'Fn::Equals', 'Fn::If', 'Fn::Not', 'Fn::Or'];
+
+    if(!workingInput.hasOwnProperty('Conditions')){
+        return;
+    }
+
+    // For through each condition
+    placeInTemplate.push('Conditions');
+    for(let cond in workingInput['Conditions']) {
+        if (workingInput['Conditions'].hasOwnProperty(cond)) {
+            placeInTemplate.push(cond);
+            let condition = workingInput['Conditions'][cond];
+
+            // Check the value of condition is an object
+            if(typeof condition != 'object'){
+                addError('crit', `Condition should consist of an intrinsic function of type ${allowedIntrinsicFunctions.join(', ')}`,
+                                placeInTemplate,
+                                'Conditions');
+                workingInput['Conditions'][cond] = {};
+                workingInput['Conditions'][cond]['Attributes'] = {};
+                workingInput['Conditions'][cond]['Attributes']['Output'] = false;
+            }else{
+                // Check the value of this is Fn::And, Fn::Equals, Fn::If, Fn::Not or Fn::Or
+                let keys = Object.keys(condition);
+                if(allowedIntrinsicFunctions.indexOf(keys[0]) != -1){
+
+                    // Resolve recursively
+                    let val = resolveIntrinsicFunction(condition, keys[0]);
+
+                    // Check is boolean type
+                    workingInput['Conditions'][cond]['Attributes'] = {};
+                    workingInput['Conditions'][cond]['Attributes']['Output'] = false;
+                    if(val === true || val === false){
+                        workingInput['Conditions'][cond]['Attributes']['Output'] = val;
+                    }else{
+                        addError('crit', `Condition did not resolve to a boolean value, got ${val}`, placeInTemplate, 'Conditions');
+                    }
+
+                }else{
+                    // Invalid intrinsic function
+                    addError('crit', `Condition does not allow function '${keys[0]}' here`, placeInTemplate, 'Conditions');
+                }
+            }
+
+
+            placeInTemplate.pop();
+        }
+    }
+    placeInTemplate.pop();
+
 }
 
 function assignResourcesOutputs(){
@@ -273,10 +329,32 @@ function recursiveDecent(ref){
     placeInTemplate.pop();
 }
 
+function resolveCondition(ref, key){
+    let toGet = ref[key];
+    let condition = false;
+
+    if(workingInput.hasOwnProperty('Conditions') && workingInput['Conditions'].hasOwnProperty(toGet)){
+
+        // Check the valid of the condition, returning argument 1 on true or 2 on failure
+        if (workingInput['Conditions'][toGet].hasOwnProperty('Attributes') &&
+            workingInput['Conditions'][toGet]['Attributes'].hasOwnProperty('Output')) {
+            condition = workingInput['Conditions'][toGet]['Attributes']['Output'];
+        }   // If invalid, we will default to false, a previous error would have been thrown
+
+    }else{
+        addError('crit', `Condition '${toGet}' must reference a valid condition`, placeInTemplate, 'Condition');
+    }
+
+    return condition;
+}
+
 function resolveIntrinsicFunction(ref, key){
     switch(key){
         case 'Ref':
             return doIntrinsicRef(ref, key);
+            break;
+        case 'Condition':
+            return resolveCondition(ref, key);
             break;
         case 'Fn::Join':
             return doIntrinsicJoin(ref, key);
@@ -295,8 +373,19 @@ function resolveIntrinsicFunction(ref, key){
             break;
         case 'Fn::Sub':
             return doIntrinsicSub(ref, key);
+            break;
         case 'Fn::If':
             return doIntrinsicIf(ref, key);
+            break;
+        case 'Fn::Equals':
+            return doIntrinsicEquals(ref, key);
+            break;
+        case 'Fn::Or':
+            return doIntrinsicOr(ref, key);
+            break;
+        case 'Fn::Not':
+            return doIntrinsicNot(ref, key);
+            break;
         default:
             addError("warn", `Unhandled Intrinsic Function ${key}, this needs implementing. Some errors might be missed.`, placeInTemplate, "Functions");
             return null;
@@ -504,36 +593,25 @@ function doIntrinsicIf(ref, key){
     if(toGet.length == 3){
 
         // Check toGet[0] is a valid condition
-        if(!workingInput['Conditions'][toGet[0]] || !workingInput['Conditions'].hasOwnProperty(toGet[0])){
-            addError('crit', `Fn::If must reference a valid condition`, placeInTemplate, 'Fn::If');
-        }else {
+        toGet[0] = resolveCondition({'Condition': toGet[0]}, 'Condition');
 
-            let condition = false;
-            // Check the valid of the condition, returning argument 1 on true or 2 on failure
-            if(workingInput['Conditions'][toGet[0]].hasOwnProperty('Attributes') &&
-                workingInput['Conditions'][toGet[0]]['Attributes'].hasOwnProperty('Value')){
-                let condition = workingInput['Conditions'][toGet[0]]['Attributes']['Value'];
-            }   // If invalid, we will default to false, a previous error would have been thrown
+        // Set the value
+        let value = null;
+        if(toGet[0]){
+            value = toGet[1];
+        }else{
+            value = toGet[2];
+        }
 
-            // Set the value
-            let value = null;
-            if(condition){
-                value = toGet[1];
+        if(typeof value != "string") {
+            let keys = Object.keys(value);
+            if (awsIntrinsicFunctions['Fn::If']['supportedFunctions'].indexOf(keys[0]) != -1) {
+                return resolveIntrinsicFunction(value, keys[0]);
             }else{
-                value = toGet[2];
+                addError('crit', `Fn::If does not allow ${keys[0]} as a nested function`, placeInTemplate, 'Fn::If');
             }
-
-            if(typeof value != "string") {
-                let keys = Object.keys(value);
-                if (awsIntrinsicFunctions['Fn::If']['supportedFunctions'].indexOf(keys[0]) != -1) {
-                    return resolveIntrinsicFunction(value, keys[0]);
-                }else{
-                    addError('crit', `Fn::If does not allow ${keys[0]} as a nested function`, placeInTemplate, 'Fn::If');
-                }
-            }else{
-                return value;
-            }
-
+        }else{
+            return value;
         }
 
     }else{
@@ -543,6 +621,106 @@ function doIntrinsicIf(ref, key){
     // Set the 1st or 2nd param as according to the condition
 
     return "INVALID_IF_STATEMENT";
+}
+
+function doIntrinsicEquals(ref, key) {
+    let toGet = ref[key];
+
+    // Check the value of the condition
+    if (toGet.length == 2) {
+
+        // Resolve first argument
+        if(typeof toGet[0] == 'object'){
+            let keys = Object.keys(toGet[0]);
+            if(awsIntrinsicFunctions['Fn::If']['supportedFunctions'].indexOf(keys[0]) != -1) {
+                toGet[0] = resolveIntrinsicFunction(toGet[0], keys[0]);
+            }else{
+                addError('crit', `Fn::Equals does not support the ${keys[0]} function in argument 1`);
+            }
+        }
+
+        // Resolve second argument
+        if(typeof toGet[1] == 'object'){
+            let keys = Object.keys(toGet[1]);
+            if(awsIntrinsicFunctions['Fn::If']['supportedFunctions'].indexOf(keys[0]) != -1) {
+                toGet[0] = resolveIntrinsicFunction(toGet[1], keys[0]);
+            }else{
+                addError('crit', `Fn::Equals does not support the ${keys[1]} function in argument 2`);
+            }
+        }
+
+        // Compare
+        return (toGet[0] == toGet[1]);
+
+    }else{
+        addError('crit', `Fn::Equals expects 2 arguments, ${toGet.length} given.`, placeInTemplate, 'Fn::Equals');
+    }
+
+    return false;
+}
+
+function doIntrinsicOr(ref, key) {
+    let toGet = ref[key];
+
+    // Check the value of the condition
+    if (toGet.length > 1 && toGet.length < 11) {
+        let argumentIsTrue = false;
+
+        // Resolve each argument
+        for(let arg in toGet){
+            if(toGet.hasOwnProperty(arg)) {
+                if (typeof toGet[arg] == 'object') {
+                    let keys = Object.keys(toGet[arg]);
+                    if(awsIntrinsicFunctions['Fn::Or']['supportedFunctions'].indexOf(keys[0]) != -1) {
+                        toGet[arg] = resolveIntrinsicFunction(toGet[arg], keys[0]);
+                    }else{
+                        addError('crit', `Fn::Or does not support function '${keys[0]}' here`, placeInTemplate, 'Fn::Or');
+                    }
+                }
+                // Set to true if needed
+                if (toGet[arg] === true) {
+                    argumentIsTrue = true;
+                }
+            }
+        }
+
+        return argumentIsTrue;
+
+    }else{
+        addError('crit', `Expecting Fn::Or to have between 2 and 10 arguments`, placeInTemplate, 'Fn::Or');
+    }
+}
+
+function doIntrinsicNot(ref, key){
+
+    let toGet = ref[key];
+
+    // Check the value of the condition
+    if (toGet.length == 1){
+
+        // Resolve if an object
+        if(typeof toGet[0] == 'object') {
+            let keys = Object.keys(toGet[0]);
+            if (awsIntrinsicFunctions['Fn::Not']['supportedFunctions'].indexOf(keys[0]) != -1) {
+                toGet[0] = resolveIntrinsicFunction(toGet[0], keys[0]);
+            } else {
+                addError('crit', `Fn::Not does not support function '${keys[0]}' here`, placeInTemplate, 'Fn::Or');
+            }
+        }
+
+        // Negate
+        if (toGet[0] === true || toGet[0] === false) {
+            return !toGet[0];
+        } else {
+            addError('crit', `Fn:::Not did not resolve to a boolean value, ${toGet[0]} given`, placeInTemplate, 'Fn::Not');
+        }
+
+
+    }else{
+        addError('crit', `Expecting Fn::Not to have exactly 1 argument`, placeInTemplate, 'Fn::Not');
+    }
+
+    return false;
 }
 
 function fnJoin(join, parts){

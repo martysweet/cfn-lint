@@ -144,7 +144,7 @@ describe('validator', () => {
     });
 
 
-    describe('templateVersion', () => {
+    describe('conditions', () => {
 
         it('1 invalid if condition arguments should return an object with validTemplate = false, 1 crit errors', () => {
             const input = './test/data/invalid/yaml/invalid_if_statement_arguments.yaml';
@@ -159,7 +159,23 @@ describe('validator', () => {
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
-            expect(result['errors']['crit'][0]['message']).to.contain('Fn::If must reference a valid condition');
+            expect(result['errors']['crit'][0]['message']).to.contain('Condition \'UseProdConditionnnnn\' must reference a valid condition');
+        });
+
+        it('1 invalid condition value should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = './test/data/invalid/yaml/invalid_condition_value.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]['message']).to.contain('Condition does not allow function \'Ref\' here');
+        });
+
+        it('1 invalid condition value type should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = './test/data/invalid/yaml/invalid_condition_value_type.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]['message']).to.contain('Condition should consist of an intrinsic function of type');
         });
 
     });
