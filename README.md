@@ -42,6 +42,7 @@ $ npm install -g cfn-lint
 * Detect invalid Ref
 * Detect invalid mappings
 * Detect invalid format
+* Missing or invalid AWSTemplateFormatVersion
 * Fn::FindInMap
 * Fn::GetAtt
 * Fn::GetAZs
@@ -79,6 +80,12 @@ will help in adding a check to the utility:
 * The working Resource/Statement which resolves the error
 
 You can add an issue on the [Github Issue Page](https://github.com/martysweet/cfn-lint/issues). Thanks for helping out!
+
+### Doesn't the AWS API provide this functionality?
+Partially. The AWS API `cloudformation validate-template` only checks the validity of the template, this includes the
+expected parameters for intrinsic functions, resource types and general structure of the JSON or YAML template it has been given. The
+AWS API does not detect incorrect resource property names or incorrect resource property types (e.g. string, bool, list) which are typically 
+only detected when CloudFormation attempts to deploy the resources with the incorrect configurations.
 
 ### Got any other questions?
 Ask a question on the [Github Issue Page](https://github.com/martysweet/cfn-lint/issues)!
