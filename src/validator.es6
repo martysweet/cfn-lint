@@ -536,21 +536,31 @@ function doIntrinsicGetAZs(ref, key){
 function doIntrinsicSub(ref, key){
     let toGet = ref[key];
     let replacementStr = null;
+    let definedParams = null;
     // We have a simple replace
     if(typeof toGet == 'string'){
         replacementStr = toGet;
     }else{
-        // We should have an array
-        if(toGet.hasOwnProperty(0)){
+
+        // We should have an array of parameters
+        if(toGet[0]){
+
             if(typeof toGet[0] == 'string'){
                 replacementStr = toGet[0];
             }else{
-                // TODO Implement recursive resolving of all the parameters
+                addError('crit', 'Fn::Sub expects first argument to be a string', placeInTemplate, 'Fn::Sub');
             }
+
+            if(typeof toGet[1] == 'object'){
+                definedParams = toGet[1];
+            }else{
+                addError('crit', 'Fn::Sub expects second argument to be a variable map', placeInTemplate, 'Fn::Sub');
+            }
+
+
         }else{
             addError('crit', 'Fn::Sub function malformed, first array element should be present', placeInTemplate, "Fn::Sub");
         }
-        replacementStr = "TO_BE_IMPLEMENTED";
     }
 
     // Extract the replacement parts
@@ -569,12 +579,23 @@ function doIntrinsicSub(ref, key){
             // Literal Value
             replacementVal = m;
         }else if(m.indexOf('.') != -1){
-            // Use Fn::GetAtt
-            let parts = m.split('.');
-            replacementVal = fnGetAtt(parts[0], parts[1]);
+            // Check if m is within the key value map
+            if(definedParams !== null && definedParams.hasOwnProperty(m) && typeof definedParams[m] !== 'string'){
+                definedParams[m] = resolveIntrinsicFunction(definedParams[m], Object.keys(m)[0]);
+                replacementVal = definedParams[m];
+            }else{
+                // Use Fn::GetAtt
+                let parts = m.split('.');
+                replacementVal = fnGetAtt(parts[0], parts[1]);
+            }
         }else{
-            // Use Ref
-            replacementVal = getRef(m);
+            if(definedParams !== null && definedParams.hasOwnProperty(m) && typeof definedParams[m] !== 'string'){
+                definedParams[m] = resolveIntrinsicFunction(definedParams[m], Object.keys(m)[0]);
+                replacementVal = definedParams[m];
+            }else {
+                // Use Ref
+                replacementVal = getRef(m);
+            }
         }
 
         // Do a string replace on the string

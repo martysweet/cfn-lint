@@ -144,6 +144,17 @@ describe('validator', () => {
     });
 
 
+    describe('Fn::Sub', () => {
+
+        it('1 valid Fn::Sub with var map should return an object with validTemplate = true, 0 crit errors', () => {
+            const input = './test/data/valid/yaml/valid_sub_with_var_map.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+    });
+
     describe('conditions', () => {
 
         it('1 invalid if condition arguments should return an object with validTemplate = false, 1 crit errors', () => {
@@ -239,7 +250,6 @@ describe('validator', () => {
 
 
     });
-
 
     describe('validateYamlFile', ()=> {
 

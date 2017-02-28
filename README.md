@@ -48,7 +48,7 @@ $ npm install -g cfn-lint
 * Fn::GetAZs
 * Fn::Join
 * Fn::Base64
-* Fn::Sub (Only direct substitution currently supported e.g. `${MyParam}`)
+* Fn::Sub
 * Fn::If
 * Fn::Equals
 * Fn::Not
@@ -61,10 +61,10 @@ $ npm install -g cfn-lint
 
 ### What does cfn-lint not currently support?
 * Detect invalid property types
+* Verbose parsing errors when reading JSON or YAML
 * Fn::ImportValue
 * Fn::Select
 * Fn::Split
-* Fn::Sub (Only direct substitution currently supported e.g. `${MyParam}`)
 
 ## FAQ
 
