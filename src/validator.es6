@@ -868,7 +868,18 @@ function checkResourceProperty(resourcePropType, ref, key){
                 for(let item in ref[key]){
                     if(ref[key].hasOwnProperty(item)) {
                         if (resourcesSpec.isPrimitiveTypeList(resourcePropType, key)) {
-                            // TODO: Some more looping?!
+                            // Get the Primitive List Type
+                            let primitiveItemType = resourcesSpec.getPrimitiveItemType(resourcePropType, key);
+                            // Go through each item in list
+                            for(let li in ref[key]){
+
+                                if(ref[key].hasOwnProperty(li)){
+                                    placeInTemplate.push(li);
+                                    checkProperty(resourcePropType, ref[key], li, true, primitiveItemType);
+                                    placeInTemplate.pop();
+                                }
+
+                            }
                         }else{
                             let propertyType = resourcesSpec.getPropertyType(resourcePropType, key);
                             checkProperty(resourcePropType, ref[key], item, isPrimitiveProperty, propertyType);
@@ -931,37 +942,36 @@ function checkProperty(resourcePropType, ref, key, isPrimitiveType, propertyType
         }
 
         // Switch statment to check primitive types
-        let val = ref[key];
-        switch(propertyType){
-            case 'String':
-                // Check the value starts with a /w
-                if(!(/^[\w\/]/.test(val))){
-                    addError('crit', `Expected type String for ${key}, got value ${val}`, placeInTemplate, `${resourcePropType}.${key}`);
-                }
-                break;
-            case 'Boolean':
-                if(!(/^[(true|false)]/i.test(val))){
-                    addError('crit', `Expected type Boolean for ${key}, got value ${val}`, placeInTemplate, `${resourcePropType}.${key}`);
-                }
-                break;
-            case 'Integer':
-                try{
-                    parseInt(val);
-                }catch(e){
-                    addError('crit', `Expected type Integer for ${key}, got value ${val}`, placeInTemplate, `${resourcePropType}.${key}`);
-                }
-                break;
-            case 'Json':
-                if(typeof val != 'object'){
-                    addError('crit', `Expected a JSON document for ${key}, got value ${val}`, placeInTemplate, `${resourcePropType}.${key}`);
-                }
-                break;
-        }
+        checkPropertyType(ref, key, propertyType);
 
     }
-    // Check each item for ARN validation
-    // Check if the property need to resolve to an ARN
+}
 
-
-    // Check each item against primitive type, bool/long/string, if custom type, recurse
+function checkPropertyType(ref, key, propertyType){
+    let val = ref[key];
+    switch(propertyType){
+        case 'String':  // A 'String' in CF can be an int or something starting with a number, it's a loose check
+                        // Check the value starts with a letter or / or _
+            if(!(/^[\w\/]/.test(val))){
+                addError('crit', `Expected type String for ${key}, got value ${val}`, placeInTemplate, `${propertyType}.${key}`);
+            }
+            break;
+        case 'Boolean':
+            if(!(/^[(true|false)]/i.test(val))){
+                addError('crit', `Expected type Boolean for ${key}, got value ${val}`, placeInTemplate, `${propertyType}.${key}`);
+            }
+            break;
+        case 'Integer':
+            try{
+                parseInt(val);
+            }catch(e){
+                addError('crit', `Expected type Integer for ${key}, got value ${val}`, placeInTemplate, `${propertyType}.${key}`);
+            }
+            break;
+        case 'Json':
+            if(typeof val != 'object'){
+                addError('crit', `Expected a JSON document for ${key}, got value ${val}`, placeInTemplate, `${propertyType}.${key}`);
+            }
+            break;
+    }
 }

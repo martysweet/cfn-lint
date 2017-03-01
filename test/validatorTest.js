@@ -248,6 +248,15 @@ describe('validator', () => {
             expect(result['errors']['crit'][0]['message']).to.contain('Keyyyyy is not a valid property of');
         });
 
+        it('1 string property should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = './test/data/invalid/yaml/invalid_property_type_string.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(2);
+            expect(result['errors']['crit'][0]['message']).to.contain('Expected type String for 0');
+            expect(result['errors']['crit'][1]['message']).to.contain('Expected type String for SubnetId');
+        });
+
 
     });
 

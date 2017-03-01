@@ -147,6 +147,14 @@ function isPrimitiveTypeList(type, key) {
 
 }
 
+function getPrimitiveItemType(type, key){
+    let spec = getType(type);
+
+    if(isPrimitiveTypeList(type, key)){
+        return spec['Properties'][key]['PrimitiveItemType'];
+    }
+}
+
 exports.getType = getType;
 exports.isValidProperty = isValidProperty;
 exports.isRequiredProperty = isRequiredProperty;
@@ -155,4 +163,5 @@ exports.isArnProperty = isArnProperty;
 exports.getRefOverride = getRefOverride;
 exports.isPropertyTypeList = isPropertyTypeList;
 exports.getPropertyType = getPropertyTypeApi;
+exports.getPrimitiveItemType = getPrimitiveItemType;
 exports.isPrimitiveTypeList = isPrimitiveTypeList;
