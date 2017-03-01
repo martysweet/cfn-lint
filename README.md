@@ -57,14 +57,17 @@ $ npm install -g cfn-lint
 * Condition support
 * Ref
 * Go to the documentation from Command Line (see above examples)
+* Detecting invalid property types
 
-
-### What does cfn-lint not currently support?
-* Detect invalid property types
+### What needs improvement/support?
 * Verbose parsing errors when reading JSON or YAML
 * Fn::ImportValue
 * Fn::Select
 * Fn::Split
+* Test coverage for Conditions and Property checking
+* Shorthand YAML doesn't always parse correctly
+* Refactor Property checking to be clearer
+
 
 ## FAQ
 
