@@ -868,10 +868,10 @@ function checkResourceProperty(resourcePropType, ref, key){
                 for(let item in ref[key]){
                     if(ref[key].hasOwnProperty(item)) {
                         if (resourcesSpec.isPrimitiveTypeList(resourcePropType, key)) {
-
+                            // TODO: Some more looping?!
                         }else{
-                            let specialType = resourcesSpec.getSpecialPropertyType(resourcePropType, key);
-                            checkProperty(resourcePropType, ref[key], item, isPrimitiveProperty, specialType);
+                            let propertyType = resourcesSpec.getPropertyType(resourcePropType, key);
+                            checkProperty(resourcePropType, ref[key], item, isPrimitiveProperty, propertyType);
                         }
                     }
                 }
@@ -883,11 +883,9 @@ function checkResourceProperty(resourcePropType, ref, key){
             }
         }else{
             // Expect a single value or object if isPrimitiveProperty == false
-            if(typeof ref[key] == 'object' && !isPrimitiveProperty) {
-                let specialType = resourcesSpec.getSpecialPropertyType(resourcePropType, key);
-                checkProperty(resourcePropType, ref, key, isPrimitiveProperty, specialType);
-            }else if(typeof ref[key] == 'string' && isPrimitiveProperty){
-                checkProperty(resourcePropType, ref, key, isPrimitiveProperty, null);
+            if((typeof ref[key] == 'object' && !isPrimitiveProperty) || (typeof ref[key] == 'string' && isPrimitiveProperty)) {
+                let propertyType = resourcesSpec.getPropertyType(resourcePropType, key);
+                checkProperty(resourcePropType, ref, key, isPrimitiveProperty, propertyType);
             }else{
                 addError('warn', `Unhandled property for ${key}`, placeInTemplate, `${resourcePropType}.${key}`);
             }
@@ -900,7 +898,7 @@ function checkResourceProperty(resourcePropType, ref, key){
 
 
 // Checks a single element of a property
-function checkProperty(resourcePropType, ref, key, isPrimitiveType, specialType){
+function checkProperty(resourcePropType, ref, key, isPrimitiveType, propertyType){
 
     if(!isPrimitiveType){
         // Recursive solve this property
@@ -910,7 +908,7 @@ function checkProperty(resourcePropType, ref, key, isPrimitiveType, specialType)
                 if(ref[key].hasOwnProperty(k)){
                     for (let a in ref[key][k]) {
                         if(ref[key][k].hasOwnProperty(a)) {
-                            checkResourceProperty(specialType, ref[key][k], a);
+                            checkResourceProperty(propertyType, ref[key][k], a);
                         }
                     }
                 }
@@ -919,7 +917,7 @@ function checkProperty(resourcePropType, ref, key, isPrimitiveType, specialType)
             // If we have an object
             for(let k in ref[key]) {
                 if(ref[key].hasOwnProperty(k)) {
-                    checkResourceProperty(specialType, ref[key], k);
+                    checkResourceProperty(propertyType, ref[key], k);
                 }
             }
         }
@@ -933,6 +931,16 @@ function checkProperty(resourcePropType, ref, key, isPrimitiveType, specialType)
         }
 
         // Switch statment to check primitive types
+        switch(propertyType){
+            case 'String':
+                break;
+            case 'Boolean':
+                break;
+            case 'Integer':
+                break;
+            case 'Json': // TODO Check this
+                break;
+        }
 
     }
     // Check each item for ARN validation

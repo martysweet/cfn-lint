@@ -118,11 +118,14 @@ function isPropertyTypeList(parentPropertyType, key){
 }
 
 
-function getSpecialPropertyType(type, key){
+function getPropertyTypeApi(type, key){
     let spec = getType(type);
 
     if(spec['Properties'].hasOwnProperty(key)){
-        if(spec['Properties'][key].hasOwnProperty('ItemType')){
+        if(spec['Properties'][key].hasOwnProperty('PrimitiveType')){
+            return spec['Properties'][key]['PrimitiveType'];
+        }
+        else if(spec['Properties'][key].hasOwnProperty('ItemType')){
             if(spec['Properties'][key]['ItemType'] == 'Tag'){
                 return 'Tag';
             }
@@ -151,5 +154,5 @@ exports.isPrimitiveProperty = isSinglePrimitivePropertyType;
 exports.isArnProperty = isArnProperty;
 exports.getRefOverride = getRefOverride;
 exports.isPropertyTypeList = isPropertyTypeList;
-exports.getSpecialPropertyType = getSpecialPropertyType;
+exports.getPropertyType = getPropertyTypeApi;
 exports.isPrimitiveTypeList = isPrimitiveTypeList;
