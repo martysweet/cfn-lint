@@ -21,7 +21,7 @@ exports.openFile = function openFile(path){
     try {
         return openYaml(path);
     }catch (e){
-        throw Error("Could not determine file type. Check your template is not malformed.");
+        throw Error(`Could not determine file type. Check your template is not malformed. ${e.message}`);
     }
 
 };

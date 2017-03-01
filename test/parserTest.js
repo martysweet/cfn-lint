@@ -16,6 +16,12 @@ describe('parser', () =>{
             expect(result['Resources']['WebServer']['Properties']['ImageId']['Fn::FindInMap'][1]['Ref']).to.equal("AWS::Region");
         });
 
+        it('valid yaml with shorthand should return valid javascript object', () => {
+            let result = parser.openFile("./test/data/valid/yaml/valid_shorthand_sub.yaml");
+            expect(result).to.not.equal(undefined);
+            expect(result).to.not.equal(null);
+        });
+
         it('invalid yaml should throw an Error', () => {
             let fn = function(){ parser.openFile("./test/data/invalid/yaml/invalid_yaml.yaml"); };
             expect(fn).to.throw(/Could not determine file type. Check your template is not malformed./);
