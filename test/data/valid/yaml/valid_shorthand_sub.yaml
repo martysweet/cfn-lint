@@ -18,6 +18,7 @@ Outputs:
 
   Output3:
     Description: Output1
-    Name: !Sub
+    Value: !Sub
       - www.${abc}
       - { abc: !Ref WebServerSecurityGroup }
+

@@ -37,7 +37,6 @@ $ npm install -g cfn-lint
 
 ### What can cfn-lint do?
 * Read JSON + YAML (Including YAML short form)
-* Detect missing properties
 * Detect invalid property names
 * Detect invalid Ref
 * Detect invalid mappings
@@ -61,13 +60,14 @@ $ npm install -g cfn-lint
 
 ### What needs improvement/support?
 * Verbose parsing errors when reading JSON or YAML
+* Detect missing required properties
 * Fn::ImportValue
 * Fn::Select
 * Fn::Split
 * Test coverage for Conditions and Property checking
 * Shorthand YAML doesn't always parse correctly
 * Refactor Property checking to be clearer
-
+* !Sub with mapping (https://github.com/yyolk/cloudformation-js-yaml-schema/issues/1)
 
 ## FAQ
 
