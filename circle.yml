@@ -11,3 +11,5 @@ deployment:
     branch: master
     commands:
       - npm run deploy
+      - git add package.json
+      - git commit -m "Bump patch version"
