@@ -20,6 +20,8 @@ You can install with `npm`:
 $ npm install -g cfn-lint
 ```
 
+If you get `/usr/bin/env: 'node': No such file or directory` ensure your system has NodeJs installed. On Debian systems you may need to symlink node to nodejs due to namespacing issues (`ln -s /usr/bin/nodejs /usr/bin/node`).
+
 
 ## How to use?
 `cfn-lint validate my_template.yaml`
