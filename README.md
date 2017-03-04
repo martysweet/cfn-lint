@@ -65,9 +65,7 @@ $ npm install -g cfn-lint
 * Fn::Select
 * Fn::Split
 * Test coverage for Conditions and Property checking
-* Shorthand YAML doesn't always parse correctly
 * Refactor Property checking to be clearer
-* !Sub with mapping (https://github.com/yyolk/cloudformation-js-yaml-schema/issues/1)
 
 ## FAQ
 
