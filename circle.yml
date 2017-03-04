@@ -13,4 +13,3 @@ deployment:
     branch: master
     commands:
       - npm run deploy
-      - git push
