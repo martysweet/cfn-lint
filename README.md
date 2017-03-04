@@ -1,5 +1,5 @@
-# cfn-lint
-[![CircleCI](https://circleci.com/gh/martysweet/cfn-lint.svg?style=svg)](https://circleci.com/gh/martysweet/cfn-lint)
+# cfn-lint [![CircleCI](https://circleci.com/gh/martysweet/cfn-lint.svg?style=svg)](https://circleci.com/gh/martysweet/cfn-lint)
+
 A more friendly CloudFormation JSON and YAML Validator
 
 `cfn-lint` is a tool used to improve your CloudFormation development cycle. If you are here, you are probably
