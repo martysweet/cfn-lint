@@ -386,6 +386,9 @@ function resolveIntrinsicFunction(ref, key){
         case 'Fn::Not':
             return doIntrinsicNot(ref, key);
             break;
+        case 'Fn::ImportValue':
+            return doIntrinsicImportValue(ref, key);
+            break;
         default:
             addError("warn", `Unhandled Intrinsic Function ${key}, this needs implementing. Some errors might be missed.`, placeInTemplate, "Functions");
             return null;
@@ -742,6 +745,31 @@ function doIntrinsicNot(ref, key){
     }
 
     return false;
+}
+
+function doIntrinsicImportValue(ref, key){
+    let toGet = ref[key];
+
+    // If not string, resolve using the supported functions
+    if(typeof toGet == 'object') {
+        let keys = Object.keys(toGet);
+        if (awsIntrinsicFunctions['Fn::ImportValue']['supportedFunctions'].indexOf(keys[0]) != -1) {
+            toGet = resolveIntrinsicFunction(toGet, keys[0]);
+        } else {
+            addError('crit', `Fn::ImportValue does not support function '${keys[0]}' here`, placeInTemplate, 'Fn::ImportValue');
+            return 'INVALID_FN_IMPORTVALUE';
+        }
+    }
+
+    // Resolve
+    if(typeof toGet == 'string'){
+        return "IMPORTEDVALUE" + toGet; // TODO: Consider making this commandline defined
+    }else{
+        addError(`warn`, `Something went wrong when resolving references for a Fn::ImportValue`, placeInTemplate, 'Fn::ImportValue');
+        return 'INVALID_FN_IMPORTVALUE';
+    }
+
+
 }
 
 function fnJoin(join, parts){

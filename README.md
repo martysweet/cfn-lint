@@ -53,6 +53,7 @@ $ npm install -g cfn-lint
 * Fn::Not
 * Fn::Or
 * Fn::And
+* Fn::ImportValue
 * Condition support
 * Ref
 * Go to the documentation from Command Line (see above examples)
@@ -61,7 +62,7 @@ $ npm install -g cfn-lint
 
 ### What needs improvement/support?
 * Verbose parsing errors when reading JSON or YAML
-* Fn::ImportValue
+* Fn::ImportValue - to support CLI injection (Like Params currently does)
 * Fn::Select
 * Fn::Split
 * Test coverage for Conditions and Property checking
