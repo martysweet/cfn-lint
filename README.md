@@ -61,7 +61,7 @@ $ npm install -g cfn-lint
 * Detect missing required properties
 
 ### What needs improvement/support?
-* Verbose parsing errors when reading JSON or YAML
+* Verbose parsing errors when reading invalid JSON
 * Fn::ImportValue - to support CLI injection (Like Params currently does)
 * Fn::Select
 * Fn::Split
