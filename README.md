@@ -66,6 +66,7 @@ $ npm install -g cfn-lint
 * Fn::Split
 * Test coverage for Conditions and Property checking
 * Refactor Property checking to be clearer
+* Circular dependency checking
 
 ### Features that would be nice, but aren't currently possible
 * Detect conditional required properties (Information doesn't exist in AWS Resource Specification)
