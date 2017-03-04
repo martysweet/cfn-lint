@@ -5,11 +5,12 @@ machine:
 dependencies:
   pre:
     - echo -e "$NPM_USER\n$NPM_PASSWORD\n$NPM_EMAIL" | npm login
+    - git config --global user.name  "CircleCI"
+    - git config --global user.email "npm@martysweet.co.uk"
 
 deployment:
   production:
     branch: master
     commands:
-      - git config --global user.name  "CircleCI"
-      - git config --global user.email "npm@martysweet.co.uk"
       - npm run deploy
+      - git push
