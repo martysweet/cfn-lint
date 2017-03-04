@@ -120,6 +120,7 @@ describe('validator', () => {
         it('1 invalid Ref within Parameters should return an object with validTemplate = false, 1 crit errors', () => {
             const input = require('./data/invalid/json/1_intrinsic_function_in_parameters.json');
             let result = validator.validateJsonObject(input);
+            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
@@ -243,6 +244,7 @@ describe('validator', () => {
         it('1 invalid property name of Tag list should return an object with validTemplate = false, 1 crit errors', () => {
             const input = './test/data/invalid/yaml/invalid_ec2_tags_property_name.yaml';
             let result = validator.validateFile(input);
+            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
             expect(result['errors']['crit'][0]['message']).to.contain('Keyyyyy is not a valid property of');
@@ -255,6 +257,24 @@ describe('validator', () => {
             expect(result['errors']['crit']).to.have.lengthOf(2);
             expect(result['errors']['crit'][0]['message']).to.contain('Expected type String for 0');
             expect(result['errors']['crit'][1]['message']).to.contain('Expected type String for SubnetId');
+        });
+
+        it('1 missing propertyType property should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = './test/data/invalid/yaml/invalid_required_propertytype_prop_missing.yaml';
+            let result = validator.validateFile(input);
+            console.log(result['errors']['crit']);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]['message']).to.contain('Required property Key missing for type Tag');
+        });
+
+        it('1 missing resourceType  property should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = './test/data/invalid/yaml/invalid_required_resourcetype_prop_missing.yaml';
+            let result = validator.validateFile(input);
+            console.log(result['errors']['crit']);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]['message']).to.contain('Required property Runtime missing for type AWS::Lambda::Function');
         });
 
 

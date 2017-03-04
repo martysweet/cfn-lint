@@ -57,15 +57,18 @@ $ npm install -g cfn-lint
 * Ref
 * Go to the documentation from Command Line (see above examples)
 * Detecting invalid property types
+* Detect missing required properties
 
 ### What needs improvement/support?
 * Verbose parsing errors when reading JSON or YAML
-* Detect missing required properties
 * Fn::ImportValue
 * Fn::Select
 * Fn::Split
 * Test coverage for Conditions and Property checking
 * Refactor Property checking to be clearer
+
+### Features that would be nice, but aren't currently possible
+* Detect conditional required properties (Information doesn't exist in AWS Resource Specification)
 
 ## FAQ
 

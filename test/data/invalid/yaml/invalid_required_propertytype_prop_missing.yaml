@@ -14,6 +14,4 @@ Resources:
       Tags:
       - Key: environment
         Value: p
-      - Keyyyyy: Name
-        Key: Mute required check
-        Value: test
+      - Value: test

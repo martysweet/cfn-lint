@@ -824,7 +824,8 @@ function checkResourceProperties() {
                 placeInTemplate.push('Properties');
                 let resourceType = resources[res]['Type'];
 
-                // TODO Check if any required properties are missing
+                // Check for missing required properties
+                checkForMissingProperties(resources[res]['Properties'], resourceType);
 
                 // TODO How to handle optional required parameters
 
@@ -907,6 +908,26 @@ function checkResourceProperty(resourcePropType, ref, key){
 
 }
 
+function checkForMissingProperties(properties, resourceType){
+    let requiredProperties = resourcesSpec.getRequiredProperties(resourceType);
+
+    // Remove the properties we have from the required property list
+    for(let prop in properties){
+        if(properties.hasOwnProperty(prop)){
+            let indexOfRequired = requiredProperties.indexOf(prop);
+            if(indexOfRequired !== -1){
+                requiredProperties.splice(indexOfRequired, 1);
+            }
+        }
+    }
+
+    // If we have any items left over, they have not been defined
+    if(requiredProperties.length > 0){
+        for(let prop of requiredProperties){
+            addError(`crit`, `Required property ${prop} missing for type ${resourceType}`, placeInTemplate, resourceType);
+        }
+    }
+}
 
 // Checks a single element of a property
 function checkProperty(resourcePropType, ref, key, isPrimitiveType, propertyType){
@@ -925,7 +946,8 @@ function checkProperty(resourcePropType, ref, key, isPrimitiveType, propertyType
                 }
             }
         }else{
-            // If we have an object
+            // If we have an object, Check for missing required properties
+            checkForMissingProperties(ref[key], propertyType);
             for(let k in ref[key]) {
                 if(ref[key].hasOwnProperty(k)) {
                     checkResourceProperty(propertyType, ref[key], k);

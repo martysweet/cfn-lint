@@ -155,6 +155,23 @@ function getPrimitiveItemType(type, key){
     }
 }
 
+function getRequiredProperties(type){
+    let spec = getType(type);
+    let requiredProperties = [];
+
+    if(spec){
+        for(let prop in spec['Properties']){
+            if(spec['Properties'].hasOwnProperty(prop)){
+                if(spec['Properties'][prop]['Required'] === true){
+                    requiredProperties.push(prop);
+                }
+            }
+        }
+    }
+
+    return requiredProperties;
+}
+
 exports.getType = getType;
 exports.isValidProperty = isValidProperty;
 exports.isRequiredProperty = isRequiredProperty;
@@ -165,3 +182,4 @@ exports.isPropertyTypeList = isPropertyTypeList;
 exports.getPropertyType = getPropertyTypeApi;
 exports.getPrimitiveItemType = getPrimitiveItemType;
 exports.isPrimitiveTypeList = isPrimitiveTypeList;
+exports.getRequiredProperties = getRequiredProperties;

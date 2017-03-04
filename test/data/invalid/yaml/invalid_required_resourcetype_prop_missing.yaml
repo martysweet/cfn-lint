@@ -5,9 +5,8 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Buckettttt: SomeBucket
+        S3Bucket: SomeBucket
         S3Key: SomeKey
       Description: Some Description
       Handler: file.handler
-      Runtime: 'node4.3'
       Role: "some arn"
