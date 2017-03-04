@@ -11,5 +11,7 @@ deployment:
     branch: master
     commands:
       - npm run deploy
+      - git config --global user.name  "CircleCI"
+      - git config --global user.email "npm@martysweet.co.uk"
       - git add package.json
       - git commit -m "Bump patch version"
