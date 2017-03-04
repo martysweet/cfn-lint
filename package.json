@@ -1,19 +1,29 @@
 {
   "name": "cfn-lint",
-  "description": "CloudFormation Validator",
-  "author": "Marty Sweet <msweet2214@gmail.com>",
+  "version": "1.0.0",
+  "description": "A more friendly CloudFormation JSON and YAML Validator",
+  "author": "Marty Sweet <npm@martysweet.co.uk>",
+  "homepage": "https://github.com/martysweet/cfn-lint#readme",
+  "keywords": [
+    "cloudformation",
+    "aws",
+    "yaml",
+    "json"
+  ],
+  "bugs": {
+    "url": "https://github.com/martysweet/cfn-lint/issues"
+  },
   "dependencies": {
-    "babel-polyfill": "latest",
-    "winston": "latest",
-    "js-yaml": "latest",
     "cloudformation-js-yaml-schema": "0.2.0",
-    "fs": "latest",
+    "colors": "latest",
     "commander": "latest",
-    "opn": "latest",
-    "colors": "latest"
+    "fs": "0.0.2",
+    "js-yaml": "^3.7.0",
+    "opn": "latest"
   },
   "devDependencies": {
     "gulp": "latest",
+    "babel-polyfill": "latest",
     "gulp-babel": "latest",
     "gulp-sourcemaps": "latest",
     "babel-preset-es2015": "latest",
@@ -25,9 +35,9 @@
   "scripts": {
     "build": "babel src --presets babel-preset-es2015 --out-dir lib",
     "test": "mocha --compilers js:babel-register --require babel-polyfill",
-    "prepublish": "npm run build"
+    "prepublish": "npm run build",
+    "deploy": "npm version patch && npm publish"
   },
-  "engine": "node >= 6.x.x",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/martysweet/cfn-lint.git"

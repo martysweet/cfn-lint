@@ -1,6 +1,6 @@
 # cfn-lint
 [![CircleCI](https://circleci.com/gh/martysweet/cfn-lint.svg?style=svg)](https://circleci.com/gh/martysweet/cfn-lint)
-Hopefully a comprehensive CloudFormation Linting tool, just what you need to speed development
+A more friendly CloudFormation JSON and YAML Validator
 
 `cfn-lint` is a tool used to improve your CloudFormation development cycle. If you are here, you are probably
 fed up of waiting for 10 minutes or more before CloudFormation gives you an error due to a typo. This tool aims to 
@@ -60,7 +60,7 @@ $ npm install -g cfn-lint
 * Detecting invalid property types
 * Detect missing required properties
 
-### What needs improvement/support?
+### Feature backlog
 * Verbose parsing errors when reading invalid JSON
 * Fn::ImportValue - to support CLI injection (Like Params currently does)
 * Fn::Select
@@ -68,6 +68,10 @@ $ npm install -g cfn-lint
 * Test coverage for Conditions and Property checking
 * Refactor Property checking to be clearer
 * Circular dependency checking
+* Suggest DependsOn when References to Resources are used
+* Extended validation flag (calls AWS CloudFormation API)
+* Watch file flag to revalidate on file save
+* Download latest resources during build
 
 ### Features that would be nice, but aren't currently possible
 * Detect conditional required properties (Information doesn't exist in AWS Resource Specification)

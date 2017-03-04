@@ -2,4 +2,12 @@ machine:
   node:
     version: 6.1.0
 
+dependencies:
+  pre:
+    - echo -e "$NPM_USER\n$NPM_PASSWORD\n$NPM_EMAIL" | npm login
 
+deployment:
+  production:
+    branch: master
+    commands:
+      - npm run deploy
