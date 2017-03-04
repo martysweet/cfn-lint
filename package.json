@@ -19,7 +19,8 @@
     "commander": "latest",
     "fs": "0.0.2",
     "js-yaml": "^3.7.0",
-    "opn": "latest"
+    "opn": "latest",
+    "winston": "latest"
   },
   "devDependencies": {
     "gulp": "latest",
