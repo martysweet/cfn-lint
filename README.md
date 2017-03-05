@@ -1,12 +1,11 @@
-# cfn-lint [![CircleCI](https://circleci.com/gh/martysweet/cfn-lint.svg?style=svg)](https://circleci.com/gh/martysweet/cfn-lint)
+# cfn-lint [![CircleCI](https://img.shields.io/circleci/project/github/martysweet/cfn-lint.svg)](https://circleci.com/gh/martysweet/cfn-lint) [![npm version](https://badge.fury.io/js/cfn-lint.svg)](https://www.npmjs.com/package/cfn-lint) [![npm](https://img.shields.io/npm/dm/cfn-lint.svg)](https://www.npmjs.com/package/cfn-lint)
 
 A more friendly CloudFormation JSON and YAML Validator
 
 `cfn-lint` is a tool used to improve your CloudFormation development cycle. If you are here, you are probably
 fed up of waiting for 10 minutes or more before CloudFormation gives you an error due to a typo. This tool aims to 
 remove that waste of time. The tool takes the CloudFormation template, and resolves all the Intrinsic functions 
-defined before checking the Properties of Resources defined. There is a test defined for each error which can be caught,
-the invalid templates which will throw errors can be found in the [tests/invalid](https://github.com/martysweet/cfn-lint/tree/master/test/data/invalid) directory.
+defined before checking the Properties of Resources defined. 
 
 The tool can be used over the commandline using `cfn-lint`, or can be used as a module within another JavaScript application.
 
