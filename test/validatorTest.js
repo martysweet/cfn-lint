@@ -160,6 +160,7 @@ describe('validator', () => {
         it('1 invalid Fn::ImportValue should return an object with validTemplate = false, 1 crit errors', () => {
             const input = './test/data/invalid/yaml/invalid_import_value_intrinsic_function.yaml';
             let result = validator.validateFile(input);
+            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
             expect(result['errors']['crit'][0]['message']).to.contain('Fn::ImportValue does not support function');
@@ -272,6 +273,7 @@ describe('validator', () => {
             const input = './test/data/invalid/yaml/invalid_property_type_string.yaml';
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', false);
+            console.log(result['errors']['crit']);
             expect(result['errors']['crit']).to.have.lengthOf(2);
             expect(result['errors']['crit'][0]['message']).to.contain('Expected type String for 0');
             expect(result['errors']['crit'][1]['message']).to.contain('Expected type String for SubnetId');
@@ -295,6 +297,22 @@ describe('validator', () => {
             expect(result['errors']['crit'][0]['message']).to.contain('Required property Runtime missing for type AWS::Lambda::Function');
         });
 
+        it('4 invalid nested properties should return an object with validTemplate = false, 4 crit errors', () => {
+            const input = './test/data/invalid/yaml/invalid_missing_nested_property.yaml';
+            let result = validator.validateFile(input);
+            console.log(result['errors']['crit']);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(4);
+            expect(result['errors']['crit'][0]['message']).to.contain('Required property TargetOriginId missing for type AWS::CloudFront::Distribution.DefaultCacheBehavior');
+            expect(result['errors']['crit'][0]['resource']).to.contain('Resources > CloudFrontDistribution > Properties > DistributionConfig > DefaultCacheBehavior');
+            expect(result['errors']['crit'][1]['message']).to.contain('Required property Forward missing for type AWS::CloudFront::Distribution.Cookies');
+            expect(result['errors']['crit'][1]['resource']).to.contain('Resources > CloudFrontDistribution > Properties > DistributionConfig > DefaultCacheBehavior > ForwardedValues > Cookies');
+            expect(result['errors']['crit'][2]['message']).to.contain('Something is not a valid property of AWS::CloudFront::Distribution.Cookies');
+            expect(result['errors']['crit'][2]['resource']).to.contain('Resources > CloudFrontDistribution > Properties > DistributionConfig > DefaultCacheBehavior > ForwardedValues > Cookies');
+            expect(result['errors']['crit'][3]['message']).to.contain('Required property Bucket missing for type AWS::CloudFront::Distribution.Logging');
+            expect(result['errors']['crit'][3]['resource']).to.contain('Resources > CloudFrontDistribution > Properties > DistributionConfig > Logging');
+        });
+
 
     });
 
@@ -304,6 +322,15 @@ describe('validator', () => {
             const input = 'test/data/valid/yaml/1.yaml';
             validator.addParameterValue('InstanceType', 't1.micro');
             let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a valid (2.json) template should return an object with validTemplate = true, no crit errors', () => {
+            const input = 'test/data/valid/yaml/2.yaml';
+            validator.addParameterValue('CertificateArn', 'arn:aws:region:something');
+            let result = validator.validateFile(input);
+            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });

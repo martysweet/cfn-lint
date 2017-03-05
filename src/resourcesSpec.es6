@@ -118,21 +118,21 @@ function isPropertyTypeList(parentPropertyType, key){
 }
 
 
-function getPropertyTypeApi(type, key){
-    let spec = getType(type);
+function getPropertyTypeApi(baseType, propType, key){
+    let spec = getType(propType);
 
     if(spec['Properties'].hasOwnProperty(key)){
         if(spec['Properties'][key].hasOwnProperty('PrimitiveType')){
-            return spec['Properties'][key]['PrimitiveType'];
+            return  spec['Properties'][key]['PrimitiveType'];
         }
         else if(spec['Properties'][key].hasOwnProperty('ItemType')){
             if(spec['Properties'][key]['ItemType'] == 'Tag'){
                 return 'Tag';
             }
-            return type + '.' + spec['Properties'][key]['ItemType'];
+            return baseType + '.' + spec['Properties'][key]['ItemType'];
         }else{
             if(spec['Properties'][key].hasOwnProperty('Type') && spec['Properties'][key]['Type']){
-                return type + '.' + spec['Properties'][key]['Type'];
+                return baseType + '.' + spec['Properties'][key]['Type'];
             }
         }
     }

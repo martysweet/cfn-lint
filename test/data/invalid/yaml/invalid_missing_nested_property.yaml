@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+
+Resources:
+
+  CloudFrontDistribution:
+    Type: "AWS::CloudFront::Distribution"
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - "domain.co.uk"
+        DefaultCacheBehavior:
+          Compress: true
+          AllowedMethods:
+            - "DELETE"
+            - "GET"
+            - "HEAD"
+            - "OPTIONS"
+            - "PATCH"
+            - "POST"
+            - "PUT"
+          ViewerProtocolPolicy: redirect-to-https
+          ForwardedValues:
+            QueryString: true
+            Cookies:
+             Something: hi
+        DefaultRootObject: index.php
+        Enabled: true
+        Logging:
+          IncludeCookies: false
+          Prefix: !Sub "domain.co.uk/"
+        Origins:
+          - Id: !Sub "Root-ABCD"
+            DomainName: "something.origin.domain.co.uk"
+            CustomOriginConfig:
+              OriginProtocolPolicy: http-only
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          AcmCertificateArn: "arn:aws:something"
+          SslSupportMethod: sni-only
