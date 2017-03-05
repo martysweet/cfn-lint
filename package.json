@@ -1,6 +1,6 @@
 {
   "name": "cfn-lint",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "A more friendly CloudFormation JSON and YAML Validator",
   "author": "Marty Sweet <npm@martysweet.co.uk>",
   "homepage": "https://github.com/martysweet/cfn-lint#readme",
@@ -14,7 +14,7 @@
     "url": "https://github.com/martysweet/cfn-lint/issues"
   },
   "dependencies": {
-    "cloudformation-js-yaml-schema": "0.2.0",
+    "cloudformation-js-yaml-schema": "0.3.0",
     "colors": "latest",
     "commander": "latest",
     "fs": "0.0.2",
