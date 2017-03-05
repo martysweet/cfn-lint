@@ -830,6 +830,8 @@ function getRef(reference){
     return null;
 }
 
+let baseResourceType = null;
+
 function checkResourceProperties() {
 
     // Go into resources
@@ -844,6 +846,9 @@ function checkResourceProperties() {
 
             // Add the resource name to stack
             placeInTemplate.push(res);
+
+            // Set the baseResourceType for PropertyType derivation
+            baseResourceType = resources[res]['Type'];
 
             // Do property validation if Properties in present
             if(resources[res].hasOwnProperty('Properties')) {
@@ -875,9 +880,7 @@ function checkResourceProperties() {
 
 function checkEachProperty(resourceType, ref, key){
     Object.keys(ref[key]).forEach((prop) => {
-        placeInTemplate.push(prop);
         checkResourceProperty(resourceType, ref[key], prop);
-        placeInTemplate.pop();
     });
 }
 
@@ -910,7 +913,7 @@ function checkResourceProperty(resourcePropType, ref, key){
 
                             }
                         }else{
-                            let propertyType = resourcesSpec.getPropertyType(resourcePropType, key);
+                            let propertyType = resourcesSpec.getPropertyType(baseResourceType, resourcePropType, key);
                             checkProperty(resourcePropType, ref[key], item, isPrimitiveProperty, propertyType);
                         }
                     }
@@ -918,16 +921,18 @@ function checkResourceProperty(resourcePropType, ref, key){
             }else{
                 // TODO: Check DuplicatesAllowed
                 if(typeof ref[key] != 'string' && ref[key] != '') { // Allow an empty string instead of a list
-                    addError("crit", `Expecting a list for ${key}`, placeInTemplate, `${resourcePropType}.${key}`);
+                    addError("crit", `Expecting a list for ${key}`, placeInTemplate, `${baseResourceType}.${key}`);
                 }
             }
         }else{
             // Expect a single value or object if isPrimitiveProperty == false
             if((typeof ref[key] == 'object' && !isPrimitiveProperty) || (typeof ref[key] == 'string' && isPrimitiveProperty)) {
-                let propertyType = resourcesSpec.getPropertyType(resourcePropType, key);
+                placeInTemplate.push(key);
+                let propertyType = resourcesSpec.getPropertyType(baseResourceType, resourcePropType, key);
                 checkProperty(resourcePropType, ref, key, isPrimitiveProperty, propertyType);
+                placeInTemplate.pop();
             }else{
-                addError('warn', `Unhandled property for ${key}`, placeInTemplate, `${resourcePropType}.${key}`);
+                addError('warn', `Unhandled property for ${key}`, placeInTemplate, `${baseResourceType}.${key}`);
             }
         }
     }else{
