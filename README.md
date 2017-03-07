@@ -35,6 +35,21 @@ If you get `/usr/bin/env: 'node': No such file or directory` ensure your system 
 
 `cfn-lint docs AWS::Lambda::Function.Code.S3Bucket`
 
+## Example Output
+```
+0 infos
+0 warn
+2 crit
+Resource: Resources > MyInstance > Properties
+Message: Required property ImageId missing for type AWS::EC2::Instance
+Documentation: http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-instance.html
+
+Resource: Resources > MyInstance > Properties
+Message: Required property Value missing for type Tag
+Documentation: http://docs.aws.amazon.com/search/doc-search.html?searchPath=documentation-guide&searchQuery=Tag&x=0&y=0&this_doc_product=AWS+CloudFormation&this_doc_guide=User+Guide&doc_locale=en_us#facet_doc_product=AWS%20CloudFormation&facet_doc_guide=User%20Guide
+
+Template invalid!
+```
 
 ### What can cfn-lint do?
 * Read JSON + YAML (Including YAML short form)
