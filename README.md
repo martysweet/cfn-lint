@@ -35,7 +35,7 @@ If you get `/usr/bin/env: 'node': No such file or directory` ensure your system 
 
 `cfn-lint docs AWS::Lambda::Function.Code.S3Bucket`
 
-## Example Output
+### Example Output
 ```
 0 infos
 0 warn
