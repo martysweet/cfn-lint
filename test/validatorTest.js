@@ -335,8 +335,16 @@ describe('validator', () => {
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
 
-        it('a valid (unquoted_template_version.yaml) template should return an object with validTemplate = true, no crit errors', () => {
-            const input = 'test/data/valid/yaml/unquoted_template_version.yaml';
+        it('a valid (valid_unquoted_template_version.yaml) template should return an object with validTemplate = true, no crit errors', () => {
+            const input = 'test/data/valid/yaml/valid_unquoted_template_version.yaml';
+            let result = validator.validateFile(input);
+            console.log(result['errors']['crit']);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a valid (valid_minus_one_as_string.yaml) template should return an object with validTemplate = true, no crit errors', () => {
+            const input = 'test/data/valid/yaml/valid_minus_one_as_string.yaml';
             let result = validator.validateFile(input);
             console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', true);
