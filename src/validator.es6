@@ -44,7 +44,9 @@ function validateWorkingInput(){
 
     // Check AWS Template Formation Version
     if(workingInput.hasOwnProperty(['AWSTemplateFormatVersion'])){
-        if(workingInput['AWSTemplateFormatVersion'] != '2010-09-09'){
+        let allowedDate = /Sep 09 2010/;
+        if(workingInput['AWSTemplateFormatVersion'].toString() != '2010-09-09' &&
+            !allowedDate.test(workingInput['AWSTemplateFormatVersion'].toString()) ){
             addError('crit', 'AWSTemplateFormationVersion should be "2010-09-09"', ['AWSTemplateFormatVersion'], 'AWSTemplateFormatVersion');
         }
     }else{

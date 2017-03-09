@@ -318,7 +318,7 @@ describe('validator', () => {
 
     describe('validateYamlFile', ()=> {
 
-        it('a valid (1.json) template should return an object with validTemplate = true, no crit errors', () => {
+        it('a valid (1.yaml) template should return an object with validTemplate = true, no crit errors', () => {
             const input = 'test/data/valid/yaml/1.yaml';
             validator.addParameterValue('InstanceType', 't1.micro');
             let result = validator.validateFile(input);
@@ -326,9 +326,17 @@ describe('validator', () => {
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
 
-        it('a valid (2.json) template should return an object with validTemplate = true, no crit errors', () => {
+        it('a valid (2.yaml) template should return an object with validTemplate = true, no crit errors', () => {
             const input = 'test/data/valid/yaml/2.yaml';
             validator.addParameterValue('CertificateArn', 'arn:aws:region:something');
+            let result = validator.validateFile(input);
+            console.log(result['errors']['crit']);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a valid (unquoted_template_version.yaml) template should return an object with validTemplate = true, no crit errors', () => {
+            const input = 'test/data/valid/yaml/unquoted_template_version.yaml';
             let result = validator.validateFile(input);
             console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', true);
