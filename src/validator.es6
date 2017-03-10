@@ -42,13 +42,21 @@ function validateWorkingInput(){
     // Ensure we are working from a clean slate
     //exports.resetValidator();
 
-    // Check AWS Template Formation Version
+    // Check AWS Template Format Version
     if(workingInput.hasOwnProperty(['AWSTemplateFormatVersion'])){
-        if(workingInput['AWSTemplateFormatVersion'] != '2010-09-09'){
-            addError('crit', 'AWSTemplateFormationVersion should be "2010-09-09"', ['AWSTemplateFormatVersion'], 'AWSTemplateFormatVersion');
+
+        let testValue  = workingInput['AWSTemplateFormatVersion'];
+
+        if(typeof workingInput['AWSTemplateFormatVersion'] == 'object'){
+            addError('warn', 'AWSTemplateFormatVersion is recommended to be of type string \'2010-09-09\'', ['AWSTemplateFormatVersion'], 'AWSTemplateFormatVersion')
+            testValue = testValue.toUTCString();
         }
-    }else{
-        addError('crit', 'Missing AWSTemplateFormatVersion in template', [], 'AWSTemplateFormatVersion');
+
+        let allowedDateRegex = /^Thu, 09 Sep 2010 00:00:00 GMT$|^2010-09-09$/;
+        if(!allowedDateRegex.test(testValue)){
+            addError('crit', 'AWSTemplateFormatVersion should be \'2010-09-09\'', ['AWSTemplateFormatVersion'], 'AWSTemplateFormatVersion');
+        }
+
     }
 
 
@@ -997,35 +1005,35 @@ function checkProperty(resourcePropType, ref, key, isPrimitiveType, propertyType
         }
 
         // Switch statment to check primitive types
-        checkPropertyType(ref, key, propertyType);
+        checkPropertyType(ref, key, propertyType, resourcePropType);
 
     }
 }
 
-function checkPropertyType(ref, key, propertyType){
+function checkPropertyType(ref, key, propertyType, resourcePropType){
     let val = ref[key];
     switch(propertyType){
         case 'String':  // A 'String' in CF can be an int or something starting with a number, it's a loose check
                         // Check the value starts with a letter or / or _
-            if(!(/^[\w\/]/.test(val))){
-                addError('crit', `Expected type String for ${key}, got value ${val}`, placeInTemplate, `${propertyType}.${key}`);
+            if(!(/^[-\w\/]/.test(val))){
+                addError('crit', `Expected type String for ${key}, got value ${val}`, placeInTemplate, `${resourcePropType}.${key}`);
             }
             break;
         case 'Boolean':
             if(!(/^[(true|false)]/i.test(val))){
-                addError('crit', `Expected type Boolean for ${key}, got value ${val}`, placeInTemplate, `${propertyType}.${key}`);
+                addError('crit', `Expected type Boolean for ${key}, got value ${val}`, placeInTemplate, `${resourcePropType}.${key}`);
             }
             break;
         case 'Integer':
             try{
                 parseInt(val);
             }catch(e){
-                addError('crit', `Expected type Integer for ${key}, got value ${val}`, placeInTemplate, `${propertyType}.${key}`);
+                addError('crit', `Expected type Integer for ${key}, got value ${val}`, placeInTemplate, `${resourcePropType}.${key}`);
             }
             break;
         case 'Json':
             if(typeof val != 'object'){
-                addError('crit', `Expected a JSON document for ${key}, got value ${val}`, placeInTemplate, `${propertyType}.${key}`);
+                addError('crit', `Expected a JSON document for ${key}, got value ${val}`, placeInTemplate, `${resourcePropType}.${key}`);
             }
             break;
     }
