@@ -218,18 +218,25 @@ describe('validator', () => {
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
-            expect(result['errors']['crit'][0]['message']).to.contain('AWSTemplateFormationVersion should be');
+            expect(result['errors']['crit'][0]['message']).to.contain('AWSTemplateFormatVersion should be');
         });
 
-        it('1 missing template version should return an object with validTemplate = false, 1 crit errors', () => {
-            const input = './test/data/invalid/yaml/missing_template_format_version.yaml';
+        // Check for optional template version
+        it('1 missing template version should return an object with validTemplate = true, 0 crit errors', () => {
+            const input = './test/data/valid/yaml/valid_missing_template_format_version.yaml';
             let result = validator.validateFile(input);
-            expect(result).to.have.deep.property('templateValid', false);
-            expect(result['errors']['crit']).to.have.lengthOf(1);
-            expect(result['errors']['crit'][0]['message']).to.contain('Missing AWSTemplateFormatVersion in template');
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
         });
 
-
+        it('1 unquouted template format version should return an object with validTemplate = true, no crit errors, 1 warn error', () => {
+            const input = 'test/data/valid/yaml/valid_unquoted_template_version.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+            expect(result['errors']['warn']).to.have.lengthOf(1);
+            expect(result['errors']['warn'][0]['message']).to.contain('AWSTemplateFormatVersion is recommended to be of type string');
+        });
     });
 
     describe('propertyValidation', () => {
@@ -329,14 +336,6 @@ describe('validator', () => {
         it('a valid (2.yaml) template should return an object with validTemplate = true, no crit errors', () => {
             const input = 'test/data/valid/yaml/2.yaml';
             validator.addParameterValue('CertificateArn', 'arn:aws:region:something');
-            let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
-            expect(result).to.have.deep.property('templateValid', true);
-            expect(result['errors']['crit']).to.have.lengthOf(0);
-        });
-
-        it('a valid (valid_unquoted_template_version.yaml) template should return an object with validTemplate = true, no crit errors', () => {
-            const input = 'test/data/valid/yaml/valid_unquoted_template_version.yaml';
             let result = validator.validateFile(input);
             console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', true);
