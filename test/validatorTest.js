@@ -340,6 +340,8 @@ describe('validator', () => {
             console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
+            expect(result['errors']['info']).to.have.lengthOf(0);
         });
 
         it('a valid (valid_minus_one_as_string.yaml) template should return an object with validTemplate = true, no crit errors', () => {
