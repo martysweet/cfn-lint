@@ -934,7 +934,9 @@ function checkResourceProperty(resourcePropType, ref, key){
             }
         }else{
             // Expect a single value or object if isPrimitiveProperty == false
-            if((typeof ref[key] == 'object' && !isPrimitiveProperty) || (typeof ref[key] == 'string' && isPrimitiveProperty)) {
+            let primTypeOf = typeof ref[key];
+            let isPrimTypeOf = (primTypeOf == 'string' || primTypeOf == 'number' || primTypeOf == 'boolean');
+            if((typeof ref[key] == 'object' && !isPrimitiveProperty) || (isPrimTypeOf && isPrimitiveProperty)) {
                 placeInTemplate.push(key);
                 let propertyType = resourcesSpec.getPropertyType(baseResourceType, resourcePropType, key);
                 checkProperty(resourcePropType, ref, key, isPrimitiveProperty, propertyType);
@@ -1016,24 +1018,24 @@ function checkPropertyType(ref, key, propertyType, resourcePropType){
         case 'String':  // A 'String' in CF can be an int or something starting with a number, it's a loose check
                         // Check the value starts with a letter or / or _
             if(!(/^[-\w\/]/.test(val))){
-                addError('crit', `Expected type String for ${key}, got value ${val}`, placeInTemplate, `${resourcePropType}.${key}`);
+                addError('crit', `Expected type String for ${key}, got value '${val}'`, placeInTemplate, `${resourcePropType}.${key}`);
             }
             break;
         case 'Boolean':
-            if(!(/^[(true|false)]/i.test(val))){
-                addError('crit', `Expected type Boolean for ${key}, got value ${val}`, placeInTemplate, `${resourcePropType}.${key}`);
+            if(!(/^true$|^false$/i.test(val))){
+                addError('crit', `Expected type Boolean for ${key}, got value '${val}'`, placeInTemplate, `${resourcePropType}.${key}`);
             }
             break;
         case 'Integer':
             try{
                 parseInt(val);
             }catch(e){
-                addError('crit', `Expected type Integer for ${key}, got value ${val}`, placeInTemplate, `${resourcePropType}.${key}`);
+                addError('crit', `Expected type Integer for ${key}, got value '${val}'`, placeInTemplate, `${resourcePropType}.${key}`);
             }
             break;
         case 'Json':
             if(typeof val != 'object'){
-                addError('crit', `Expected a JSON document for ${key}, got value ${val}`, placeInTemplate, `${resourcePropType}.${key}`);
+                addError('crit', `Expected a JSON document for ${key}, got value '${val}'`, placeInTemplate, `${resourcePropType}.${key}`);
             }
             break;
     }

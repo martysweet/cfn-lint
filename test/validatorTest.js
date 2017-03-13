@@ -304,6 +304,16 @@ describe('validator', () => {
             expect(result['errors']['crit'][0]['message']).to.contain('Required property Runtime missing for type AWS::Lambda::Function');
         });
 
+        it('1 invalid boolean property should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = './test/data/invalid/yaml/invalid_boolean_type.yaml';
+            validator.addParameterValue('CertificateArn', 'arn:aws:region:something');
+            let result = validator.validateFile(input);
+            console.log(result['errors']['crit']);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]['message']).to.contain('Expected type Boolean for Compress, got value \'trueeeee\'');
+        });
+
         it('4 invalid nested properties should return an object with validTemplate = false, 4 crit errors', () => {
             const input = './test/data/invalid/yaml/invalid_missing_nested_property.yaml';
             let result = validator.validateFile(input);
@@ -340,6 +350,8 @@ describe('validator', () => {
             console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
+            expect(result['errors']['info']).to.have.lengthOf(0);
         });
 
         it('a valid (valid_minus_one_as_string.yaml) template should return an object with validTemplate = true, no crit errors', () => {

@@ -1,0 +1,92 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+
+Parameters:
+  DomainName:
+    Description: Domain name alias for this Cloudfront Distribution
+    Type: String
+
+  OriginDomainCode:
+    Description: Code used for the origin server CODE.origin.domain.co.uk
+    Type: String
+
+  Alias:
+    Description: Alias used for ALIAS.web.domain.co.uk
+    Type: String
+
+  CertificateArn:
+    Description: Certificate Arn for the Cloudfront Domain Name
+    Type: String
+
+
+Resources:
+
+  DNSOrigin:
+    Type: "AWS::Route53::RecordSet"
+    Properties:
+      HostedZoneName: domain.co.uk.
+      Name: !Sub "${OriginDomainCode}.origin.domain.co.uk."
+      Type: CNAME
+      TTL: 3600
+      ResourceRecords:
+        - 'origin.domain.co.uk'
+
+  CloudFrontDistribution:
+    Type: "AWS::CloudFront::Distribution"
+    DependsOn: DNSOrigin
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - !Ref DomainName
+        DefaultCacheBehavior:
+          Compress: trueeeee
+          AllowedMethods:
+            - "DELETE"
+            - "GET"
+            - "HEAD"
+            - "OPTIONS"
+            - "PATCH"
+            - "POST"
+            - "PUT"
+          TargetOriginId: !Sub "Root-${OriginDomainCode}"
+          ViewerProtocolPolicy: redirect-to-https
+          ForwardedValues:
+            QueryString: true
+            Cookies:
+              Forward: all
+        DefaultRootObject: index.php
+        Enabled: true
+        Logging:
+          Bucket: domain-cloudwatch-logs.s3.amazonaws.com
+          IncludeCookies: false
+          Prefix: !Sub "${DomainName}/"
+        Origins:
+          - Id: !Sub "Root-${OriginDomainCode}"
+            DomainName: !Join ['.', [!Ref OriginDomainCode, 'origin.domain.co.uk']]
+            CustomOriginConfig:
+              OriginProtocolPolicy: http-only
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CertificateArn
+          SslSupportMethod: sni-only
+
+  DNSAlias:
+    Type: "AWS::Route53::RecordSet"
+    DependsOn: CloudFrontDistribution
+    Properties:
+      HostedZoneName: domain.co.uk.
+      Name: !Sub "${Alias}.domain.co.uk."
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt CloudFrontDistribution.DomainName
+        HostedZoneId: Z2FDTNDATAQYW2
+
+
+Outputs:
+  CustomerDNSName:
+    Description: DNS name
+    Value: !Ref DNSAlias
+
+  CloudFrontID:
+    Description: ID of the CloudFront origin
+    Value: !Ref CloudFrontDistribution
