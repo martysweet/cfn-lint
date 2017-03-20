@@ -1001,7 +1001,7 @@ function checkProperty(resourcePropType, ref, key, isPrimitiveType, propertyType
         // Check for ARNs
         if(resourcesSpec.isArnProperty(key) && ref[key].indexOf('arn:aws') != 0){ // First position in string
             let k = ref[key];
-            addError("crit", `${key} is expecting an Arn, '${k}' given.`, placeInTemplate, `${resourcePropType}.${key}`);
+            addError("crit", `${key} is expecting an Arn, '${k}' given. If this is a parameter, has it been specified with --parameters?`, placeInTemplate, `${resourcePropType}.${key}`);
         }
 
         // Switch statment to check primitive types
