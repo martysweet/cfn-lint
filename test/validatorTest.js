@@ -362,4 +362,13 @@ describe('validator', () => {
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
     });
+
+    describe('issue-24', () => {
+        it('a valid ASG template with Tags property should return an object with validTemplate = true, no crit errors', () => {
+            const input = 'test/data/valid/yaml/issue-24.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+    })
 });
