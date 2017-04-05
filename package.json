@@ -1,6 +1,6 @@
 {
   "name": "cfn-lint",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "A more friendly CloudFormation JSON and YAML Validator",
   "author": "Marty Sweet <npm@martysweet.co.uk>",
   "homepage": "https://github.com/martysweet/cfn-lint#readme",
