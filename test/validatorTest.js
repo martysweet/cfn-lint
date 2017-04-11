@@ -376,6 +376,7 @@ describe('validator', () => {
         it('both methods of defining a custom resource should result in validTemplate = true, no crit errors', () => {
             const input = 'test/data/valid/yaml/issue-28-custom-resource.yaml';
             let result = validator.validateFile(input);
+            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });

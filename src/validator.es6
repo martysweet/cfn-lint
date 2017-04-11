@@ -896,7 +896,10 @@ function checkResourceProperty(resourcePropType, ref, key){
 
     // Using the Key, the the Resource Type, get the expected Property type
     // resourceSpec get type of property using resourceType and property name
-    if(resourcesSpec.isValidProperty(resourcePropType, key)){
+    let isValidProperty = resourcesSpec.isValidProperty(resourcePropType, key);
+    let isCustomPropertyAllowed = resourcesSpec.isAdditionalPropertiesEnabled(resourcePropType);
+
+    if(isValidProperty){
 
         // Check if the property is a string
         let isPrimitiveProperty = resourcesSpec.isPrimitiveProperty(resourcePropType, key);
@@ -946,7 +949,9 @@ function checkResourceProperty(resourcePropType, ref, key){
             }
         }
     }else{
-        addError("crit", `${key} is not a valid property of ${resourcePropType}`, placeInTemplate, resourcePropType);
+        if(!isCustomPropertyAllowed) {
+            addError("crit", `${key} is not a valid property of ${resourcePropType}`, placeInTemplate, resourcePropType);
+        }
     }
 
 }
