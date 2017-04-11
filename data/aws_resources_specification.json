@@ -14404,7 +14404,7 @@
         }
       }
     },
-    "AWS::CloudFormation::CustomResource": {
+    "eAWS::CloudFormation::CustomResourc": {
       "AdditionalProperties": true,
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cfn-customresource.html",
       "Properties": {
