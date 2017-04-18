@@ -1,0 +1,18 @@
+
+Resources:
+
+  MyResource:
+    Type: Custom::MyPingTest
+    Properties:
+      ServiceToken: arn:aws:sns:us-east-1:84969EXAMPLE:CRTest
+      key1: string
+      key2:
+        - list
+      key3:
+        key4: map
+
+  MyOtherResource:
+      Type: AWS::CloudFormation::CustomResource
+      Properties:
+        ServiceToken: arn:aws:sns:us-east-1:84969EXAMPLE:CRTest
+        key1: string
