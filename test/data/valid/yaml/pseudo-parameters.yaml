@@ -10,4 +10,4 @@ Resources:
   MyBucket:
     Type: AWS::S3::Bucket
     Properties:
-      Name: !FindInMap[!Ref AWS::AccountId, !Ref AWS::Region, 'BucketName']
+      BucketName: !FindInMap [!Ref AWS::AccountId, !Ref AWS::Region, 'BucketName']
