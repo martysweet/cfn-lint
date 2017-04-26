@@ -16,6 +16,7 @@ program
     .version('0.0.1')
     .arguments('<cmd> <file>')
     .option('-p, --parameters <items>', 'List of params', list)
+    .option('-p, --pseudo <items>', 'List of pseudo overrides', list)
     .action(function (arg1, arg2) {
         firstArg = arg1;
         secondArg = arg2;
@@ -37,6 +38,14 @@ if(firstArg == "validate"){
             // Set the parameter
             let kv = param.split('=');
             validator.addParameterValue(kv[0], kv[1]);
+        }
+    }
+
+    if(program.pseudo){
+        for(let pseudo of program.pseudo){
+            // Set the parameter
+            let kv = pseudo.split('=');
+            validator.addPseudoValue(kv[0], kv[1]);
         }
     }
 
