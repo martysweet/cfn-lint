@@ -1,0 +1,18 @@
+{
+  "AWS::ApplicationAutoScaling::ScalingPolicy": "arn",
+  "AWS::AutoScaling::ScalingPolicy": "arn",
+  "AWS::CertificateManager::Certificate": "arn",
+  "AWS::CloudFormation::Stack": "arn",
+  "AWS::CloudFormation::WaitCondition": "arn",
+  "AWS::ECS::Service": "arn",
+  "AWS::ECS::TaskDefinition": "arn",
+  "AWS::ElasticLoadBalancingV2::Listener": "arn",
+  "AWS::ElasticLoadBalancingV2::ListenerRule": "arn",
+  "AWS::ElasticLoadBalancingV2::LoadBalancer": "arn",
+  "AWS::ElasticLoadBalancingV2::TargetGroup": "arn",
+  "AWS::IAM::ManagedPolicy": "arn",
+  "AWS::Lambda::Alias": "arn",
+  "AWS::Lambda::Version": "arn",
+  "AWS::OpsWorks::UserProfile": "arn",
+  "AWS::SNS::Topic": "arn"
+}

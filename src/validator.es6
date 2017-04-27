@@ -34,6 +34,29 @@ exports.addParameterValue = function addParameterValue(parameter, value){
     addParameterOverride(parameter, value);
 };
 
+exports.addPseudoValue = function addPseudoValue(parameter, value){
+    // Silently drop requests to change AWS::NoValue
+    if(parameter == 'AWS::NoValue') {
+        return;
+    }
+    // Only process items which are already defined in overrides
+    if(parameter in awsRefOverrides){
+        // Put NotificationARNs in an array if required
+        if(parameter == 'AWS::NotificationARNs'){
+            if(awsRefOverrides['AWS::NotificationARNs'][0] == 'arn:aws:sns:us-east-1:123456789012:MyTopic'){
+                awsRefOverrides['AWS::NotificationARNs'][0] = value;
+            }else{
+                awsRefOverrides['AWS::NotificationARNs'].push(value);
+            }
+        }else{
+            // By default, replace the value
+            awsRefOverrides[parameter] = value;
+        }
+    }else{
+        addError('crit', parameter + " is not an allowed pseudo parameter", ['cli-options'], 'pseudo parameters');
+    }
+};
+
 function addParameterOverride(parameter, value){
     parameterRuntimeOverride[parameter] = value;
 }

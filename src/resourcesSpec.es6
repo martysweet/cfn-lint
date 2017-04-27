@@ -1,5 +1,5 @@
 let specification = require('../data/aws_resources_specification.json');
-let refOverride = require('../data/aws_ref_override.json');
+let resourceRefOverride = require('../data/aws_resource_ref_types.json');
 
 function getResourceType(type){
     // If the type starts with Custom::, it's a custom resource.
@@ -43,8 +43,8 @@ function isPropertyTypeFormat(type){
 }
 
 function getRefOverride(resourceType){
-    if(refOverride.hasOwnProperty(resourceType)){
-        return refOverride[resourceType];
+    if(resourceRefOverride.hasOwnProperty(resourceType)){
+        return resourceRefOverride[resourceType];
     }else{
         return null;
     }

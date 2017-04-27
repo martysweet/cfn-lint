@@ -382,11 +382,25 @@ describe('validator', () => {
         });
     });
 
+
     describe('issue-27', () => {
         it('numeric properties should result in validTemplate = true, no crit errors, no warn errors', () => {
             const input = 'test/data/valid/yaml/issue-27-numeric-properties.yaml';
             let result = validator.validateFile(input);
             console.log(result['errors']['warn']);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
+        });
+    });
+
+
+    describe('pseudo-parmeters', () => {
+        it('defining an override for accountId should result in validTemplate = true, no crit errors, no warnings', () => {
+            const input = 'test/data/valid/yaml/pseudo-parameters.yaml';
+            validator.addPseudoValue("AWS::AccountId", "000000000000");
+            validator.addPseudoValue("AWS::Region", "us-east-1");
+            let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
             expect(result['errors']['warn']).to.have.lengthOf(0);
