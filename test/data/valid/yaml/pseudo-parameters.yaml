@@ -1,0 +1,12 @@
+Mappings:
+  '000000000000':
+    us-east-1:
+      BucketName: MyBucket
+
+
+Resources:
+
+  MyBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !FindInMap [!Ref AWS::AccountId, !Ref AWS::Region, 'BucketName']

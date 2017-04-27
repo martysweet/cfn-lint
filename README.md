@@ -29,11 +29,17 @@ If you get `/usr/bin/env: 'node': No such file or directory` ensure your system 
 
 `cfn-lint validate my_template.yaml --parameters key="my value",key2=value2,key3=3`
 
+`cfn-lint validate my_template.yaml --pseudo AWS::StackName="My-Stack"`
+
+`cfn-lint validate my_template.yaml --parameters key="my value" --pseudo AWS::Region=ap-northeast-1,AWS::AccountId=000000000000`
+
 `cfn-lint docs AWS::Lambda::Function` 
 
 `cfn-lint docs AWS::Lambda::Function.Code`
 
 `cfn-lint docs AWS::Lambda::Function.Code.S3Bucket`
+
+**Note: The order of `--parameters` and `--pseudo` currently matters. This should be addressed in a later release.**
 
 ### Example Output
 ```

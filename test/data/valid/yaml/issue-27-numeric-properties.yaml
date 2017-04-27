@@ -1,0 +1,21 @@
+
+Resources:
+
+   VaultLoadBalancerTargetGroup:
+      Type: AWS::ElasticLoadBalancingV2::TargetGroup
+      Properties:
+        VpcId:  "vpc-abcde"
+        HealthCheckIntervalSeconds: 5
+        HealthCheckPath: /health
+        HealthCheckPort: "8200"
+        HealthCheckProtocol: HTTPS
+        HealthCheckTimeoutSeconds: 2
+        HealthyThresholdCount: 5
+        UnhealthyThresholdCount: 2
+        Matcher:
+          HttpCode: 200
+        Port: 8200
+        Protocol: HTTPS
+        Targets:
+          - Id: !ImportValue SomeStack-PrimaryInstance
+          - Id: !ImportValue SomeStack-SecondaryInstance
