@@ -53,7 +53,7 @@ exports.addPseudoValue = function addPseudoValue(parameter, value){
             awsRefOverrides[parameter] = value;
         }
     }else{
-        addError('crit', parameter + " is not an allowed pseudo parameter");
+        addError('crit', parameter + " is not an allowed pseudo parameter", ['cli-options'], 'pseudo parameters');
     }
 };
 

@@ -66,6 +66,16 @@ describe('index', () => {
             });
         }).timeout(5000);
 
+        it('invalid pseudo flag throws 2 critical error', (done) => {
+
+            let exec = require('child_process').exec;
+            exec('node lib/index.js validate test/data/valid/yaml/pseudo-parameters.yaml ' +
+                '--pseudo AWS::Region=us-east-1,Something=000000000000', function(error, stdout, stderr) {
+                expect(stdout).to.contain('2 crit');
+                done();
+            });
+        }).timeout(5000);
+
     });
 
 });
