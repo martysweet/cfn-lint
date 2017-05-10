@@ -598,7 +598,7 @@ function doIntrinsicSub(ref, key){
     }
 
     // Extract the replacement parts
-    let regex = /\${([A-Za-z:.!]+)/gm
+    let regex = /\${([A-Za-z0-9:.!]+)/gm;
     let matches = [];
     let match;
     while (match = regex.exec(replacementStr)) {
@@ -621,14 +621,23 @@ function doIntrinsicSub(ref, key){
                 // Use Fn::GetAtt
                 let parts = m.split('.');
                 replacementVal = fnGetAtt(parts[0], parts[1]);
+                if(replacementVal === null){
+                    addError('crit', `Intrinsic Sub does not reference valid resource attribute '${m}'`, placeInTemplate, 'Fn::Sub');
+                }
             }
         }else{
-            if(definedParams !== null && definedParams.hasOwnProperty(m) && typeof definedParams[m] !== 'string'){
-                definedParams[m] = resolveIntrinsicFunction(definedParams[m], Object.keys(m)[0]);
-                replacementVal = definedParams[m];
+            if(definedParams !== null && definedParams.hasOwnProperty(m)){
+                if(typeof definedParams[m] !== 'string') {
+                    replacementVal = resolveIntrinsicFunction(definedParams[m], Object.keys(m)[0]);
+                }else{
+                    replacementVal = definedParams[m];
+                }
             }else {
                 // Use Ref
                 replacementVal = getRef(m);
+                if(replacementVal === null){
+                    addError('crit', `Intrinsic Sub does not reference valid resource or mapping '${m}'`, placeInTemplate, 'Fn::Sub');
+                }
             }
         }
 

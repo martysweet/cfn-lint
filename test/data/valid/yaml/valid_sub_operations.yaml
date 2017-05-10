@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Resources:
+  WebServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Enable HTTP access via port 80 locked down to the load balancer + SSH access"
+      SecurityGroupIngress:
+      - CidrIp: 0.0.0.0/0
+        FromPort: '80'
+        IpProtocol: tcp
+        ToPort: '80'
+
+Outputs:
+  Output2:
+    Description: Output2
+    Value: !Sub "${WebServerSecurityGroup}"
+
+  Output3:
+    Description: Output1
+    Value:
+      Fn::Sub:
+        - "Some ${Param1} or {$Param2} string"
+        - {Param1: "a", Param2: !Ref "WebServerSecurityGroup"}
+
+  Output1:
+    Value: !Sub "${WebServerSecurityGroup.GroupId}"
