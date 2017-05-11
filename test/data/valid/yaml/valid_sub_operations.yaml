@@ -22,3 +22,6 @@ Outputs:
       Fn::Sub:
         - "Some ${Param1} or {$Param2} string"
         - {Param1: "a", Param2: !Ref "WebServerSecurityGroup"}
+
+  Output1:
+    Value: !Sub "${WebServerSecurityGroup.GroupId}"

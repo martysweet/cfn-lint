@@ -1,0 +1,22 @@
+Resources:
+  MyBucket:
+    Type: AWS::S3::Bucket
+
+Outputs:
+  SomeOtherOutput:
+    Value: !Ref MyBucket
+
+  Output2:
+    Value: !Sub "Output-${MyBucket}"
+
+  Output3:
+    Value: !GetAtt MyBucket.DomainName
+
+  Output4:
+    Value: !Join ["", [!Ref MyBucket, "Something"]]
+
+  Output5:
+    Value:
+      Fn::Sub:
+        - "Some ${Param1} or {$Param2} string"
+        - {Param1: "a", Param2: !Ref "MyBucket"}

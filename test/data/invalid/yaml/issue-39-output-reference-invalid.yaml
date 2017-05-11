@@ -1,0 +1,13 @@
+Resources:
+  MyBucket:
+    Type: AWS::S3::Bucket
+
+Outputs:
+  SomeOutput:
+    Value: !Ref SomethingMissing
+
+  SomeOtherOutput:
+    Value: !Sub "Something-${SomethingMissing}"
+
+  YetAnotherOutput:
+    Value: !Join [" ", ["A", !Ref SomethingMissing]]

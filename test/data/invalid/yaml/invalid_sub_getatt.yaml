@@ -1,0 +1,8 @@
+Resources:
+  MyMisspeltBucket:
+    Type: AWS::S3::Bucket
+
+  MyLogBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${MyBucket.DomainName}-Logs"

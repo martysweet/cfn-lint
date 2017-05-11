@@ -146,11 +146,27 @@ describe('validator', () => {
 
     describe('Fn::Sub', () => {
 
-        it('1 valid Fn::Sub with var map should return an object with validTemplate = true, 0 crit errors', () => {
-            const input = './test/data/valid/yaml/valid_sub_with_var_map.yaml';
+        it('3 valid Fn::Sub should return an object with validTemplate = true, 0 crit errors', () => {
+            const input = './test/data/valid/yaml/valid_sub_operations.yaml';
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sub referencing an invalid resource should result in validTemplate = false, 1 crit errors, no warnings', () => {
+            const input = 'test/data/invalid/yaml/invalid_sub_reference.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
+        });
+
+        it('a sub getatt an invalid resource should result in validTemplate = false, 1 crit errors, no warnings', () => {
+            const input = 'test/data/invalid/yaml/invalid_sub_getatt.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
         });
 
     });
@@ -405,5 +421,25 @@ describe('validator', () => {
             expect(result['errors']['crit']).to.have.lengthOf(0);
             expect(result['errors']['warn']).to.have.lengthOf(0);
         });
+    });
+
+    describe('output-references', () => {
+
+        it('an output referencing an invalid resource should result in validTemplate = false, 1 crit errors, no warnings', () => {
+            const input = 'test/data/invalid/yaml/issue-39-output-reference-invalid.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(3);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
+        });
+
+        it('an output referencing an valid resource should result in validTemplate = true, 0 crit errors, no warnings', () => {
+            const input = 'test/data/valid/yaml/issue-39-output-reference-check.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
+        });
+
     });
 });
