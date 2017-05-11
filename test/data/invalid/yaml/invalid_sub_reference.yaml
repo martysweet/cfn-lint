@@ -5,4 +5,4 @@ Resources:
   MyLogBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "${MyBucket}-Logs"
+      BucketName: !Sub "${MyBucket}-Logs"#

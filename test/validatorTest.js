@@ -425,7 +425,6 @@ describe('validator', () => {
 
     describe('output-references', () => {
 
-
         it('an output referencing an invalid resource should result in validTemplate = false, 1 crit errors, no warnings', () => {
             const input = 'test/data/invalid/yaml/issue-39-output-reference-invalid.yaml';
             let result = validator.validateFile(input);
