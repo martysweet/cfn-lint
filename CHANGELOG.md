@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.1.4
+- Update CloudFormation specification (downloaded 17th May 2017), see the [AWS Blog](https://aws.amazon.com/about-aws/whats-new/2017/05/cloudformation-support-for-aws-waf-on-alb/)
+
 ## v1.1.3
 - Fix Fn::Sub not throwing errors on invalid reference ([Issue #39](https://github.com/martysweet/cfn-lint/issues/39))
 
