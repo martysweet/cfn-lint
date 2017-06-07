@@ -379,16 +379,14 @@ describe('validator', () => {
         });
     });
 
-    describe('issue-24', () => {
+    describe('issues', () => {
         it('a valid ASG template with Tags property should return an object with validTemplate = true, no crit errors', () => {
             const input = 'test/data/valid/yaml/issue-24.yaml';
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
-    });
 
-    describe('issue-28', () => {
         it('both methods of defining a custom resource should result in validTemplate = true, no crit errors', () => {
             const input = 'test/data/valid/yaml/issue-28-custom-resource.yaml';
             let result = validator.validateFile(input);
@@ -396,10 +394,7 @@ describe('validator', () => {
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
-    });
 
-
-    describe('issue-27', () => {
         it('numeric properties should result in validTemplate = true, no crit errors, no warn errors', () => {
             const input = 'test/data/valid/yaml/issue-27-numeric-properties.yaml';
             let result = validator.validateFile(input);
@@ -407,6 +402,22 @@ describe('validator', () => {
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
             expect(result['errors']['warn']).to.have.lengthOf(0);
+        });
+
+        it('IAM with ManagedPolicyName should result in validTemplate=true, no crit errors, no warn errors', () => {
+            const input = 'test/data/valid/yaml/issue-42-managed-policy-name.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('Reference to RDS attribute validTemplate=true, no crit errors, no warn errors', () => {
+            const input = 'test/data/valid/yaml/issue-44-database-endpoint.yaml';
+            let result = validator.validateFile(input);
+            console.log(result['errors']['crit']);
+            console.log(result['errors']['warn']);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
         });
     });
 

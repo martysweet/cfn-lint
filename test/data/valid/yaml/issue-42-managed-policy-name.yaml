@@ -1,0 +1,13 @@
+
+Resources:
+
+   DeploymentIAMPolicy:
+     Type: AWS::IAM::ManagedPolicy
+     Properties:
+        ManagedPolicyName: DeploymentPolicyForMyApplication
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action: s3:GetObject
+            Resource: !Sub arn:aws:s3:::SOME-BUCKET/html/*

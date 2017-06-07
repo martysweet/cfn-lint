@@ -481,12 +481,19 @@ function doIntrinsicJoin(ref, key){
 
 function doIntrinsicGetAtt(ref, key){
     let toGet = ref[key];
-    if(toGet.length != 2){
+    if(toGet.length < 2){
         addError("crit", "Invalid parameters for Fn::GetAtt", placeInTemplate, "Fn::GetAtt");
         return "INVALID_GET_ATT"
     }else{
         if(typeof toGet[0] != "string"){ // TODO Implement unit test for this
             addError("crit", "Fn::GetAtt does not support functions for the logical resource name", placeInTemplate, "Fn::GetAtt");
+        }
+
+        // If we have more than 2 parameters, merge other parameters
+        if(toGet.length > 2){
+            let root = toGet[0];
+            let parts = toGet.slice(1).join('.');
+            toGet = [root, parts];
         }
 
         // The AttributeName could be a Ref, so check if it needs resolving

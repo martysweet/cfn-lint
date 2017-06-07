@@ -1,0 +1,22 @@
+Resources:
+ Database:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: s3o
+      AllocatedStorage: 10
+      DBInstanceClass:  db.t2.small
+      Engine: "MySQL"
+      EngineVersion: "5.7"
+      StorageEncrypted: true
+      MultiAZ: true
+      DBSubnetGroupName: "SomeSubnetGroup"
+      VPCSecurityGroups:
+       - "sg-abcdef"
+      MasterUsername: "root"
+      MasterUserPassword: "insecurepassword"
+    DeletionPolicy: "Snapshot"
+
+Outputs:
+  DBDNS:
+    Description: DNS Name of the DB Instance
+    Value: !GetAtt Database.Endpoint.Address
