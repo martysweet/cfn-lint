@@ -410,6 +410,15 @@ describe('validator', () => {
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
+
+        it('Reference to RDS attribute validTemplate=true, no crit errors, no warn errors', () => {
+            const input = 'test/data/valid/yaml/issue-44-database-endpoint.yaml';
+            let result = validator.validateFile(input);
+            console.log(result['errors']['crit']);
+            console.log(result['errors']['warn']);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
     });
 
 
