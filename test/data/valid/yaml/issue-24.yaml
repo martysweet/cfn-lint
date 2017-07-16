@@ -6,7 +6,7 @@ Resources:
       MaxSize: 7
       MinSize: 3
       MetricsCollection:
-        Granularity: 1Minute
+        - Granularity: 1Minute
       HealthCheckType: EC2
       LaunchConfigurationName: "Some Config"
       VPCZoneIdentifier: "Some VPC"
