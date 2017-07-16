@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.6
+- Update CloudFormation specification (downloaded 16th July 2017)
+
+## v1.1.5
+- Fix bugs in issues #42 and #44
+
 ## v1.1.4
 - Update CloudFormation specification (downloaded 17th May 2017), see the [AWS Blog](https://aws.amazon.com/about-aws/whats-new/2017/05/cloudformation-support-for-aws-waf-on-alb/)
 
