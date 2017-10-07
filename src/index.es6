@@ -6,6 +6,7 @@
 
 let program = require('commander');
 let colors = require('colors');
+let version = require('../package').version;
 let firstArg, secondArg, params = null;
 
 function list(val) {
@@ -13,7 +14,7 @@ function list(val) {
 }
 
 program
-    .version('0.0.1')
+    .version(version)
     .arguments('<cmd> <file>')
     .option('-p, --parameters <items>', 'List of params', list)
     .option('-p, --pseudo <items>', 'List of pseudo overrides', list)
