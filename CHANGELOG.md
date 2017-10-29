@@ -1,4 +1,13 @@
 # Changelog
+## v1.2.0
+- Update CloudFormation specification (downloaded 29th October 2017)
+- Merge PR #62, exiting the CLI with 1 if the template is invalid
+- Merge PR #60, allowing a single wildcard as a string within the template
+- Merge PR #65, allowing forked branches to run tests
+
+## v1.1.7
+- Update CloudFormation specification (downloaded 7th October 2017)
+- Merge PR #53, using the package version for the command line version output
 
 ## v1.1.6
 - Update CloudFormation specification (downloaded 16th July 2017)
