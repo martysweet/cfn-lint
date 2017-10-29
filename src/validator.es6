@@ -126,7 +126,19 @@ function assignParametersOutput(){
 
             // Check if the Ref for the parameter has been defined at runtime
             if(parameterRuntimeOverride.hasOwnProperty(param)){
+                // Check the parameter provided at runtime is within the allowed property list (if specified)
+                if(workingInput['Parameters'][param].hasOwnProperty('AllowedValues')){
+                    if(workingInput['Parameters'][param]['AllowedValues'].indexOf(parameterRuntimeOverride[param]) < 0){
+                        addError('crit', `Provided parameter value '${parameterRuntimeOverride[param]}' for ${param} is`
+                                        + ` not within the parameters AllowedValues`, ['Parameters', param], "Parameters");
+                    }
+                }
                 parameterRefAttribute = parameterRuntimeOverride[param];
+            }else{
+                // See if Default property is present and populate
+                if(workingInput['Parameters'][param].hasOwnProperty('Default')){
+                    parameterRefAttribute = workingInput['Parameters'][param]['Default'];
+                }
             }
 
             if (!workingInput['Parameters'][param].hasOwnProperty('Type')) {
@@ -367,10 +379,14 @@ function resolveCondition(ref, key){
     if(workingInput.hasOwnProperty('Conditions') && workingInput['Conditions'].hasOwnProperty(toGet)){
 
         // Check the valid of the condition, returning argument 1 on true or 2 on failure
-        if (workingInput['Conditions'][toGet].hasOwnProperty('Attributes') &&
-            workingInput['Conditions'][toGet]['Attributes'].hasOwnProperty('Output')) {
-            condition = workingInput['Conditions'][toGet]['Attributes']['Output'];
-        }   // If invalid, we will default to false, a previous error would have been thrown
+        if(typeof workingInput['Conditions'][toGet] == 'object') {
+            if (workingInput['Conditions'][toGet].hasOwnProperty('Attributes') &&
+                workingInput['Conditions'][toGet]['Attributes'].hasOwnProperty('Output')) {
+                condition = workingInput['Conditions'][toGet]['Attributes']['Output'];
+            }   // If invalid, we will default to false, a previous error would have been thrown
+        }else{
+            condition = workingInput['Conditions'][toGet];
+        }
 
     }else{
         addError('crit', `Condition '${toGet}' must reference a valid condition`, placeInTemplate, 'Condition');
@@ -674,14 +690,27 @@ function doIntrinsicIf(ref, key){
             value = toGet[2];
         }
 
-        if(typeof value != "string") {
+        if(value instanceof Array){
+            // Go through each element in the array, resolving if needed.
+            let resolvedValue = [];
+            for(let i=0; i < value.length; i++) {
+                let keys = Object.keys(value[i]);
+                if (awsIntrinsicFunctions['Fn::If']['supportedFunctions'].indexOf(keys[0]) !== -1) {
+                    resolvedValue.push(resolveIntrinsicFunction(value[i], keys[0]));
+                }else{
+                    addError('crit', `Fn::If does not allow ${keys[0]} as a nested function within an array`, placeInTemplate, 'Fn::If');
+                }
+            }
+            // Return the resolved array
+            return resolvedValue;
+        }else if(typeof value === "object") {
             let keys = Object.keys(value);
-            if (awsIntrinsicFunctions['Fn::If']['supportedFunctions'].indexOf(keys[0]) != -1) {
+            if (awsIntrinsicFunctions['Fn::If']['supportedFunctions'].indexOf(keys[0]) !== -1) {
                 return resolveIntrinsicFunction(value, keys[0]);
             }else{
                 addError('crit', `Fn::If does not allow ${keys[0]} as a nested function`, placeInTemplate, 'Fn::If');
             }
-        }else{
+        }else {
             return value;
         }
 
@@ -783,7 +812,7 @@ function doIntrinsicNot(ref, key){
         if (toGet[0] === true || toGet[0] === false) {
             return !toGet[0];
         } else {
-            addError('crit', `Fn:::Not did not resolve to a boolean value, ${toGet[0]} given`, placeInTemplate, 'Fn::Not');
+            addError('crit', `Fn::Not did not resolve to a boolean value, ${toGet[0]} given`, placeInTemplate, 'Fn::Not');
         }
 
 
