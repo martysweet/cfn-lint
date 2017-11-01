@@ -6,6 +6,18 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Merge PR #67, change format of CHANGELOG to standardised approach
+- Merge PR #62, exiting the CLI with 1 if the template is invalid
+
+### Fixed
+- Merge PR #60, allowing a single wildcard as a string within the template
+- Merge PR #65, allowing forked branches to run tests
+
+## [1.1.7] - 2017-10-07
+### Changed
+- Update CloudFormation specification (downloaded 7th October 2017)
+- Merge PR #53, using the package version for the command line version output
 
 ## [1.1.6] - 2017-07-16
 ### Changed

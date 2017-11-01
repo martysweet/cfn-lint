@@ -76,8 +76,10 @@ if(firstArg == "validate"){
 
     if(result['templateValid'] === false){
         console.log('Template invalid!'.red.bold);
+        process.exit(1)
     }else{
         console.log('Template valid!'.green);
+        process.exit(0)
     }
 
 

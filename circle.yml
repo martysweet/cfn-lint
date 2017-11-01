@@ -1,15 +1,10 @@
 machine:
   node:
     version: 6.1.0
-
-dependencies:
-  pre:
-    - echo -e "$NPM_USER\n$NPM_PASSWORD\n$NPM_EMAIL" | npm login
-    - git config --global user.name  "CircleCI"
-    - git config --global user.email "npm@martysweet.co.uk"
-
+    
 deployment:
   production:
     branch: master
     commands:
+      - echo -e "$NPM_USER\n$NPM_PASSWORD\n$NPM_EMAIL" | npm login
       - npm run deploy
