@@ -949,7 +949,7 @@ function checkResourceProperty(resourcePropType, ref, key){
             if(typeof ref[key] == 'object' && ref[key].constructor === Array){
                 for(let item in ref[key]){
                     if(ref[key].hasOwnProperty(item)) {
-                        if (resourcesSpec.isPrimitiveTypeList(resourcePropType, key)) {
+                        if (resourcesSpec.hasPrimitiveItemType(resourcePropType, key)) {
                             // Get the Primitive List Type
                             let primitiveItemType = resourcesSpec.getPrimitiveItemType(resourcePropType, key);
                             // Go through each item in list

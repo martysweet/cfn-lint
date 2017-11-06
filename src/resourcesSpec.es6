@@ -149,7 +149,7 @@ function getPropertyTypeApi(baseType, propType, key){
     return 'Unknown';
 }
 
-function isPrimitiveTypeList(type, key) {
+function hasPrimitiveItemType(type, key) {
     let spec = getType(type);
 
     return spec['Properties'].hasOwnProperty(key) && spec['Properties'][key].hasOwnProperty('PrimitiveItemType');
@@ -159,7 +159,7 @@ function isPrimitiveTypeList(type, key) {
 function getPrimitiveItemType(type, key){
     let spec = getType(type);
 
-    if(isPrimitiveTypeList(type, key)){
+    if(hasPrimitiveItemType(type, key)){
         return spec['Properties'][key]['PrimitiveItemType'];
     }
 }
@@ -190,6 +190,6 @@ exports.getRefOverride = getRefOverride;
 exports.isPropertyTypeList = isPropertyTypeList;
 exports.getPropertyType = getPropertyTypeApi;
 exports.getPrimitiveItemType = getPrimitiveItemType;
-exports.isPrimitiveTypeList = isPrimitiveTypeList;
+exports.hasPrimitiveItemType = hasPrimitiveItemType;
 exports.getRequiredProperties = getRequiredProperties;
 exports.isAdditionalPropertiesEnabled = isAdditionalPropertiesEnabled;
