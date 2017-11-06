@@ -996,13 +996,7 @@ function checkResourceProperties() {
             placeInTemplate.push('Properties');
             let resourceType = resources[res]['Type'];
 
-            // Check for missing required properties
-            checkForMissingProperties(resources[res]['Properties'], resourceType);
-
-            // TODO How to handle optional required parameters
-
-            // Process each Property
-            checkEachProperty(resourceType, resources[res], 'Properties');
+                checkComplexObject(resourceType, resourceType, resources[res]['Properties']);
 
             // Remove Properties
             placeInTemplate.pop();
@@ -1016,7 +1010,130 @@ function checkResourceProperties() {
     placeInTemplate.pop();
 }
 
-function checkEachProperty(resourceType: string, ref: any, key: string){
+
+function check(resourceType, objectType, objectToCheck) {
+    // if we expect an object
+    try {
+        if (resourcesSpec.isPropertySchema(objectType)) {
+            verify(isObject, objectToCheck);
+            checkComplexObject(resourceType, objectType, objectToCheck);
+        }
+        // else if we expect a list
+        else if (resourceSpec.isListSchema(objectType)) {
+            verify(isList, objectToCheck);
+            checkList(resourceType, objectType, objectToCheck);
+        }
+        else if (resourceSpec.isMapSchema(objectType)) {
+            verify(isObject, objectToCheck);
+            checkMap(resourceType, objectType, objectToCheck);
+        }
+        else if (resourceSpec.isArn(objectType)) {
+            verify(isString, objectToCheck);
+            checkArn(objectToCheck);
+        }
+        else if (resourceSpec.isString(objectType)) {
+            verify(isString, objectToCheck);
+        }
+        else if (resourceSpec.isInteger(objectType)) {
+            verify(isInteger, objectToCheck);
+        }
+        else if (resourceSpec.isBoolean(objectType)) {
+            verify(isBoolean, objectToCheck);
+        }
+        else if (resourceSpec.isJson(objectType)) {
+            verify(isJson, objectToCheck);
+        }
+        else {
+            // TODO
+            throw new Error ('TODO: unknown type');
+        }
+    } catch (e) {
+        if (e instanceof VerificationError) {
+            addError('crit', e.message, resourceType, objectToCheck);
+        } else {
+            throw e;
+        }
+    }
+
+    // else if we expect a primitive
+}
+
+
+function checkComplexObject(resourceType, objectType, objectToCheck) {
+    
+    // Check for missing required properties
+    checkForMissingProperties(objectToCheck, objectType);
+
+    const isCustomPropertyAllowed = resourcesSpec.isAdditionalPropertiesEnabled(objectType);
+
+    for (const propertyName in objectToCheck) {
+        const isValidProperty = resourcesSpec.isValidProperty(objectType, propertyName);
+        if (isValidProperty) {
+            const propertyType = resourcesSpec.getPropertyType(resourceType, objectType, propertyName);
+            check(resourceType, propertyType, objectToCheck[propertyName])
+        } else if (!isCustomPropertyAllowed) {
+            addError("crit", `${propertyName} is not a valid property of ${objectType}`, placeInTemplate, objectType);
+        }
+    }
+
+    // TODO How to handle optional required parameters
+}
+
+function verify(verifyTypeFunction, object) {
+    if (!verifyTypeFunction(object)) {
+        throw new VerificationError(verifyTypeFunction.message);
+    }
+}
+
+function isList(objectToCheck) {
+    return (typeof objectToCheck === 'object' && objectToCheck.prototype === Array);
+}
+isList.failureMessage = `Expecting a list`;
+
+function checkList(resourceType, objectType, listToCheck) {
+    const itemType = resourcesSpec.getItemType(objectType);
+    for (const [index, item] of listToCheck.entries()) {
+        placeInTemplate.push(index);
+        check(resourceType, itemType, item);
+        placeInTemplate.pop();
+    }
+}
+
+
+function isObject(objectToCheck) {
+    return (typeof objectToCheck === 'object' && objectToCheck.prototype === Object);
+}
+isObject.failureMessage = `Expecting an object`;
+
+function checkMap(resourceType, objectType, mapToCheck) {
+    const itemType = resourceSpec.getItemType(objectType);
+    for (let key in mapToCheck) {
+        placeInTemplate.push(key);
+        const item = mapToCheck[key];
+        check(resourceType, itemType, item);
+        placeInTemplate.pop();
+    }
+}
+
+
+function isString(objectToCheck) {
+    return (typeof objectToCheck === 'string');
+}
+isString.failureMessage = `Expecting a string`;
+
+
+function isInteger(objectToCheck) {
+    if (typeof objectToCheck === 'number') { return true; }
+    else if (typeof objectToCheck === 'string') {
+        return /-?\d+/.test(objectToCheck);
+    }
+    else { return false; }
+}
+
+
+
+
+function checkEachProperty(resourceType, ref, key){
     Object.keys(ref[key]).forEach((prop) => {
         checkResourceProperty(resourceType, ref[key], prop);
     });
