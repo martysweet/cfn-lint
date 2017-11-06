@@ -126,6 +126,13 @@ function isPropertyTypeList(parentPropertyType, key){
     return (spec !== null && spec['Properties'][key].hasOwnProperty('Type') && spec['Properties'][key]['Type'] == "List");
 }
 
+function isPropertyTypeMap(parentPropertyType, key){
+    // Get the type
+    let spec = getType(parentPropertyType);
+    // Check if Type == Map
+    return (spec !== null && spec['Properties'][key].hasOwnProperty('Type') && spec['Properties'][key]['Type'] == "Map");
+}
+
 
 function getPropertyTypeApi(baseType, propType, key){
     let spec = getType(propType);
@@ -188,6 +195,7 @@ exports.isPrimitiveProperty = isSinglePrimitivePropertyType;
 exports.isArnProperty = isArnProperty;
 exports.getRefOverride = getRefOverride;
 exports.isPropertyTypeList = isPropertyTypeList;
+exports.isPropertyTypeMap = isPropertyTypeMap;
 exports.getPropertyType = getPropertyTypeApi;
 exports.getPrimitiveItemType = getPrimitiveItemType;
 exports.hasPrimitiveItemType = hasPrimitiveItemType;

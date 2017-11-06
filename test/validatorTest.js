@@ -346,6 +346,21 @@ describe('validator', () => {
             expect(result['errors']['crit'][3]['resource']).to.contain('Resources > CloudFrontDistribution > Properties > DistributionConfig > Logging');
         });
 
+        it('a valid template with a Map property should return an object with validTemplate = true, no crit errors', () => {
+            const input = 'test/data/valid/yaml/maps.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('an invalid template with a Map property should return an object with validTemplate = false, 1 crit error', () => {
+            const input = 'test/data/invalid/yaml/invalid_maps.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]['message']).to.contain('Expected type String for key, got value \'[object Object]\'');
+            expect(result['errors']['crit'][0]['resource']).to.contain('Resources > 0-ParameterGroupWithAMap > Properties > key');
+        });
 
     });
 

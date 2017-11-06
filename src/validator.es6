@@ -974,6 +974,23 @@ function checkResourceProperty(resourcePropType, ref, key){
                     addError("crit", `Expecting a list for ${key}`, placeInTemplate, `${baseResourceType}.${key}`);
                 }
             }
+        }else if(resourcesSpec.isPropertyTypeMap(resourcePropType, key)) {
+            if (typeof ref[key] == 'object' && ref[key].constructor === Object) {
+                const isPrimitiveProperty = resourcesSpec.hasPrimitiveItemType(resourcePropType, key);
+                const propertyType = (isPrimitiveProperty)
+                    ? resourcesSpec.getPrimitiveItemType(resourcePropType, key)
+                    : resourcesSpec.getPropertyType(baseResourceType, resourcePropType, key);
+
+                for (const itemKey of Object.getOwnPropertyNames(ref[key])) {
+                    placeInTemplate.push(itemKey);
+                    checkProperty(resourcePropType, ref[key], itemKey, isPrimitiveProperty, propertyType);
+                    placeInTemplate.pop();
+                }
+            }else{
+                if (ref[key] !== '') {
+                    addError('crit', `Expecting a map for ${key}`, placeInTemplate, `${baseResourceType}.${key}`);
+                }
+            }
         }else{
             // Expect a single value or object if isPrimitiveProperty == false
             let primTypeOf = typeof ref[key];
