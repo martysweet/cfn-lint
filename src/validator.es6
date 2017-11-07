@@ -1078,7 +1078,7 @@ function checkPropertyType(ref, key, propertyType, resourcePropType){
     switch(propertyType){
         case 'String':  // A 'String' in CF can be an int or something starting with a number, it's a loose check
                         // Check the value starts with a letter or / or _
-            if(!(/^[-\w\/]/.test(val))){
+            if(!(/^[-\w\*\/]/.test(val))){
                 addError('crit', `Expected type String for ${key}, got value '${val}'`, placeInTemplate, `${resourcePropType}.${key}`);
             }
             break;
