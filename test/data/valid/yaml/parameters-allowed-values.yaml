@@ -1,0 +1,15 @@
+---
+Parameters:
+  Env:
+    Description: Environment
+    Type: String
+    Default: ''
+    AllowedValues:
+      - Dev
+      - QA
+
+Resources:
+  S3One:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref Env
