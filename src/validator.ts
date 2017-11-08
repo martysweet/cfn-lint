@@ -1,40 +1,56 @@
-let workingInput = null;
+let workingInput: any = null;
 let stopValidation = false;
-let errorObject = {"templateValid": true, "errors": {"info": [], "warn": [], "crit": []}};
-const resourcesSpec = require('./resourcesSpec');
-const logger = require('./logger');
-const parser = require('./parser');
+import resourcesSpec = require('./resourcesSpec');
+import logger = require('./logger');
+import parser = require('./parser');
 const mockArnPrefix = "arn:aws:mock:region:123456789012:";
-const parameterTypesSpec = require('../data/aws_parameter_types.json');
-const awsRefOverrides = require('../data/aws_ref_override.json');
-const awsIntrinsicFunctions = require('../data/aws_intrinsic_functions.json');
-const docs = require('./docs');
-let parameterRuntimeOverride= {};
+import {
+    awsParameterTypes as parameterTypesSpec,
+    awsRefOverrides,
+    awsIntrinsicFunctions
+} from './awsData';
+import docs = require('./docs');
+let parameterRuntimeOverride: {[parameter: string]: string | string[]} = {};
 // Todo: Allow override for RefOverrides ex. Regions
 
-exports.resetValidator = function resetValidator(){
+interface ErrorRecord {
+    message: string,
+    resource: string,
+    documentation: string
+}
+
+let errorObject = {
+    "templateValid": true,
+    "errors": {
+        "info": [] as ErrorRecord[],
+        "warn": [] as ErrorRecord[],
+        "crit": [] as ErrorRecord[]
+    }
+};
+
+export function resetValidator(){
     errorObject = {"templateValid": true, "errors": {"info": [], "warn": [], "crit": []}};
     stopValidation = false;
     parameterRuntimeOverride = {};
 };
 
-exports.validateFile = function validateFile(path){
+export function validateFile(path: string){
     // Convert to object, this will throw an exception on an error
     workingInput = parser.openFile(path);
     // Let's go!
    return validateWorkingInput();
 };
 
-exports.validateJsonObject = function validateJsonObject(obj){
+export function validateJsonObject(obj: any){
     workingInput = obj;
     return validateWorkingInput();
 };
 
-exports.addParameterValue = function addParameterValue(parameter, value){
+export function addParameterValue(parameter: string, value: string){
     addParameterOverride(parameter, value);
 };
 
-exports.addPseudoValue = function addPseudoValue(parameter, value){
+export function addPseudoValue(parameter: string, value: string){
     // Silently drop requests to change AWS::NoValue
     if(parameter == 'AWS::NoValue') {
         return;
@@ -57,7 +73,7 @@ exports.addPseudoValue = function addPseudoValue(parameter, value){
     }
 };
 
-function addParameterOverride(parameter, value){
+function addParameterOverride(parameter: string, value: string){
     parameterRuntimeOverride[parameter] = value;
 }
 
@@ -122,7 +138,7 @@ function assignParametersOutput(){
         if (workingInput['Parameters'].hasOwnProperty(param)) {
 
             // Check if Type is defined
-            let parameterRefAttribute = `string_input_${param}`;
+            let parameterRefAttribute: string | string[] = `string_input_${param}`;
 
             // Check if the Ref for the parameter has been defined at runtime
             if(parameterRuntimeOverride.hasOwnProperty(param)){
@@ -167,7 +183,9 @@ function assignParametersOutput(){
     }
 }
 
-function addError(severity, message, resourceStack, help){
+type Severity = keyof typeof errorObject.errors;
+
+function addError(severity: Severity, message : string, resourceStack: string[] = [], help?: string){
     let obj = {
         'message': message,
         'resource': resourceStack.join(' > '),
@@ -273,7 +291,7 @@ function assignResourcesOutputs(){
             }else{
                 // Check if Type is valid
                 resourceType = workingInput['Resources'][res]['Type'];
-                spec = resourcesSpec.getType(workingInput['Resources'][res]['Type']);
+                spec = resourcesSpec.getResourceType(workingInput['Resources'][res]['Type']);
                 if(spec === null){
                     addError('crit',
                         `Resource ${res} has an invalid Type of ${resourceType}.`,
@@ -300,14 +318,12 @@ function assignResourcesOutputs(){
             workingInput['Resources'][res]['Attributes']['Ref'] = refValue;
 
             //  Go through the attributes of the specification, and assign them
-            if(spec != null && spec.hasOwnProperty('Attributes')){
-                for(let attr in spec['Attributes']){
-                    if(spec['Attributes'].hasOwnProperty(attr)) {
-                        if (attr.indexOf('Arn') != -1) {
-                            workingInput['Resources'][res]['Attributes'][attr] = mockArnPrefix + res;
-                        }else {
-                            workingInput['Resources'][res]['Attributes'][attr] = "mockAttr_" + res;
-                        }
+            if(spec != null && spec.Attributes){
+                for(let attr in spec.Attributes){
+                    if (attr.indexOf('Arn') != -1) {
+                        workingInput['Resources'][res]['Attributes'][attr] = mockArnPrefix + res;
+                    }else {
+                        workingInput['Resources'][res]['Attributes'][attr] = "mockAttr_" + res;
                     }
                 }
             }
@@ -331,11 +347,11 @@ function resolveReferences(){
 
 }
 
-let placeInTemplate = [];
-let lastPositionInTemplate = null;
-let lastPositionInTemplateKey = null;
+let placeInTemplate: string[] = [];
+let lastPositionInTemplate: any = null;
+let lastPositionInTemplateKey: string | null = null;
 
-function recursiveDecent(ref){
+function recursiveDecent(ref: any){
     // Step into next attribute
     for(let i=0; i < Object.keys(ref).length; i++){
         let key = Object.keys(ref)[i];
@@ -355,7 +371,7 @@ function recursiveDecent(ref){
             }else {
                 // Resolve the function
                 let functionOutput = resolveIntrinsicFunction(ref, key);
-                if (functionOutput !== null) {
+                if (functionOutput !== null && lastPositionInTemplateKey !== null) {
                     // Overwrite the position with the resolved value
                     lastPositionInTemplate[lastPositionInTemplateKey] = functionOutput;
                 }
@@ -372,7 +388,7 @@ function recursiveDecent(ref){
     placeInTemplate.pop();
 }
 
-function resolveCondition(ref, key){
+function resolveCondition(ref: any, key: string){
     let toGet = ref[key];
     let condition = false;
 
@@ -395,55 +411,41 @@ function resolveCondition(ref, key){
     return condition;
 }
 
-function resolveIntrinsicFunction(ref, key){
+function resolveIntrinsicFunction(ref: any, key: string) : string | boolean | string[] | undefined | null{
     switch(key){
         case 'Ref':
             return doIntrinsicRef(ref, key);
-            break;
         case 'Condition':
             return resolveCondition(ref, key);
-            break;
         case 'Fn::Join':
             return doIntrinsicJoin(ref, key);
-            break;
         case 'Fn::Base64':
             return doIntrinsicBase64(ref, key);
-            break;
         case 'Fn::GetAtt':
             return doIntrinsicGetAtt(ref, key);
-            break;
         case 'Fn::FindInMap':
             return doIntrinsicFindInMap(ref, key);
-            break;
         case 'Fn::GetAZs':
             return doIntrinsicGetAZs(ref, key);
-            break;
         case 'Fn::Sub':
             return doIntrinsicSub(ref, key);
-            break;
         case 'Fn::If':
             return doIntrinsicIf(ref, key);
-            break;
         case 'Fn::Equals':
             return doIntrinsicEquals(ref, key);
-            break;
         case 'Fn::Or':
             return doIntrinsicOr(ref, key);
-            break;
         case 'Fn::Not':
             return doIntrinsicNot(ref, key);
-            break;
         case 'Fn::ImportValue':
             return doIntrinsicImportValue(ref, key);
-            break;
         default:
             addError("warn", `Unhandled Intrinsic Function ${key}, this needs implementing. Some errors might be missed.`, placeInTemplate, "Functions");
             return null;
-            break;
     }
 }
 
-function doIntrinsicRef(ref, key){
+function doIntrinsicRef(ref: any, key: string){
 
     let refValue = ref[key];
     let resolvedVal = "INVALID_REF";
@@ -465,7 +467,7 @@ function doIntrinsicRef(ref, key){
 
 }
 
-function doIntrinsicBase64(ref, key){
+function doIntrinsicBase64(ref: any, key: string){
     // Only base64 encode strings
     let toEncode = ref[key];
     if(typeof toEncode != "string"){
@@ -479,7 +481,7 @@ function doIntrinsicBase64(ref, key){
     return Buffer.from(toEncode).toString('base64');
 }
 
-function doIntrinsicJoin(ref, key){
+function doIntrinsicJoin(ref: any, key: string){
     // Ensure that all objects in the join array have been resolved to string, otherwise
     // we need to resolve them.
     // Expect 2 parameters
@@ -495,7 +497,7 @@ function doIntrinsicJoin(ref, key){
     }
 }
 
-function doIntrinsicGetAtt(ref, key){
+function doIntrinsicGetAtt(ref: any, key: string){
     let toGet = ref[key];
     if(toGet.length < 2){
         addError("crit", "Invalid parameters for Fn::GetAtt", placeInTemplate, "Fn::GetAtt");
@@ -530,7 +532,7 @@ function doIntrinsicGetAtt(ref, key){
     }
 }
 
-function doIntrinsicFindInMap(ref, key){
+function doIntrinsicFindInMap(ref: any, key: string){
     let toGet = ref[key];
     if(toGet.length != 3){
         addError("crit", "Invalid parameters for Fn::FindInMap", placeInTemplate, "Fn::FindInMap");
@@ -560,7 +562,7 @@ function doIntrinsicFindInMap(ref, key){
     }
 }
 
-function doIntrinsicGetAZs(ref, key){
+function doIntrinsicGetAZs(ref: any, key: string){
     let toGet = ref[key];
     let region = awsRefOverrides['AWS::Region'];
     // If the argument is not a string, check it's Ref and resolve
@@ -570,7 +572,7 @@ function doIntrinsicGetAZs(ref, key){
             if(toGet[key] != 'AWS::Region'){
                 addError("warn", "Fn::GetAZs expects a region, ensure this reference returns a region", placeInTemplate, "Fn::GetAZs");
             }
-            region = resolveIntrinsicFunction(toGet, "Ref");
+            region = resolveIntrinsicFunction(toGet, "Ref") as string;
         }else{ // TODO Implement unit test for this
             addError("crit", "Fn::GetAZs only supports Ref or string as a parameter", placeInTemplate, "Fn::GetAZs");
         }
@@ -590,7 +592,7 @@ function doIntrinsicGetAZs(ref, key){
 
 }
 
-function doIntrinsicSub(ref, key){
+function doIntrinsicSub(ref: any, key: string){
     let toGet = ref[key];
     let replacementStr = null;
     let definedParams = null;
@@ -651,7 +653,7 @@ function doIntrinsicSub(ref, key){
         }else{
             if(definedParams !== null && definedParams.hasOwnProperty(m)){
                 if(typeof definedParams[m] !== 'string') {
-                    replacementVal = resolveIntrinsicFunction(definedParams[m], Object.keys(m)[0]);
+                    replacementVal = resolveIntrinsicFunction(definedParams[m], Object.keys(m)[0]) as string;
                 }else{
                     replacementVal = definedParams[m];
                 }
@@ -673,7 +675,7 @@ function doIntrinsicSub(ref, key){
     return replacementStr;
 }
 
-function doIntrinsicIf(ref, key){
+function doIntrinsicIf(ref: any, key: string){
     let toGet = ref[key];
 
     // Check the value of the condition
@@ -723,7 +725,7 @@ function doIntrinsicIf(ref, key){
     return "INVALID_IF_STATEMENT";
 }
 
-function doIntrinsicEquals(ref, key) {
+function doIntrinsicEquals(ref: any, key: string) {
     let toGet = ref[key];
 
     // Check the value of the condition
@@ -759,7 +761,7 @@ function doIntrinsicEquals(ref, key) {
     return false;
 }
 
-function doIntrinsicOr(ref, key) {
+function doIntrinsicOr(ref: any, key: string) {
     let toGet = ref[key];
 
     // Check the value of the condition
@@ -791,7 +793,7 @@ function doIntrinsicOr(ref, key) {
     }
 }
 
-function doIntrinsicNot(ref, key){
+function doIntrinsicNot(ref: any, key: string){
 
     let toGet = ref[key];
 
@@ -823,7 +825,7 @@ function doIntrinsicNot(ref, key){
     return false;
 }
 
-function doIntrinsicImportValue(ref, key){
+function doIntrinsicImportValue(ref: any, key: string){
     let toGet = ref[key];
 
     // If not string, resolve using the supported functions
@@ -841,14 +843,14 @@ function doIntrinsicImportValue(ref, key){
     if(typeof toGet == 'string'){
         return "IMPORTEDVALUE" + toGet; // TODO: Consider making this commandline defined
     }else{
-        addError(`warn`, `Something went wrong when resolving references for a Fn::ImportValue`, placeInTemplate, 'Fn::ImportValue');
+        addError('warn', `Something went wrong when resolving references for a Fn::ImportValue`, placeInTemplate, 'Fn::ImportValue');
         return 'INVALID_FN_IMPORTVALUE';
     }
 
 
 }
 
-function fnJoin(join, parts){
+function fnJoin(join: any, parts: any){
     // Go through each parts and ensure they are resolved
     for(let p in parts){
         if(parts.hasOwnProperty(p)) {
@@ -863,7 +865,7 @@ function fnJoin(join, parts){
     return parts.join(join);
 }
 
-function fnGetAtt(reference, attribute){
+function fnGetAtt(reference: string, attribute: string){
     if(workingInput['Resources'].hasOwnProperty(reference)){
         if(workingInput['Resources'][reference]['Attributes'].hasOwnProperty(attribute)){
             return workingInput['Resources'][reference]['Attributes'][attribute];
@@ -873,7 +875,7 @@ function fnGetAtt(reference, attribute){
     return null;
 }
 
-function fnFindInMap(map, first, second){
+function fnFindInMap(map: any, first: string, second: string){
     if(workingInput.hasOwnProperty('Mappings')){
         if(workingInput['Mappings'].hasOwnProperty(map)){
             if(workingInput['Mappings'][map].hasOwnProperty(first)){
@@ -886,7 +888,7 @@ function fnFindInMap(map, first, second){
     return null;
 }
 
-function getRef(reference){
+function getRef(reference: string){
     // Check in Resources
     if(workingInput['Resources'].hasOwnProperty(reference)){
         return workingInput['Resources'][reference]['Attributes']['Ref'];
@@ -906,7 +908,7 @@ function getRef(reference){
     return null;
 }
 
-let baseResourceType = null;
+let baseResourceType: string = null!;
 
 function checkResourceProperties() {
 
@@ -954,13 +956,13 @@ function checkResourceProperties() {
     placeInTemplate.pop();
 }
 
-function checkEachProperty(resourceType, ref, key){
+function checkEachProperty(resourceType: string, ref: any, key: string){
     Object.keys(ref[key]).forEach((prop) => {
         checkResourceProperty(resourceType, ref[key], prop);
     });
 }
 
-function checkResourceProperty(resourcePropType, ref, key){
+function checkResourceProperty(resourcePropType: string, ref: any, key: string){
 
     // Using the Key, the the Resource Type, get the expected Property type
     // resourceSpec get type of property using resourceType and property name
@@ -980,7 +982,7 @@ function checkResourceProperty(resourcePropType, ref, key){
                     if(ref[key].hasOwnProperty(item)) {
                         if (resourcesSpec.hasPrimitiveItemType(resourcePropType, key)) {
                             // Get the Primitive List Type
-                            let primitiveItemType = resourcesSpec.getPrimitiveItemType(resourcePropType, key);
+                            let primitiveItemType = resourcesSpec.getPrimitiveItemType(resourcePropType, key)!;
                             // Go through each item in list
                             for(let li in ref[key]){
 
@@ -993,7 +995,7 @@ function checkResourceProperty(resourcePropType, ref, key){
                             }
                         }else{
                             let propertyType = resourcesSpec.getPropertyType(baseResourceType, resourcePropType, key);
-                            checkProperty(resourcePropType, ref[key], item, isPrimitiveProperty, propertyType);
+                            checkProperty(resourcePropType, ref[key], item, isPrimitiveProperty, propertyType!);
                         }
                     }
                 }
@@ -1007,8 +1009,8 @@ function checkResourceProperty(resourcePropType, ref, key){
             if (typeof ref[key] == 'object' && ref[key].constructor === Object) {
                 const isPrimitiveProperty = resourcesSpec.hasPrimitiveItemType(resourcePropType, key);
                 const propertyType = (isPrimitiveProperty)
-                    ? resourcesSpec.getPrimitiveItemType(resourcePropType, key)
-                    : resourcesSpec.getPropertyType(baseResourceType, resourcePropType, key);
+                    ? resourcesSpec.getPrimitiveItemType(resourcePropType, key)!
+                    : resourcesSpec.getPropertyType(baseResourceType, resourcePropType, key)!;
 
                 for (const itemKey of Object.getOwnPropertyNames(ref[key])) {
                     placeInTemplate.push(itemKey);
@@ -1026,7 +1028,7 @@ function checkResourceProperty(resourcePropType, ref, key){
             let isPrimTypeOf = (primTypeOf == 'string' || primTypeOf == 'number' || primTypeOf == 'boolean');
             if((typeof ref[key] == 'object' && !isPrimitiveProperty) || (isPrimTypeOf && isPrimitiveProperty)) {
                 placeInTemplate.push(key);
-                let propertyType = resourcesSpec.getPropertyType(baseResourceType, resourcePropType, key);
+                let propertyType = resourcesSpec.getPropertyType(baseResourceType, resourcePropType, key)!;
                 checkProperty(resourcePropType, ref, key, isPrimitiveProperty, propertyType);
                 placeInTemplate.pop();
             }else{
@@ -1041,7 +1043,7 @@ function checkResourceProperty(resourcePropType, ref, key){
 
 }
 
-function checkForMissingProperties(properties, resourceType){
+function checkForMissingProperties(properties: {[k: string]: any}, resourceType: string){
     let requiredProperties = resourcesSpec.getRequiredProperties(resourceType);
 
     // Remove the properties we have from the required property list
@@ -1057,13 +1059,13 @@ function checkForMissingProperties(properties, resourceType){
     // If we have any items left over, they have not been defined
     if(requiredProperties.length > 0){
         for(let prop of requiredProperties){
-            addError(`crit`, `Required property ${prop} missing for type ${resourceType}`, placeInTemplate, resourceType);
+            addError('crit', `Required property ${prop} missing for type ${resourceType}`, placeInTemplate, resourceType);
         }
     }
 }
 
 // Checks a single element of a property
-function checkProperty(resourcePropType, ref, key, isPrimitiveType, propertyType){
+function checkProperty(resourcePropType: string, ref: any, key: string, isPrimitiveType: boolean, propertyType: string){
 
     if(!isPrimitiveType){
         // Recursive solve this property
@@ -1102,7 +1104,7 @@ function checkProperty(resourcePropType, ref, key, isPrimitiveType, propertyType
     }
 }
 
-function checkPropertyType(ref, key, propertyType, resourcePropType){
+function checkPropertyType(ref: any, key: string, propertyType: string, resourcePropType: string){
     let val = ref[key];
     switch(propertyType){
         case 'String':  // A 'String' in CF can be an int or something starting with a number, it's a loose check
