@@ -978,7 +978,7 @@ function checkResourceProperty(resourcePropType, ref, key){
             if(typeof ref[key] == 'object' && ref[key].constructor === Array){
                 for(let item in ref[key]){
                     if(ref[key].hasOwnProperty(item)) {
-                        if (resourcesSpec.isPrimitiveTypeList(resourcePropType, key)) {
+                        if (resourcesSpec.hasPrimitiveItemType(resourcePropType, key)) {
                             // Get the Primitive List Type
                             let primitiveItemType = resourcesSpec.getPrimitiveItemType(resourcePropType, key);
                             // Go through each item in list
@@ -1001,6 +1001,23 @@ function checkResourceProperty(resourcePropType, ref, key){
                 // TODO: Check DuplicatesAllowed
                 if(typeof ref[key] != 'string' && ref[key] != '') { // Allow an empty string instead of a list
                     addError("crit", `Expecting a list for ${key}`, placeInTemplate, `${baseResourceType}.${key}`);
+                }
+            }
+        }else if(resourcesSpec.isPropertyTypeMap(resourcePropType, key)) {
+            if (typeof ref[key] == 'object' && ref[key].constructor === Object) {
+                const isPrimitiveProperty = resourcesSpec.hasPrimitiveItemType(resourcePropType, key);
+                const propertyType = (isPrimitiveProperty)
+                    ? resourcesSpec.getPrimitiveItemType(resourcePropType, key)
+                    : resourcesSpec.getPropertyType(baseResourceType, resourcePropType, key);
+
+                for (const itemKey of Object.getOwnPropertyNames(ref[key])) {
+                    placeInTemplate.push(itemKey);
+                    checkProperty(resourcePropType, ref[key], itemKey, isPrimitiveProperty, propertyType);
+                    placeInTemplate.pop();
+                }
+            }else{
+                if (ref[key] !== '') {
+                    addError('crit', `Expecting a map for ${key}`, placeInTemplate, `${baseResourceType}.${key}`);
                 }
             }
         }else{
@@ -1090,7 +1107,7 @@ function checkPropertyType(ref, key, propertyType, resourcePropType){
     switch(propertyType){
         case 'String':  // A 'String' in CF can be an int or something starting with a number, it's a loose check
                         // Check the value starts with a letter or / or _
-            if(!(/^[-\w\/]/.test(val))){
+            if(!(/^[-\w\*\/]/.test(val))){
                 addError('crit', `Expected type String for ${key}, got value '${val}'`, placeInTemplate, `${resourcePropType}.${key}`);
             }
             break;
