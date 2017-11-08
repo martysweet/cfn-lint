@@ -346,6 +346,21 @@ describe('validator', () => {
             expect(result['errors']['crit'][3]['resource']).to.contain('Resources > CloudFrontDistribution > Properties > DistributionConfig > Logging');
         });
 
+        it('a valid template with a Map property should return an object with validTemplate = true, no crit errors', () => {
+            const input = 'test/data/valid/yaml/maps.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('an invalid template with a Map property should return an object with validTemplate = false, 1 crit error', () => {
+            const input = 'test/data/invalid/yaml/invalid_maps.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]['message']).to.contain('Expected type String for key, got value \'[object Object]\'');
+            expect(result['errors']['crit'][0]['resource']).to.contain('Resources > 0-ParameterGroupWithAMap > Properties > key');
+        });
 
     });
 
@@ -419,8 +434,53 @@ describe('validator', () => {
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
+
+        it('if condition not working as expected, no crit errors, no warn errors', () => {
+            const input = 'test/data/valid/yaml/issue-61.yaml';
+            validator.addParameterValue('Env', 'Production');
+            let result = validator.validateFile(input);
+            console.log(result['errors']['crit']);
+            console.log(result['errors']['warn']);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('if condition not working as expected, 2 crit errors, no warn errors', () => {
+            const input = 'test/data/valid/yaml/issue-61.yaml';
+            validator.addParameterValue('Env', 'Dev');
+            let result = validator.validateFile(input);
+            console.log(result['errors']['crit']);
+            console.log(result['errors']['warn']);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(2);
+        });
     });
 
+    describe('parameters-validation', () => {
+        it('an unallowed parameter value provided at runtime gets rejected', () => {
+            const input = 'test/data/valid/yaml/parameters-allowed-values.yaml';
+            validator.addParameterValue('Env', 'InvalidValue');
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+        });
+
+        it('an allowed parameter value provided at runtime gets allowed', () => {
+            const input = 'test/data/valid/yaml/parameters-allowed-values.yaml';
+            validator.addParameterValue('Env', 'Dev');
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('an empty parameter value provided at runtime picks up the empty default (which will throw an error)', () => {
+            const input = 'test/data/valid/yaml/parameters-allowed-values.yaml';
+            let result = validator.validateFile(input);
+            console.log(result['errors']['crit']);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+        });
+    });
 
     describe('pseudo-parmeters', () => {
         it('defining an override for accountId should result in validTemplate = true, no crit errors, no warnings', () => {
