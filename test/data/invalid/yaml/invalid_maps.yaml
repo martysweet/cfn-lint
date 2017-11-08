@@ -1,0 +1,9 @@
+Resources:
+  0-ParameterGroupWithAMap:
+    Type: AWS::RDS::DBParameterGroup
+    Properties:
+      Description: description
+      Family: MySQL5.1
+      Parameters:
+        key:
+          not: a string
