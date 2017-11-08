@@ -17,25 +17,23 @@
     "cloudformation-js-yaml-schema": "0.3.0",
     "colors": "latest",
     "commander": "latest",
-    "fs": "0.0.2",
     "js-yaml": "^3.7.0",
     "opn": "latest",
     "winston": "latest"
   },
   "devDependencies": {
-    "gulp": "latest",
-    "babel-polyfill": "latest",
-    "gulp-babel": "latest",
-    "gulp-sourcemaps": "latest",
-    "babel-preset-es2015": "latest",
-    "babel-register": "latest",
-    "babel-cli": "latest",
+    "@types/colors": "^1.1.3",
+    "@types/commander": "^2.11.0",
+    "@types/node": "^8.0.50",
+    "chai": "latest",
     "mocha": "latest",
-    "chai": "latest"
+    "ts-node": "^3.3.0",
+    "typescript": "^2.6.1"
   },
   "scripts": {
-    "build": "babel src --presets babel-preset-es2015 --out-dir lib",
-    "test": "mocha --compilers js:babel-register --require babel-polyfill",
+    "build": "tsc",
+    "test": "mocha --require ts-node/register",
+    "watch": "tsc -w",
     "prepublish": "npm run build",
     "deploy": "npm publish"
   },
