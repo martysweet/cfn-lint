@@ -6,13 +6,18 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.2.0] - 2017-11-08
 ### Changed
 - Merge PR #67, change format of CHANGELOG to standardised approach
 - Merge PR #62, exiting the CLI with 1 if the template is invalid
+- Update CloudFormation specification (downloaded 7th November 2017)
 
 ### Fixed
 - Merge PR #60, allowing a single wildcard as a string within the template
 - Merge PR #65, allowing forked branches to run tests
+- Merge PR #71, fixing maps, see #69 and #68 
+- Merge PR #63, fixing if intrinsic functions, see 
 
 ## [1.1.7] - 2017-10-07
 ### Changed
@@ -43,7 +48,8 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Added
 - Add pseudo parameter support
 
-[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.1.7...HEAD
+[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/martysweet/cfn-lint/compare/v1.1.7...v1.2.0
 [1.1.7]: https://github.com/martysweet/cfn-lint/compare/v1.1.6...v1.1.7
 [1.1.6]: https://github.com/martysweet/cfn-lint/compare/v1.1.5...v1.1.6
 [1.1.5]: https://github.com/martysweet/cfn-lint/compare/v1.1.4...v1.1.5
