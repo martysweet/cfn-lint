@@ -153,6 +153,10 @@ function getPrimitiveItemType(type: string, key: string): AWSPrimitiveType | und
     return getProperty(type, key).PrimitiveItemType;
 }
 
+function getPrimitiveType(type: string, key: string): AWSPrimitiveType | undefined {
+    return getProperty(type, key).PrimitiveType;
+}
+
 function getRequiredProperties(type: string){
     let spec = getType(type);
     let requiredProperties = [];
@@ -180,6 +184,7 @@ export = {
     isPropertyTypeList,
     isPropertyTypeMap,
     getPropertyType: getPropertyTypeApi,
+    getPrimitiveType,
     getPrimitiveItemType,
     hasPrimitiveItemType,
     getRequiredProperties,
