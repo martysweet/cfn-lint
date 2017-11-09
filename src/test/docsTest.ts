@@ -1,11 +1,9 @@
-const chai = require('chai');
+import chai = require('chai');
 const expect = chai.expect;
 const assert = chai.assert;
-const docs = require('../src/docs');
+import docs = require('../docs');
 
 describe('docs', () =>{
-
-
 
     it('resource type', () => {
         let result = docs.getDoc("AWS::Lambda::Function", false);

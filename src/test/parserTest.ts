@@ -1,14 +1,14 @@
-const chai = require('chai');
+import chai = require('chai');
 const expect = chai.expect;
 const assert = chai.assert;
-const parser = require('../src/parser');
+import parser = require('../parser');
 
 describe('parser', () =>{
 
     describe('openFile', () => {
 
         it('valid yaml should return valid javascript object', () => {
-            let result = parser.openFile("./test/data/valid/yaml/1.yaml");
+            let result = parser.openFile("./testData/valid/yaml/1.yaml");
             expect(result).to.not.equal(undefined);
             expect(result).to.not.equal(null);
             expect(result['Outputs']['PublicIP']['Value']).to.have.any.keys('Fn::GetAtt');
@@ -17,18 +17,18 @@ describe('parser', () =>{
         });
 
         it('valid yaml with shorthand should return valid javascript object', () => {
-            let result = parser.openFile("./test/data/valid/yaml/valid_shorthand_sub.yaml");
+            let result = parser.openFile("./testData/valid/yaml/valid_shorthand_sub.yaml");
             expect(result).to.not.equal(undefined);
             expect(result).to.not.equal(null);
         });
 
         it('invalid yaml should throw an Error', () => {
-            let fn = function(){ parser.openFile("./test/data/invalid/yaml/invalid_yaml.yaml"); };
+            let fn = function(){ parser.openFile("./testData/invalid/yaml/invalid_yaml.yaml"); };
             expect(fn).to.throw(/Could not determine file type. Check your template is not malformed./);
         });
 
         it('invalid json should throw an Error', () => {
-            let fn = function(){ parser.openFile("./test/data/invalid/json/invalid_json.json"); };
+            let fn = function(){ parser.openFile("./testData/invalid/json/invalid_json.json"); };
             expect(fn).to.throw(/Could not determine file type. Check your template is not malformed./);
         });
 
