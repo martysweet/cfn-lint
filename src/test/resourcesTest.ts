@@ -37,9 +37,10 @@ describe('resourceSpec', () =>{
             expect(result).to.equal(false);
         });
 
-        it('should return False for AWS::Lambda::InvalidFunction > Code', () => {
-            let result = resourceSpec.isValidProperty("AWS::Lambda::InvalidFunction", "Code");
-            expect(result).to.equal(false);
+        it('should throw for AWS::Lambda::InvalidFunction > Code', () => {
+            expect(
+                () => resourceSpec.isValidProperty("AWS::Lambda::InvalidFunction", "Code")
+            ).to.throw(resourceSpec.NoSuchResourceType);
         });
 
     });
@@ -61,9 +62,10 @@ describe('resourceSpec', () =>{
             expect(result).to.equal(false);
         });
 
-        it('should return False for AWS::Lambda::InvalidFunction > Description', () => {
-            let result = resourceSpec.isRequiredProperty("AWS::Lambda::InvalidFunction", "Description");
-            expect(result).to.equal(false);
+        it('should throw for AWS::Lambda::InvalidFunction > Description', () => {
+            expect(
+                () => resourceSpec.isRequiredProperty("AWS::Lambda::InvalidFunction", "Description")
+            ).to.throw(resourceSpec.NoSuchResourceType);
         });
 
     });
@@ -81,8 +83,9 @@ describe('resourceSpec', () =>{
         });
 
         it('should return False for AWS::Lambda::InvalidFunction > Code', () => {
-            let result = resourceSpec.isPrimitiveProperty("AWS::Lambda::InvalidFunction", "Code");
-            expect(result).to.equal(false);
+            expect(
+                () => resourceSpec.isPrimitiveProperty("AWS::Lambda::InvalidFunction", "Code")
+            ).to.throw(resourceSpec.NoSuchResourceType);
         });
 
     });

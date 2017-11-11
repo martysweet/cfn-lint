@@ -117,7 +117,7 @@ function isSinglePrimitivePropertyType(parentPropertyType: string, propertyName:
 }
 
 function isAdditionalPropertiesEnabled(resourceType: string){
-    return getResourceType(resourceType).AdditionalProperties === true;
+    return getType(resourceType).AdditionalProperties === true;
 }
 
 function isPropertyTypeList(type: string, propertyName: string) {

@@ -62,6 +62,8 @@ export type Property = PrimitiveProperty | ComplexProperty | ListProperty | MapP
 export interface ResourcePropertyType {
     Documentation: string,
     Properties: {[propertyName: string]: Property | undefined}
+    
+    AdditionalProperties: undefined;
 }
 
 export interface ResourceType {

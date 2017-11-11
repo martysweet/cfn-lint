@@ -306,13 +306,18 @@ function assignResourcesOutputs(){
             }else{
                 // Check if Type is valid
                 resourceType = workingInput['Resources'][res]['Type'];
-                spec = resourcesSpec.getResourceType(workingInput['Resources'][res]['Type']);
-                if(spec === null){
-                    addError('crit',
-                        `Resource ${res} has an invalid Type of ${resourceType}.`,
-                        ['Resources', res],
-                        "Resources"
-                    );
+                try {
+                    spec = resourcesSpec.getResourceType(workingInput['Resources'][res]['Type']);
+                } catch (e) {
+                    if (e instanceof resourcesSpec.NoSuchResourceType) {
+                        addError('crit',
+                            `Resource ${res} has an invalid Type of ${resourceType}.`,
+                            ['Resources', res],
+                            "Resources"
+                        );
+                    } else {
+                        throw e;
+                    }
                 }
             }
 
@@ -968,36 +973,43 @@ function checkResourceProperties() {
     for (let res in resources) {
 
         // Check the property exists
-        if (resources.hasOwnProperty(res) && resourcesSpec.getType(resources[res]['Type']) !== null) {
-
-            // Add the resource name to stack
-            placeInTemplate.push(res);
-
-            // Set the baseResourceType for PropertyType derivation
-            baseResourceType = resources[res]['Type'];
-
-            // Do property validation if Properties in present
-            if(resources[res].hasOwnProperty('Properties')) {
-
-                // Add Properties to the location stack
-                placeInTemplate.push('Properties');
-                let resourceType = resources[res]['Type'];
-
-                // Check for missing required properties
-                checkForMissingProperties(resources[res]['Properties'], resourceType);
-
-                // TODO How to handle optional required parameters
-
-                // Process each Property
-                checkEachProperty(resourceType, resources[res], 'Properties');
-
-                // Remove Properties
-                placeInTemplate.pop();
+        try {
+            resourcesSpec.getType(resources[res]['Type']);
+        } catch (e) {
+            if (e instanceof resourcesSpec.NoSuchResourceType) {
+                continue;
+            } else {
+                throw e;
             }
+        }
 
-            // Remove resources
+        // Add the resource name to stack
+        placeInTemplate.push(res);
+
+        // Set the baseResourceType for PropertyType derivation
+        baseResourceType = resources[res]['Type'];
+
+        // Do property validation if Properties in present
+        if(resources[res].hasOwnProperty('Properties')) {
+
+            // Add Properties to the location stack
+            placeInTemplate.push('Properties');
+            let resourceType = resources[res]['Type'];
+
+            // Check for missing required properties
+            checkForMissingProperties(resources[res]['Properties'], resourceType);
+
+            // TODO How to handle optional required parameters
+
+            // Process each Property
+            checkEachProperty(resourceType, resources[res], 'Properties');
+
+            // Remove Properties
             placeInTemplate.pop();
         }
+
+        // Remove resources
+        placeInTemplate.pop();
     }
 
     // Remove Resource
