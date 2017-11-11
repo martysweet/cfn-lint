@@ -47,24 +47,29 @@ function searchInResources(search: string): string[] {
     if(dotCount == 0){
 
         // Resource Type
-        if(awsResources['ResourceTypes'].hasOwnProperty(search)){
-            return [ awsResources['ResourceTypes'][search]['Documentation'] ];
+        const resourceType = awsResources['ResourceTypes'][search];
+        if (resourceType) {
+            return [ resourceType.Documentation ];
         }
 
     }else if(dotCount == 1){
 
         let urls: string[] = new Array();
 
+        const propertyType = awsResources['PropertyTypes'][search];
         // Check PropertyTypes
-        if(awsResources['PropertyTypes'].hasOwnProperty(search)){
-            urls.push(awsResources['PropertyTypes'][search]['Documentation']);
+        if(propertyType){
+            urls.push(propertyType.Documentation);
         }
 
         // Split and check Resource, then a property of that resource
-        let split = search.split('.');
-        if(awsResources['ResourceTypes'].hasOwnProperty(split[0])){
-            if(awsResources['ResourceTypes'][split[0]]['Properties'].hasOwnProperty(split[1])){
-                urls.push(awsResources['ResourceTypes'][split[0]]['Properties'][split[1]]['Documentation']);
+        const [resourceName, propertyName] = search.split('.');
+
+        const resourceType = awsResources['ResourceTypes'][resourceName];
+        if(resourceType){
+            const property = resourceType.Properties[propertyName];
+            if (property) {
+                urls.push(property.Documentation);
             }
         }
 
@@ -76,11 +81,13 @@ function searchInResources(search: string): string[] {
 
         // Split and find a property of a PropertyType
         let split = search.split('.');
-        let propertyType = split[0] + '.' + split[1];
+        let propertyTypeName = split[0] + '.' + split[1];
 
-        if(awsResources['PropertyTypes'].hasOwnProperty(propertyType)){
-            if(awsResources['PropertyTypes'][propertyType]['Properties'].hasOwnProperty(split[2])){
-                return [ awsResources['PropertyTypes'][propertyType]['Properties'][split[2]]['Documentation'] ];
+        const propertyType = awsResources['PropertyTypes'][propertyTypeName];
+        if (propertyType) {
+            const property = propertyType.Properties[split[2]];
+            if (property) {
+                return [ property.Documentation ]
             }
         }
 

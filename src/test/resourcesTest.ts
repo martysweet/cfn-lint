@@ -17,9 +17,10 @@ describe('resourceSpec', () =>{
             expect(result).to.not.equal(null);
         });
 
-        it('should return null for invalid type', () => {
-            let result = resourceSpec.getType("AWS::Lambda::InvalidFunction");
-            expect(result).to.equal(null);
+        it('should throw for invalid type', () => {
+            expect(
+                () => resourceSpec.getType("AWS::Lambda::InvalidFunction")
+            ).to.throw(resourceSpec.NoSuchResourceType);
         });
 
     });
