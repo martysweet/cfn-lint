@@ -12,6 +12,12 @@ import {
     awsIntrinsicFunctions
 } from './awsData';
 import docs = require('./docs');
+
+import util = require('util');
+
+import sms = require('source-map-support');
+sms.install();
+
 let parameterRuntimeOverride: {[parameter: string]: string | string[]} = {};
 // Todo: Allow override for RefOverrides ex. Regions
 
@@ -1014,7 +1020,7 @@ function checkResourceProperties() {
 
 
 function check(objectType: ObjectType, objectToCheck: any) {
-    console.dir({objectType});
+    // console.dir({objectType});
     // if we expect an object
     try {
         if ((objectType.type === 'RESOURCE') || (objectType.type === 'PROPERTY_TYPE')) {
@@ -1022,47 +1028,49 @@ function check(objectType: ObjectType, objectToCheck: any) {
             checkComplexObject(objectType, objectToCheck);
         } else {
             
-            if (objectType.type === 'PROPERTY') {
-                if (isPropertySchema(objectType)) {
-                    verify(isObject, objectToCheck);
-                    checkComplexObject(objectType, objectToCheck);
-                }
-                // else if we expect a list
-                else if (isListSchema(objectType)) {
-                    verify(isList, objectToCheck);
-                    checkList(objectType, objectToCheck);
-                }
-                else if (isMapSchema(objectType)) {
-                    verify(isObject, objectToCheck);
-                    checkMap(objectType, objectToCheck);
-                }
-                else if (isArn(objectType)) {
-                    verify(isString, objectToCheck);
-                    checkArn(objectToCheck);
-                }
+            if (objectType.type === 'PROPERTY' && isPropertySchema(objectType)) {
+                verify(isObject, objectToCheck);
+                checkComplexObject(objectType, objectToCheck);
             }
-
-            if (isString(objectType)) {
+            // else if we expect a list
+            else if (objectType.type === 'PROPERTY' && isListSchema(objectType)) {
+                verify(isList, objectToCheck);
+                checkList(objectType, objectToCheck);
+            }
+            else if (objectType.type === 'PROPERTY' && isMapSchema(objectType)) {
+                verify(isObject, objectToCheck);
+                checkMap(objectType, objectToCheck);
+            }
+            else if (objectType.type === 'PROPERTY' && isArnSchema(objectType)) {
+                verify(isString, objectToCheck);
+                checkArn(objectToCheck);
+            }
+            else if (isStringSchema(objectType)) {
                 verify(isString, objectToCheck);
             }
-            else if (isInteger(objectType)) {
+            else if (isIntegerSchema(objectType)) {
                 verify(isInteger, objectToCheck);
             }
-            else if (isBoolean(objectType)) {
+            else if (isBooleanSchema(objectType)) {
                 verify(isBoolean, objectToCheck);
             }
-            else if (isJson(objectType)) {
+            else if (isJsonSchema(objectType)) {
                 verify(isJson, objectToCheck);
             }
             else {
                 // TODO
-                throw new Error (`TODO: unknown type ${objectType}`);
+                console.log('unknown schema!!');
+                const property = (objectType.type === 'PROPERTY')
+                    ? resourcesSpec.getType(objectType.parentType).Properties[objectType.propertyName]
+                    : undefined;
+                console.dir({objectType, property})
+                throw new Error (`TODO: unknown type ${util.inspect(objectType)}`);
+                
             }
         }
     } catch (e) {
-        if (e.name === VerificationError.name) {
+        if (e instanceof VerificationError) {
             addError('crit', e.message+`, got ${objectToCheck}`, placeInTemplate, objectType.resourceType);
-            console.log({message: e.message, type: typeof objectToCheck, prototype: objectToCheck.prototype});
         } else {
             throw e;
         }
@@ -1076,7 +1084,7 @@ function checkComplexObject(objectType: ResourceType | NamedProperty | PropertyT
     // Check for missing required properties
     checkForMissingProperties(objectToCheck, objectType);
 
-    const objectTypeName = getPropertyTypeName(objectType);
+    const objectTypeName = getTypeName(objectType);
 
     const isCustomPropertyAllowed = resourcesSpec.isAdditionalPropertiesEnabled(objectTypeName);
 
@@ -1085,7 +1093,7 @@ function checkComplexObject(objectType: ResourceType | NamedProperty | PropertyT
         const isValidProperty = resourcesSpec.isValidProperty(objectTypeName, subPropertyName);
         if (isValidProperty) {
             //const propertyType = resourcesSpec.getPropertyType(objectType, propertyName);
-            console.dir({objectType, subPropertyName, objectTypeName});
+            // console.dir({objectType, subPropertyName, objectTypeName});
             const subPropertyObjectType = {
                 type: 'PROPERTY',
                 resourceType: objectType.resourceType,
@@ -1106,7 +1114,6 @@ class VerificationError extends Error {
     constructor(message: string) {
         super(message)
         Error.captureStackTrace(this, VerificationError);
-        this.name = VerificationError.name;
     }
 }
 
@@ -1194,7 +1201,7 @@ function checkArn(strToCheck: string) {
     return strToCheck.indexOf('arn:aws') == 0;
 }
 
-function getPropertyTypeName(objectType: ObjectType): string {
+function getTypeName(objectType: ObjectType): string {
     switch (objectType.type) {
         case 'RESOURCE': return objectType.resourceType
         case 'PROPERTY':
@@ -1230,7 +1237,9 @@ function isPropertySchema(objectType: NamedProperty | PrimitiveType) {
     if (objectType.type === 'PRIMITIVE_TYPE') {
         return false;
     } else {
-        return !(resourcesSpec.isPrimitiveProperty(objectType.parentType, objectType.propertyName));
+        return !(resourcesSpec.isPrimitiveProperty(objectType.parentType, objectType.propertyName))
+            && !(resourcesSpec.isPropertyTypeList(objectType.parentType, objectType.propertyName))
+            && !(resourcesSpec.isPropertyTypeMap(objectType.parentType, objectType.propertyName))
     }
 }
 
@@ -1242,7 +1251,6 @@ const isListSchema = (property: NamedProperty) =>
 const isMapSchema = (property: NamedProperty) =>
     resourcesSpec.isPropertyTypeMap(property.parentType, property.propertyName);
 
-const isArn = wrapCheck(resourcesSpec.isArnProperty);
 
 function wrapCheck(f: (primitiveType: string) => boolean) {
     function wrapped(objectType: NamedProperty | PrimitiveType) {
@@ -1256,6 +1264,7 @@ function wrapCheck(f: (primitiveType: string) => boolean) {
     return wrapped;
 }
 
+const isArnSchema = wrapCheck(resourcesSpec.isArnProperty);
 const isStringSchema = wrapCheck((primitiveType) => primitiveType == 'String');
 const isIntegerSchema = wrapCheck((primitiveType) => primitiveType == 'Integer');
 const isBooleanSchema = wrapCheck((primitiveType) => primitiveType == 'Boolean');
@@ -1352,7 +1361,7 @@ function checkResourceProperty(resourcePropType: string, ref: any, key: string){
 
 function checkForMissingProperties(properties: {[k: string]: any}, objectType: ResourceType | PropertyType | NamedProperty){
 
-    const propertyType = getPropertyTypeName(objectType);
+    const propertyType = getTypeName(objectType);
     let requiredProperties = resourcesSpec.getRequiredProperties(propertyType);
 
     // Remove the properties we have from the required property list
