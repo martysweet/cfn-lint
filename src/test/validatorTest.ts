@@ -3,6 +3,11 @@ const expect = chai.expect;
 const assert = chai.assert;
 import validator = require('../validator');
 
+import util = require('util');
+function dump(a: any) {
+    console.log(util.inspect(a, {colors: true, depth: Infinity}));
+}
+
 describe('validator', () => {
 
     beforeEach(() => {
