@@ -475,10 +475,10 @@ describe('validator', () => {
             const input = 'testData/valid/yaml/issue-61.yaml';
             validator.addParameterValue('Env', 'Dev');
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
-            console.log(result['errors']['warn']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(2);
+            expect(result['errors']['crit'][0]).to.have.property('message', 'Required property FunctionName missing for type AWS::Lambda::Version');
+            expect(result['errors']['crit'][1]).to.have.property('message', 'Required property FunctionName missing for type AWS::Lambda::Version');
         });
     });
 

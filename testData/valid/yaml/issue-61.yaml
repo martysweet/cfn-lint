@@ -22,18 +22,21 @@ Mappings:
       CertificateArn: NA
 
 Resources:
-  S3One:
-    Type: AWS::S3::Bucket
+  LambdaOne:
+    Type: AWS::Lambda::Version
     Properties:
-      BucketName: !If
+      FunctionName: !If
         - isProd
         - !FindInMap [App, !Ref Env, CertificateId]
         - !Ref "AWS::NoValue" # To cause a validation error
 
-  S3Two:
-      Type: AWS::S3::Bucket
-      Properties:
-        BucketName: !If
+  LambdaTwo:
+    Type: AWS::Lambda::Version
+    Properties:
+      FunctionName: !If
           - isNotDev
           - "Some Value"
           - !Ref "AWS::NoValue" # To cause a validation error
+
+
+    
