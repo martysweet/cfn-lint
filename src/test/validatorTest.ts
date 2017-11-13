@@ -182,7 +182,15 @@ describe('validator', () => {
             expect(result['errors']['crit'][0]['message']).to.contain('Fn::ImportValue does not support function');
         });
 
-        it('1 invalid Fn::ImportValue should return an object with validTemplate = true, 0 crit errors', () => {
+        it('1 invalid Fn::ImportValue should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = './testData/invalid/yaml/invalid_import_value_type.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]['message']).to.contain('Expecting a double');
+        });
+
+        it('a valid Fn::ImportValue should return an object with validTemplate = true, 0 crit errors', () => {
             const input = './testData/valid/yaml/valid_import_value.yaml';
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', true);
