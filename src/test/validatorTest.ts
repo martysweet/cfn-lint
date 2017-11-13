@@ -3,11 +3,6 @@ const expect = chai.expect;
 const assert = chai.assert;
 import validator = require('../validator');
 
-import util = require('util');
-function dump(a: any) {
-    console.log(util.inspect(a, {colors: true, depth: Infinity}));
-}
-
 describe('validator', () => {
 
     beforeEach(() => {
@@ -122,7 +117,6 @@ describe('validator', () => {
         it('1 invalid Ref within Parameters should return an object with validTemplate = false, 1 crit errors', () => {
             const input = require('../../testData/invalid/json/1_intrinsic_function_in_parameters.json');
             let result = validator.validateJsonObject(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
@@ -139,7 +133,6 @@ describe('validator', () => {
             const input = require('../../testData/invalid/json/1_warning_ref_get_azs_parameter.json');
             validator.addParameterValue('InstanceType', 't1.micro');
             let result = validator.validateJsonObject(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['warn']).to.have.lengthOf(1);
         });
@@ -178,7 +171,6 @@ describe('validator', () => {
         it('1 invalid Fn::ImportValue should return an object with validTemplate = false, 1 crit errors', () => {
             const input = './testData/invalid/yaml/invalid_import_value_intrinsic_function.yaml';
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
             expect(result['errors']['crit'][0]['message']).to.contain('Fn::ImportValue does not support function');
@@ -305,7 +297,6 @@ describe('validator', () => {
         it('1 invalid property name of Tag list should return an object with validTemplate = false, 1 crit errors', () => {
             const input = './testData/invalid/yaml/invalid_ec2_tags_property_name.yaml';
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
             expect(result['errors']['crit'][0]['message']).to.contain('Keyyyyy is not a valid property of');
@@ -323,7 +314,6 @@ describe('validator', () => {
         it('1 missing propertyType property should return an object with validTemplate = false, 1 crit errors', () => {
             const input = './testData/invalid/yaml/invalid_required_propertytype_prop_missing.yaml';
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
             expect(result['errors']['crit'][0]['message']).to.contain('Required property Key missing for type Tag');
@@ -332,7 +322,6 @@ describe('validator', () => {
         it('1 missing resourceType  property should return an object with validTemplate = false, 1 crit errors', () => {
             const input = './testData/invalid/yaml/invalid_required_resourcetype_prop_missing.yaml';
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
             expect(result['errors']['crit'][0]['message']).to.contain('Required property Runtime missing for type AWS::Lambda::Function');
@@ -341,7 +330,6 @@ describe('validator', () => {
         it('1 missing (via AWS::NoValue) property should return an object with validTemplate = false, 1 crit errors', () => {
             const input = './testData/invalid/yaml/invalid_required_resourcetype_prop_no_value.yaml';
             let result = validator.validateFile(input);
-            dump(result);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
             expect(result['errors']['crit'][0]['message']).to.contain('Required property Runtime missing for type AWS::Lambda::Function');
@@ -360,7 +348,6 @@ describe('validator', () => {
         it('4 invalid nested properties should return an object with validTemplate = false, 4 crit errors', () => {
             const input = './testData/invalid/yaml/invalid_missing_nested_property.yaml';
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(4);
             expect(result['errors']['crit'][0]['message']).to.contain('Required property TargetOriginId missing for type AWS::CloudFront::Distribution.DefaultCacheBehavior');
@@ -405,7 +392,6 @@ describe('validator', () => {
             const input = 'testData/valid/yaml/2.yaml';
             validator.addParameterValue('CertificateArn', 'arn:aws:region:something');
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
             expect(result['errors']['warn']).to.have.lengthOf(0);
@@ -431,7 +417,6 @@ describe('validator', () => {
         it('both methods of defining a custom resource should result in validTemplate = true, no crit errors', () => {
             const input = 'testData/valid/yaml/issue-28-custom-resource.yaml';
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
@@ -439,7 +424,6 @@ describe('validator', () => {
         it('numeric properties should result in validTemplate = true, no crit errors, no warn errors', () => {
             const input = 'testData/valid/yaml/issue-27-numeric-properties.yaml';
             let result = validator.validateFile(input);
-            console.log(result['errors']['warn']);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
             expect(result['errors']['warn']).to.have.lengthOf(0);
@@ -455,8 +439,6 @@ describe('validator', () => {
         it('Reference to RDS attribute validTemplate=true, no crit errors, no warn errors', () => {
             const input = 'testData/valid/yaml/issue-44-database-endpoint.yaml';
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
-            console.log(result['errors']['warn']);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
@@ -465,8 +447,6 @@ describe('validator', () => {
             const input = 'testData/valid/yaml/issue-61.yaml';
             validator.addParameterValue('Env', 'Production');
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
-            console.log(result['errors']['warn']);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
