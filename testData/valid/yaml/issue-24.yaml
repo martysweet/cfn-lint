@@ -9,7 +9,8 @@ Resources:
         - Granularity: 1Minute
       HealthCheckType: EC2
       LaunchConfigurationName: "Some Config"
-      VPCZoneIdentifier: "Some VPC"
+      VPCZoneIdentifier:
+        - "Some VPC"
       Tags:
         - Key: Auto-Discover
           Value: !Sub "Discover-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}"
