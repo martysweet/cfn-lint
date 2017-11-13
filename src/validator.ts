@@ -1349,19 +1349,11 @@ function checkForMissingProperties(properties: {[k: string]: any}, objectType: R
     let requiredProperties = resourcesSpec.getRequiredProperties(propertyType);
 
     // Remove the properties we have from the required property list
-    for(let propertyName in properties){
-        const propertyValue = properties[propertyName];
-        if (propertyValue !== undefined) {
-            let indexOfRequired = requiredProperties.indexOf(propertyName);
-            if(indexOfRequired !== -1){
-                requiredProperties.splice(indexOfRequired, 1);
-            }
-        }
-    }
+    const remainingProperties = requiredProperties.filter((propertyName) => properties[propertyName] === undefined);
 
     // If we have any items left over, they have not been defined
-    if(requiredProperties.length > 0){
-        for(let prop of requiredProperties){
+    if(remainingProperties.length > 0){
+        for(let prop of remainingProperties){
             addError(`crit`, `Required property ${prop} missing for type ${propertyType}`, placeInTemplate, objectType.resourceType);
         }
     }
