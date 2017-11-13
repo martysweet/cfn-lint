@@ -551,4 +551,34 @@ describe('validator', () => {
         })
 
     });
+
+    describe('type checking coverage', () => {
+        it('should be able to determine the type of every property of every resource', () => {
+            for (let resourceName in awsResources.ResourceTypes) {
+                const resource = awsResources.ResourceTypes[resourceName]!;
+                for (let propertyName in resource.Properties) {
+                    expect(() => validator.getPropertyType({
+                        'type': 'PROPERTY',
+                        resourceType: resourceName,
+                        parentType: resourceName,
+                        propertyName: propertyName
+                    })).not.to.throw();
+                }
+            }
+        });
+
+        it('should be able to determine the type of every property of every propertytype', () => {
+            for (let propertyTypeName in awsResources.PropertyTypes) {
+                const propertyType = awsResources.PropertyTypes[propertyTypeName]!;
+                for (let propertyName in propertyType.Properties) {
+                    expect(() => validator.getPropertyType({
+                        'type': 'PROPERTY',
+                        resourceType: 'TEST',
+                        parentType: propertyTypeName,
+                        propertyName: propertyName
+                    })).not.to.throw();
+                }
+            }
+        })
+    })
 });
