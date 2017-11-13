@@ -342,10 +342,10 @@ describe('validator', () => {
             const input = './testData/invalid/yaml/invalid_boolean_type.yaml';
             validator.addParameterValue('CertificateArn', 'arn:aws:region:something');
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
-            expect(result['errors']['crit'][0]['message']).to.contain('Expected type Boolean for Compress, got value \'trueeeee\'');
+            expect(result['errors']['crit'][0]['message']).to.contain('Expecting a Boolean, got \'trueeeee\'');
+            expect(result['errors']['crit'][0]['resource']).to.contain('Resources > CloudFrontDistribution > Properties > DistributionConfig > DefaultCacheBehavior > Compress');
         });
 
         it('4 invalid nested properties should return an object with validTemplate = false, 4 crit errors', () => {
