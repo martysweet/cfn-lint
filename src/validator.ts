@@ -1112,44 +1112,48 @@ function check(objectType: ObjectType, objectToCheck: any) {
     // else if we expect a primitive
 }
 
+function isKnownProperty(objectTypeName: string, objectType: ObjectType, isCustomPropertyAllowed: boolean, subPropertyName: string) {
+    const isKnownProperty = resourcesSpec.isValidProperty(objectTypeName, subPropertyName);
+    if (!isKnownProperty) {
+        if (!isCustomPropertyAllowed) {
+            addError("crit", `${subPropertyName} is not a valid property of ${objectTypeName}`, placeInTemplate, objectType.resourceType);
+        }
+        return false;
+    } else {
+        return true;
+    }
+}
+
 function checkComplexObject(objectType: ResourceType | NamedProperty | PropertyType,  objectToCheck: any) {
     
     // Check for missing required properties
     checkForMissingProperties(objectToCheck, objectType);
 
     const objectTypeName = getTypeName(objectType);
-
     const isCustomPropertyAllowed = resourcesSpec.isAdditionalPropertiesEnabled(objectTypeName);
 
-
     for (const subPropertyName in objectToCheck) {
-
         placeInTemplate.push(subPropertyName);
+        const propertyValue = objectToCheck[subPropertyName];
+        try {
+            // check if property is recognized
+            if (!isKnownProperty(objectTypeName, objectType, isCustomPropertyAllowed, subPropertyName)) { continue; }
 
-        const isValidProperty = resourcesSpec.isValidProperty(objectTypeName, subPropertyName);
-        if (isValidProperty) {
+            // already handled in check for missing properties, above.
+            if (propertyValue === undefined) { continue; }
 
-            const propertyValue = objectToCheck[subPropertyName];
-
-            if (propertyValue === undefined) {
-                // already handled in check for missing properties, above.
-                continue;
-            }
-            //const propertyType = resourcesSpec.getPropertyType(objectType, propertyName);
-            // console.dir({objectType, subPropertyName, objectTypeName});
             const subPropertyObjectType = {
                 type: 'PROPERTY',
                 resourceType: objectType.resourceType,
                 parentType: objectTypeName,
                 propertyName: subPropertyName
             } as NamedProperty;
-
+        
             check(subPropertyObjectType, propertyValue)
-        } else if (!isCustomPropertyAllowed) {
-            addError("crit", `${subPropertyName} is not a valid property of ${objectTypeName}`, placeInTemplate, objectType.resourceType);
-        }
 
-        placeInTemplate.pop();
+        } finally {
+            placeInTemplate.pop();
+        }
     }
 
     // TODO How to handle optional required parameters
@@ -1339,94 +1343,6 @@ const isBooleanSchema = wrapCheck((primitiveType) => primitiveType == 'Boolean')
 const isJsonSchema = wrapCheck((primitiveType) => primitiveType == 'Json');
 const isDoubleSchema = wrapCheck((primitiveType) => primitiveType == 'Double');
 
-
-function checkEachProperty(resourceType: string, ref: any, key: string){
-    Object.keys(ref[key]).forEach((prop) => {
-        checkResourceProperty(resourceType, ref[key], prop);
-    });
-}
-
-function checkResourceProperty(resourcePropType: string, ref: any, key: string){
-
-    // Using the Key, the the Resource Type, get the expected Property type
-    // resourceSpec get type of property using resourceType and property name
-    let isValidProperty = resourcesSpec.isValidProperty(resourcePropType, key);
-    let isCustomPropertyAllowed = resourcesSpec.isAdditionalPropertiesEnabled(resourcePropType);
-
-    if(isValidProperty){
-
-        // Check if the property is a string
-        let isPrimitiveProperty = resourcesSpec.isPrimitiveProperty(resourcePropType, key);
-
-        // Check if list of primitives
-        if(resourcesSpec.isPropertyTypeList(resourcePropType, key)) {
-            // Check if the given property is an array
-            if(typeof ref[key] == 'object' && ref[key].constructor === Array){
-                for(let item in ref[key]){
-                    if(ref[key].hasOwnProperty(item)) {
-                        if (resourcesSpec.hasPrimitiveItemType(resourcePropType, key)) {
-                            // Get the Primitive List Type
-                            let primitiveItemType = resourcesSpec.getPrimitiveItemType(resourcePropType, key)!;
-                            // Go through each item in list
-                            for(let li in ref[key]){
-
-                                if(ref[key].hasOwnProperty(li)){
-                                    placeInTemplate.push(li);
-                                    checkProperty(resourcePropType, ref[key], li, true, primitiveItemType);
-                                    placeInTemplate.pop();
-                                }
-
-                            }
-                        }else{
-                            let propertyType = resourcesSpec.getPropertyType(baseResourceType, resourcePropType, key);
-                            checkProperty(resourcePropType, ref[key], item, isPrimitiveProperty, propertyType!);
-                        }
-                    }
-                }
-            }else{
-                // TODO: Check DuplicatesAllowed
-                if(typeof ref[key] != 'string' && ref[key] != '') { // Allow an empty string instead of a list
-                    addError("crit", `Expecting a list for ${key}`, placeInTemplate, `${baseResourceType}.${key}`);
-                }
-            }
-        }else if(resourcesSpec.isPropertyTypeMap(resourcePropType, key)) {
-            if (typeof ref[key] == 'object' && ref[key].constructor === Object) {
-                const isPrimitiveProperty = resourcesSpec.hasPrimitiveItemType(resourcePropType, key);
-                const propertyType = (isPrimitiveProperty)
-                    ? resourcesSpec.getPrimitiveItemType(resourcePropType, key)!
-                    : resourcesSpec.getPropertyType(baseResourceType, resourcePropType, key)!;
-
-                for (const itemKey of Object.getOwnPropertyNames(ref[key])) {
-                    placeInTemplate.push(itemKey);
-                    checkProperty(resourcePropType, ref[key], itemKey, isPrimitiveProperty, propertyType);
-                    placeInTemplate.pop();
-                }
-            }else{
-                if (ref[key] !== '') {
-                    addError('crit', `Expecting a map for ${key}`, placeInTemplate, `${baseResourceType}.${key}`);
-                }
-            }
-        }else{
-            // Expect a single value or object if isPrimitiveProperty == false
-            let primTypeOf = typeof ref[key];
-            let isPrimTypeOf = (primTypeOf == 'string' || primTypeOf == 'number' || primTypeOf == 'boolean');
-            if((typeof ref[key] == 'object' && !isPrimitiveProperty) || (isPrimTypeOf && isPrimitiveProperty)) {
-                placeInTemplate.push(key);
-                let propertyType = resourcesSpec.getPropertyType(baseResourceType, resourcePropType, key)!;
-                checkProperty(resourcePropType, ref, key, isPrimitiveProperty, propertyType);
-                placeInTemplate.pop();
-            }else{
-                addError('warn', `Unhandled property for ${key}`, placeInTemplate, `${baseResourceType}.${key}`);
-            }
-        }
-    }else{
-        if(!isCustomPropertyAllowed) {
-            addError("crit", `${key} is not a valid property of ${resourcePropType}`, placeInTemplate, resourcePropType);
-        }
-    }
-
-}
-
 function checkForMissingProperties(properties: {[k: string]: any}, objectType: ResourceType | PropertyType | NamedProperty){
 
     const propertyType = getTypeName(objectType);
@@ -1448,74 +1364,5 @@ function checkForMissingProperties(properties: {[k: string]: any}, objectType: R
         for(let prop of requiredProperties){
             addError(`crit`, `Required property ${prop} missing for type ${propertyType}`, placeInTemplate, objectType.resourceType);
         }
-    }
-}
-
-// Checks a single element of a property
-function checkProperty(resourcePropType: string, ref: any, key: string, isPrimitiveType: boolean, propertyType: string){
-
-    if(!isPrimitiveType){
-        // Recursive solve this property
-        // If we have a List
-        if(typeof ref[key] == 'object' && ref[key].constructor === Array) {
-            for (let k in ref[key]) {
-                if(ref[key].hasOwnProperty(k)){
-                    for (let a in ref[key][k]) {
-                        if(ref[key][k].hasOwnProperty(a)) {
-                            checkResourceProperty(propertyType, ref[key][k], a);
-                        }
-                    }
-                }
-            }
-        }else{
-            // If we have an object, Check for missing required properties
-            checkForMissingProperties(ref[key], {type: 'PROPERTY_TYPE', resourceType: resourcePropType, propertyType});
-            for(let k in ref[key]) {
-                if(ref[key].hasOwnProperty(k)) {
-                    checkResourceProperty(propertyType, ref[key], k);
-                }
-            }
-        }
-
-    }else{
-
-        // Check for ARNs
-        if(resourcesSpec.isArnProperty(key) && ref[key].indexOf('arn:aws') != 0){ // First position in string
-            let k = ref[key];
-            addError("crit", `${key} is expecting an Arn, '${k}' given. If this is a parameter, has it been specified with --parameters?`, placeInTemplate, `${resourcePropType}.${key}`);
-        }
-
-        // Switch statment to check primitive types
-        checkPropertyType(ref, key, propertyType, resourcePropType);
-
-    }
-}
-
-function checkPropertyType(ref: any, key: string, propertyType: string, resourcePropType: string){
-    let val = ref[key];
-    switch(propertyType){
-        case 'String':  // A 'String' in CF can be an int or something starting with a number, it's a loose check
-                        // Check the value starts with a letter or / or _
-            if(!(/^[-\w\*\/]/.test(val))){
-                addError('crit', `Expected type String for ${key}, got value '${val}'`, placeInTemplate, `${resourcePropType}.${key}`);
-            }
-            break;
-        case 'Boolean':
-            if(!(/^true$|^false$/i.test(val))){
-                addError('crit', `Expected type Boolean for ${key}, got value '${val}'`, placeInTemplate, `${resourcePropType}.${key}`);
-            }
-            break;
-        case 'Integer':
-            try{
-                parseInt(val);
-            }catch(e){
-                addError('crit', `Expected type Integer for ${key}, got value '${val}'`, placeInTemplate, `${resourcePropType}.${key}`);
-            }
-            break;
-        case 'Json':
-            if(typeof val != 'object'){
-                addError('crit', `Expected a JSON document for ${key}, got value '${val}'`, placeInTemplate, `${resourcePropType}.${key}`);
-            }
-            break;
     }
 }
