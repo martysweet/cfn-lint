@@ -297,7 +297,6 @@ describe('validator', () => {
         it('1 invalid property name of PropertyType should return an object with validTemplate = false, 1 crit errors', () => {
             const input = './testData/invalid/yaml/invalid_propertytype_property_name.yaml';
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
             expect(result['errors']['crit'][0]['message']).to.contain('S3Buckettttt is not a valid property of AWS::Lambda::Function.Code');
@@ -316,10 +315,9 @@ describe('validator', () => {
             const input = './testData/invalid/yaml/invalid_property_type_string.yaml';
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', false);
-            console.log(result['errors']['crit']);
             expect(result['errors']['crit']).to.have.lengthOf(2);
-            expect(result['errors']['crit'][0]['message']).to.contain('Expected type String for 0');
-            expect(result['errors']['crit'][1]['message']).to.contain('Expected type String for SubnetId');
+            expect(result['errors']['crit'][0]['message']).to.contain('Expecting a string');
+            expect(result['errors']['crit'][1]['message']).to.contain('Expecting a string');
         });
 
         it('1 missing propertyType property should return an object with validTemplate = false, 1 crit errors', () => {
