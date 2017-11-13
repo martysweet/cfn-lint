@@ -2,7 +2,7 @@ type AWSExtraDocs = {[k: string]: string}
 
 export const awsExtraDocs = require('../data/aws_extra_docs.json') as AWSExtraDocs;
 
-export type AWSPrimitiveType = 'String' | 'Integer' | 'Boolean' | 'Json';
+export type AWSPrimitiveType = 'String' | 'Integer' | 'Boolean' | 'Json' | 'Double' | 'Long' | 'Timestamp';
 
 export interface PropertyBase {
     Required: boolean,

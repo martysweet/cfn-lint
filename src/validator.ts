@@ -1057,6 +1057,9 @@ function check(objectType: ObjectType, objectToCheck: any) {
             else if (isJsonSchema(objectType)) {
                 verify(isJson, objectToCheck);
             }
+            else if (isDoubleSchema(objectType)) {
+                verify(isDouble, objectToCheck);
+            }
             else {
                 // TODO
                 console.log('unknown schema!!');
@@ -1172,22 +1175,39 @@ const isString = function isString(objectToCheck: any) {
 isString.failureMessage = 'Expecting an string';
 
 
+const integerRegex = /-?\d+/;
 const isInteger = function isInteger(objectToCheck: any) {
-    if (typeof objectToCheck === 'number') { return true; }
+    if (typeof objectToCheck === 'number') {
+        return (objectToCheck === Math.round(objectToCheck));
+    }
     else if (typeof objectToCheck === 'string') {
-        return /-?\d+/.test(objectToCheck);
+        return integerRegex.test(objectToCheck);
     }
     else { return false; }
 } as any as VerificationFunction
 isInteger.failureMessage = 'Expecting an integer';
 
 
-/**
- * @type {VerificationFunction}
- * @param {any} objectToCheck 
- */
+const doubleRegex = /^-?\d+(.\d*)?([eE][-+]?\d+)?$/;
+const isDouble = function isDouble(objectToCheck: any) {
+    if (typeof objectToCheck === 'number') {
+        return !isNaN(objectToCheck);
+    }
+    else if (typeof objectToCheck === 'string') {
+        return doubleRegex.test(objectToCheck);
+    }
+} as any as VerificationFunction
+isInteger.failureMessage = 'Expecting a double';
+
+
 const isBoolean = function isBoolean(objectToCheck: any) {
-    return (typeof objectToCheck === 'boolean');
+    if (typeof objectToCheck === 'boolean') {
+        return true
+    } else if (typeof objectToCheck === 'string') {
+        return objectToCheck === 'True' || objectToCheck === 'true' || objectToCheck === 'False' || objectToCheck === 'false';
+    } else {
+        return false;
+    }
 } as any as VerificationFunction;
 isBoolean.failureMessage = 'Expecting a Boolean'
 
@@ -1281,7 +1301,7 @@ const isStringSchema = wrapCheck((primitiveType) => primitiveType == 'String');
 const isIntegerSchema = wrapCheck((primitiveType) => primitiveType == 'Integer');
 const isBooleanSchema = wrapCheck((primitiveType) => primitiveType == 'Boolean');
 const isJsonSchema = wrapCheck((primitiveType) => primitiveType == 'Json');
-
+const isDoubleSchema = wrapCheck((primitiveType) => primitiveType == 'Double');
 
 
 function checkEachProperty(resourceType: string, ref: any, key: string){
