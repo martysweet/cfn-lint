@@ -151,78 +151,89 @@ function validateWorkingInput(){
 
 }
 
-function assignParametersOutput(){
+function assignParametersOutput() {
     if(!workingInput.hasOwnProperty('Parameters')){
         return false; // This isn't an issue
     }
 
     // For through each parameter
-    for(let param in workingInput['Parameters']) {
+    for(let parameterName in workingInput['Parameters']) {
 
-        // Check if Type is defined
-        let parameterRefAttribute: string | string[] | undefined = undefined;
-        const parameterRefAttributes = {
-            'string': `string_input_${param}`,
-            'array': undefined,
-            'number': '42'
-        }
+        const parameter = workingInput['Parameters'][parameterName];
 
-        // Check if the Ref for the parameter has been defined at runtime
-        if(parameterRuntimeOverride.hasOwnProperty(param)){
-            // Check the parameter provided at runtime is within the allowed property list (if specified)
-            if(workingInput['Parameters'][param].hasOwnProperty('AllowedValues')){
-                if(workingInput['Parameters'][param]['AllowedValues'].indexOf(parameterRuntimeOverride[param]) < 0){
-                    addError('crit', `Provided parameter value '${parameterRuntimeOverride[param]}' for ${param} is`
-                                    + ` not within the parameters AllowedValues`, ['Parameters', param], "Parameters");
-                }
-            }
-            parameterRefAttribute = parameterRuntimeOverride[param];
-        }else{
-            // See if Default property is present and populate
-            if(workingInput['Parameters'][param].hasOwnProperty('Default')){
-                parameterRefAttribute = workingInput['Parameters'][param]['Default'];
-            }
-        }
-
-        if (!workingInput['Parameters'][param].hasOwnProperty('Type')) {
+        if (!parameter.hasOwnProperty('Type')) {
             // We are going to assume type if a string to continue validation, but will throw a critical
-            addError('crit', `Parameter ${param} does not have a Type defined.`, ['Parameters', param], "Parameters");
-        }else{
+            addError('crit', `Parameter ${parameterName} does not have a Type defined.`, ['Parameters', parameterName], "Parameters");
+            parameter['Type'] = 'String';
+        }
 
-            const rawParameterType = workingInput['Parameters'][param]['Type'];
-            const listMatch = /^List<(\w+)>$/.exec(rawParameterType);
-            let isList: boolean;
-            let parameterType: string;
-            if (rawParameterType === 'array') {
-                isList = true;
-                parameterType = 'string';
-            } else if (listMatch) {
-                isList = true;
-                parameterType = listMatch[1];
-            } else {
-                isList = false;
-                parameterType = rawParameterType;
-            }
+        const parameterValue = guessParameterValue(parameterName, parameter);
 
-            // Check if the parameter type is valid
-            if(!parameterTypesSpec.hasOwnProperty(parameterType)){
-                addError('crit', `Parameter ${param} has an invalid type of ${rawParameterType}.`, ['Parameters', param], "Parameters");
-            }else{
-                if (!parameterRefAttribute) {
-                    const parameterDefault = parameterRefAttributes[parameterTypesSpec[parameterType]!]! 
-                    if (isList) {
-                        parameterRefAttribute = [parameterDefault];
-                    } else {
-                        parameterRefAttribute = parameterDefault;
-                    }
-                }
-            }
+        if (parameter.hasOwnProperty('AllowedValues') && parameter['AllowedValues'].indexOf(parameterValue) < 0) {
+            addError('crit', `Parameter value '${parameterValue}' for ${parameterName} is`
+                            + ` not within the parameters AllowedValues`, ['Parameters', parameterName], "Parameters");
+
         }
 
         // Assign an Attribute Ref regardless of any failures above
-        workingInput['Parameters'][param]['Attributes'] = {};
-        workingInput['Parameters'][param]['Attributes']['Ref'] = parameterRefAttribute;
+        workingInput['Parameters'][parameterName]['Attributes'] = {};
+        workingInput['Parameters'][parameterName]['Attributes']['Ref'] = parameterValue;
     
+    }
+}
+
+
+function guessParameterValue(parameterName: string, parameter: any): string | string[] {
+
+    const parameterDefaultsByType = {
+        'string': `string_input_${parameterName}`,
+        'array': undefined,
+        'number': '42'
+    }
+
+    // Check if the Ref for the parameter has been defined at runtime
+    if (parameterRuntimeOverride.hasOwnProperty(parameterName)) {
+        // Check the parameter provided at runtime is within the allowed property list (if specified)
+        return parameterRuntimeOverride[parameterName];
+    } else if (parameter.hasOwnProperty('Default')) {
+        // See if Default property is present and populate
+        return parameter['Default'];
+    } else if (parameter.hasOwnProperty('AllowedValues') && parameter['AllowedValues'].length > 0) {
+        // See if AllowedValues has been specified
+        return parameter['AllowedValues'][0];
+    } else {
+        const rawParameterType = parameter['Type'];
+
+        const listMatch = /^List<(\w+)>$/.exec(rawParameterType);
+        let isList: boolean;
+        let parameterType: string;
+
+        if (listMatch) {
+            isList = true;
+            parameterType = listMatch[1];
+        } else {
+            parameterType = rawParameterType;
+            isList = false;
+        }
+
+        if (!parameterTypesSpec.hasOwnProperty(parameterType)) {
+            addError('crit', `Parameter ${parameterName} has an invalid type of ${rawParameterType}.`, ['Parameters', parameterName], "Parameters");
+            parameterType = 'String';
+        }
+
+        let normalizedType = parameterTypesSpec[parameterType!];
+        if (normalizedType == 'array') {
+            isList = true;
+            parameterType = 'String';
+            normalizedType = 'string';
+        }
+
+        const parameterDefault = parameterDefaultsByType[parameterTypesSpec[parameterType]!]! 
+        if (isList) {
+            return [parameterDefault];
+        } else {
+            return parameterDefault;
+        }
     }
 }
 

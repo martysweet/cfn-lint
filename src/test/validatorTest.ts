@@ -502,9 +502,9 @@ describe('validator', () => {
         it('an empty parameter value provided at runtime picks up the empty default (which will throw an error)', () => {
             const input = 'testData/valid/yaml/parameters-allowed-values.yaml';
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]).to.has.property('message', 'Parameter value \'\' for Env is not within the parameters AllowedValues');
         });
     });
 
