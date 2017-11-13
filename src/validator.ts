@@ -484,7 +484,7 @@ function doIntrinsicRef(ref: any, key: string){
     }else {
         // Check if the value of the Ref exists
         resolvedVal = getRef(refValue);
-        if (resolvedVal == null) {
+        if (resolvedVal === null) {
             addError('crit', `Referenced value ${refValue} does not exist`, placeInTemplate, "Ref");
             resolvedVal = "INVALID_REF";
         }
@@ -1090,8 +1090,18 @@ function checkComplexObject(objectType: ResourceType | NamedProperty | PropertyT
 
 
     for (const subPropertyName in objectToCheck) {
+
+        placeInTemplate.push(subPropertyName);
+
         const isValidProperty = resourcesSpec.isValidProperty(objectTypeName, subPropertyName);
         if (isValidProperty) {
+
+            const propertyValue = objectToCheck[subPropertyName];
+
+            if (propertyValue === undefined) {
+                // already handled in check for missing properties, above.
+                continue;
+            }
             //const propertyType = resourcesSpec.getPropertyType(objectType, propertyName);
             // console.dir({objectType, subPropertyName, objectTypeName});
             const subPropertyObjectType = {
@@ -1101,10 +1111,12 @@ function checkComplexObject(objectType: ResourceType | NamedProperty | PropertyT
                 propertyName: subPropertyName
             } as NamedProperty;
 
-            check(subPropertyObjectType, objectToCheck[subPropertyName])
+            check(subPropertyObjectType, propertyValue)
         } else if (!isCustomPropertyAllowed) {
             addError("crit", `${subPropertyName} is not a valid property of ${objectType}`, placeInTemplate, objectType.resourceType);
         }
+
+        placeInTemplate.pop();
     }
 
     // TODO How to handle optional required parameters
@@ -1365,9 +1377,10 @@ function checkForMissingProperties(properties: {[k: string]: any}, objectType: R
     let requiredProperties = resourcesSpec.getRequiredProperties(propertyType);
 
     // Remove the properties we have from the required property list
-    for(let prop in properties){
-        if(properties.hasOwnProperty(prop)){
-            let indexOfRequired = requiredProperties.indexOf(prop);
+    for(let propertyName in properties){
+        const propertyValue = properties[propertyName];
+        if (propertyValue !== undefined) {
+            let indexOfRequired = requiredProperties.indexOf(propertyName);
             if(indexOfRequired !== -1){
                 requiredProperties.splice(indexOfRequired, 1);
             }

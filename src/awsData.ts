@@ -115,7 +115,7 @@ for (let functionName in awsIntrinsicFunctions) {
 type RefOverrides = {
     "AWS::AccountId": string,
     "AWS::NotificationARNs": string[],
-    "AWS::NoValue": "",
+    "AWS::NoValue": undefined,
     "AWS::Region": string,
     "AWS::StackId": string,
     "AWS::StackName": string,
@@ -123,3 +123,4 @@ type RefOverrides = {
 };
 
 export const awsRefOverrides = require('../data/aws_ref_override.json') as RefOverrides;
+awsRefOverrides["AWS::NoValue"] = undefined;
