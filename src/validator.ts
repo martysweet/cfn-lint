@@ -1135,7 +1135,7 @@ function checkComplexObject(objectType: ResourceType | NamedProperty | PropertyT
 
             check(subPropertyObjectType, propertyValue)
         } else if (!isCustomPropertyAllowed) {
-            addError("crit", `${subPropertyName} is not a valid property of ${objectType}`, placeInTemplate, objectType.resourceType);
+            addError("crit", `${subPropertyName} is not a valid property of ${objectTypeName}`, placeInTemplate, objectType.resourceType);
         }
 
         placeInTemplate.pop();
