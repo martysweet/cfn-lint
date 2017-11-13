@@ -1092,7 +1092,7 @@ function check(objectType: ObjectType, objectToCheck: any) {
         }
     } catch (e) {
         if (e instanceof VerificationError) {
-            addError('crit', e.message+`, got ${objectToCheck}`, placeInTemplate, objectType.resourceType);
+            addError('crit', e.message+`, got ${util.inspect(objectToCheck)}`, placeInTemplate, objectType.resourceType);
         } else {
             throw e;
         }
