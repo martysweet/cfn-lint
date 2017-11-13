@@ -95,7 +95,7 @@ type ResourceRefTypes = {[resourceName: string]: string | undefined};
 
 export const awsResourceRefTypes = require('../data/aws_resource_ref_types.json') as ResourceRefTypes;
 
-type ParameterTypes = {[parameterName: string]: 'string' | 'array' | undefined};
+type ParameterTypes = {[parameterName: string]: 'string' | 'number' | 'array' | undefined};
 
 export const awsParameterTypes = require('../data/aws_parameter_types.json') as ParameterTypes;
 

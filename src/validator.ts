@@ -158,51 +158,71 @@ function assignParametersOutput(){
 
     // For through each parameter
     for(let param in workingInput['Parameters']) {
-        if (workingInput['Parameters'].hasOwnProperty(param)) {
 
-            // Check if Type is defined
-            let parameterRefAttribute: string | string[] = `string_input_${param}`;
-
-            // Check if the Ref for the parameter has been defined at runtime
-            if(parameterRuntimeOverride.hasOwnProperty(param)){
-                // Check the parameter provided at runtime is within the allowed property list (if specified)
-                if(workingInput['Parameters'][param].hasOwnProperty('AllowedValues')){
-                    if(workingInput['Parameters'][param]['AllowedValues'].indexOf(parameterRuntimeOverride[param]) < 0){
-                        addError('crit', `Provided parameter value '${parameterRuntimeOverride[param]}' for ${param} is`
-                                        + ` not within the parameters AllowedValues`, ['Parameters', param], "Parameters");
-                    }
-                }
-                parameterRefAttribute = parameterRuntimeOverride[param];
-            }else{
-                // See if Default property is present and populate
-                if(workingInput['Parameters'][param].hasOwnProperty('Default')){
-                    parameterRefAttribute = workingInput['Parameters'][param]['Default'];
-                }
-            }
-
-            if (!workingInput['Parameters'][param].hasOwnProperty('Type')) {
-                // We are going to assume type if a string to continue validation, but will throw a critical
-                addError('crit', `Parameter ${param} does not have a Type defined.`, ['Parameters', param], "Parameters");
-            }else{
-
-                let parameterType = workingInput['Parameters'][param]['Type'];
-
-                // Check if the parameter type is valid
-                if(!parameterTypesSpec.hasOwnProperty(parameterType)){
-                    addError('crit', `Parameter ${param} has an invalid type of ${parameterType}.`, ['Parameters', param], "Parameters");
-                }else{
-
-                        // Check the Type of an array specification, otherwise assume string
-                        if(parameterTypesSpec[parameterType] == "array"){
-                            parameterRefAttribute = ['param1', 'param2', 'param3'];
-                        }
-                    }
-            }
-
-            // Assign an Attribute Ref regardless of any failures above
-            workingInput['Parameters'][param]['Attributes'] = {};
-            workingInput['Parameters'][param]['Attributes']['Ref'] = parameterRefAttribute;
+        // Check if Type is defined
+        let parameterRefAttribute: string | string[] | undefined = undefined;
+        const parameterRefAttributes = {
+            'string': `string_input_${param}`,
+            'array': undefined,
+            'number': '42'
         }
+
+        // Check if the Ref for the parameter has been defined at runtime
+        if(parameterRuntimeOverride.hasOwnProperty(param)){
+            // Check the parameter provided at runtime is within the allowed property list (if specified)
+            if(workingInput['Parameters'][param].hasOwnProperty('AllowedValues')){
+                if(workingInput['Parameters'][param]['AllowedValues'].indexOf(parameterRuntimeOverride[param]) < 0){
+                    addError('crit', `Provided parameter value '${parameterRuntimeOverride[param]}' for ${param} is`
+                                    + ` not within the parameters AllowedValues`, ['Parameters', param], "Parameters");
+                }
+            }
+            parameterRefAttribute = parameterRuntimeOverride[param];
+        }else{
+            // See if Default property is present and populate
+            if(workingInput['Parameters'][param].hasOwnProperty('Default')){
+                parameterRefAttribute = workingInput['Parameters'][param]['Default'];
+            }
+        }
+
+        if (!workingInput['Parameters'][param].hasOwnProperty('Type')) {
+            // We are going to assume type if a string to continue validation, but will throw a critical
+            addError('crit', `Parameter ${param} does not have a Type defined.`, ['Parameters', param], "Parameters");
+        }else{
+
+            const rawParameterType = workingInput['Parameters'][param]['Type'];
+            const listMatch = /^List<(\w+)>$/.exec(rawParameterType);
+            let isList: boolean;
+            let parameterType: string;
+            if (rawParameterType === 'array') {
+                isList = true;
+                parameterType = 'string';
+            } else if (listMatch) {
+                isList = true;
+                parameterType = listMatch[1];
+            } else {
+                isList = false;
+                parameterType = rawParameterType;
+            }
+
+            // Check if the parameter type is valid
+            if(!parameterTypesSpec.hasOwnProperty(parameterType)){
+                addError('crit', `Parameter ${param} has an invalid type of ${rawParameterType}.`, ['Parameters', param], "Parameters");
+            }else{
+                if (!parameterRefAttribute) {
+                    const parameterDefault = parameterRefAttributes[parameterTypesSpec[parameterType]!]! 
+                    if (isList) {
+                        parameterRefAttribute = [parameterDefault];
+                    } else {
+                        parameterRefAttribute = parameterDefault;
+                    }
+                }
+            }
+        }
+
+        // Assign an Attribute Ref regardless of any failures above
+        workingInput['Parameters'][param]['Attributes'] = {};
+        workingInput['Parameters'][param]['Attributes']['Ref'] = parameterRefAttribute;
+    
     }
 }
 
