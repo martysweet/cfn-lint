@@ -1189,7 +1189,8 @@ function checkMap(objectType: NamedProperty, mapToCheck: {[k: string]: any}) {
 
 
 const isString = function isString(objectToCheck: any) {
-    return (typeof objectToCheck === 'string');
+    return (typeof objectToCheck === 'string')
+        || (typeof objectToCheck === 'number'); // wtf cfn.
 } as any as VerificationFunction;
 isString.failureMessage = 'Expecting a string';
 
