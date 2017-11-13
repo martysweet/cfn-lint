@@ -129,20 +129,26 @@ function isPropertyTypeMap(type: string, propertyName: string)  {
 }
 
 
-function getPropertyTypeApi(baseType: string, propType: string, key: string){
+function getPropertyTypeApi(baseType: string, propType: string, key: string) {
+    const property = getProperty(propType, key);
+    
+    if (!property.Type) {
+        return undefined
+    }
+    
+    return baseType + '.' + property.Type;
+}
+
+function getItemType(baseType: string, propType: string, key: string) {
     const property = getProperty(propType, key);
 
-    if (property.PrimitiveType) {
-        return property.PrimitiveType;
+    if (!property.ItemType) {
+        return undefined;
     } else if (property.ItemType === 'Tag') {
         return 'Tag'
-    } else if (property.ItemType) {
+    } else {
         return baseType + '.' + property.ItemType;
-    } else if (property.Type) {
-        return baseType + '.' + property.Type;
     }
-
-    return 'Unknown';
 }
 
 function hasPrimitiveItemType(type: string, propertyName: string) {
@@ -184,6 +190,7 @@ export = {
     isPropertyTypeList,
     isPropertyTypeMap,
     getPropertyType: getPropertyTypeApi,
+    getItemType,
     getPrimitiveType,
     getPrimitiveItemType,
     hasPrimitiveItemType,

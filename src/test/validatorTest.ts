@@ -3,6 +3,8 @@ const expect = chai.expect;
 const assert = chai.assert;
 import validator = require('../validator');
 
+import {awsResources} from '../awsData';
+
 describe('validator', () => {
 
     beforeEach(() => {
