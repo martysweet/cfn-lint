@@ -282,7 +282,7 @@ describe('validator', () => {
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
-            expect(result['errors']['crit'][0]['message']).to.contain('is expecting an Arn');
+            expect(result['errors']['crit'][0]['message']).to.contain('Expecting an ARN');
         });
 
         it('1 invalid property name of ResourceType should return an object with validTemplate = false, 1 crit errors', () => {

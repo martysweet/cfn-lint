@@ -1022,9 +1022,9 @@ function checkResourceProperties() {
 
             // Add Properties to the location stack
             placeInTemplate.push('Properties');
-            let resourceType = resources[res]['Type'];
 
-                check({type: 'RESOURCE', resourceType}, resources[res]['Properties']);
+            let resourceType = resources[res]['Type'];
+            check({type: 'RESOURCE', resourceType}, resources[res]['Properties']);
 
             // Remove Properties
             placeInTemplate.pop();
@@ -1062,8 +1062,7 @@ function check(objectType: ObjectType, objectToCheck: any) {
                 checkMap(objectType, objectToCheck);
             }
             else if (objectType.type === 'PROPERTY' && isArnSchema(objectType)) {
-                verify(isString, objectToCheck);
-                checkArn(objectToCheck);
+                verify(isArn, objectToCheck);
             }
             else if (isStringSchema(objectType)) {
                 verify(isString, objectToCheck);
@@ -1195,6 +1194,13 @@ const isString = function isString(objectToCheck: any) {
 isString.failureMessage = 'Expecting an string';
 
 
+const isArn = function isArn(objectToCheck: any) {
+    if (typeof objectToCheck !== 'string') { return false; }
+    return objectToCheck.indexOf('arn:aws') == 0;
+} as any as VerificationFunction;
+isArn.failureMessage = 'Expecting an ARN';
+
+
 const integerRegex = /-?\d+/;
 const isInteger = function isInteger(objectToCheck: any) {
     if (typeof objectToCheck === 'number') {
@@ -1249,10 +1255,6 @@ const isJson = function isJson(objectToCheck: any) {
 isJson.failureMessage = 'Expecting a JSON object'
 
 
-function checkArn(strToCheck: string) {
-    return strToCheck.indexOf('arn:aws') == 0;
-}
-
 function getTypeName(objectType: ObjectType): string {
     switch (objectType.type) {
         case 'RESOURCE': return objectType.resourceType
@@ -1303,6 +1305,9 @@ const isListSchema = (property: NamedProperty) =>
 const isMapSchema = (property: NamedProperty) =>
     resourcesSpec.isPropertyTypeMap(property.parentType, property.propertyName);
 
+const isArnSchema = (property: NamedProperty) =>
+    resourcesSpec.isArnProperty(property.propertyName);
+
 
 function wrapCheck(f: (primitiveType: string) => boolean) {
     function wrapped(objectType: NamedProperty | PrimitiveType) {
@@ -1316,7 +1321,6 @@ function wrapCheck(f: (primitiveType: string) => boolean) {
     return wrapped;
 }
 
-const isArnSchema = wrapCheck(resourcesSpec.isArnProperty);
 const isStringSchema = wrapCheck((primitiveType) => primitiveType == 'String');
 const isIntegerSchema = wrapCheck((primitiveType) => primitiveType == 'Integer');
 const isBooleanSchema = wrapCheck((primitiveType) => primitiveType == 'Boolean');
