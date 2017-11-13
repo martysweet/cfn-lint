@@ -338,6 +338,15 @@ describe('validator', () => {
             expect(result['errors']['crit'][0]['message']).to.contain('Required property Runtime missing for type AWS::Lambda::Function');
         });
 
+        it('1 missing (via AWS::NoValue) property should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = './testData/invalid/yaml/invalid_required_resourcetype_prop_no_value.yaml';
+            let result = validator.validateFile(input);
+            dump(result);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]['message']).to.contain('Required property Runtime missing for type AWS::Lambda::Function');
+        });
+
         it('1 invalid boolean property should return an object with validTemplate = false, 1 crit errors', () => {
             const input = './testData/invalid/yaml/invalid_boolean_type.yaml';
             validator.addParameterValue('CertificateArn', 'arn:aws:region:something');
