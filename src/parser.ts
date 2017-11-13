@@ -1,9 +1,8 @@
-import yaml from 'js-yaml';
-import { CLOUDFORMATION_SCHEMA} from 'cloudformation-js-yaml-schema';
-import fs from 'fs';
+import yaml = require('js-yaml');
+const { CLOUDFORMATION_SCHEMA } = require('cloudformation-js-yaml-schema');
+import fs = require('fs');
 
-
-exports.openFile = function openFile(path){
+export function openFile(path: string){
 
     // Check the file path is valid
     if (!fs.existsSync(path)) {
@@ -26,7 +25,7 @@ exports.openFile = function openFile(path){
 
 };
 
-function openYaml(path){
+function openYaml(path: string){
 
     // Try and load the Yaml
     let yamlParse = yaml.safeLoad(fs.readFileSync(path, 'utf8'), {
@@ -49,7 +48,7 @@ function openYaml(path){
 
 }
 
-function openJson(path){
+function openJson(path: string){
 
     return JSON.parse(fs.readFileSync(path, 'utf8'));
 
@@ -57,7 +56,7 @@ function openJson(path){
 
 let lastPlaceInTemplate = null;
 let lastKeyInTemplate = null;
-function cleanupYaml(ref){
+function cleanupYaml(ref: any){
 
         // Step into next attribute
         for(let i=0; i < Object.keys(ref).length; i++){

@@ -1,4 +1,4 @@
-let winston = require('winston');
+import winston = require('winston');
 
 let logger = new (winston.Logger)({
     transports: [
@@ -10,4 +10,4 @@ let logger = new (winston.Logger)({
     exitOnError: false
 });
 
-module.exports = logger;
+export = logger;

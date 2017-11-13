@@ -1,9 +1,8 @@
-let awsResources = require('../data/aws_resources_specification.json');
-let awsExtraDocs = require('../data/aws_extra_docs.json');
-let opn = require('opn');
+import {awsResources, awsExtraDocs} from './awsData';
+import opn = require('opn');
 
 
-exports.getDoc = function getDoc(search, browse = true){
+export function getDoc(search: string | null, browse: boolean = true){
 
     let formattedSearch = search;
 
@@ -22,7 +21,7 @@ exports.getDoc = function getDoc(search, browse = true){
 
 };
 
-exports.getUrls = function getUrls(search = ''){
+export function getUrls(search: string | null = ''){
 
     if(search == null) search = '';
 
@@ -41,7 +40,7 @@ exports.getUrls = function getUrls(search = ''){
     return docs;
 };
 
-function searchInResources(search){
+function searchInResources(search: string): string[] {
     let dotCount = (search.match(/\./g) || []).length;
 
 
@@ -54,7 +53,7 @@ function searchInResources(search){
 
     }else if(dotCount == 1){
 
-        let urls = new Array();
+        let urls: string[] = new Array();
 
         // Check PropertyTypes
         if(awsResources['PropertyTypes'].hasOwnProperty(search)){
@@ -90,7 +89,7 @@ function searchInResources(search){
     return [];
 }
 
-function searchExtraDocs(search){
+function searchExtraDocs(search: string) {
     if(awsExtraDocs.hasOwnProperty(search)){
         return [ awsExtraDocs[search] ];
     }else{

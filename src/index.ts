@@ -4,12 +4,13 @@
  * Module dependencies.
  */
 
-let program = require('commander');
-let colors = require('colors');
+import program = require('commander');
+require('colors');
 let version = require('../package').version;
-let firstArg, secondArg, params = null;
+let firstArg: string | undefined = undefined
+let secondArg: string = undefined!;
 
-function list(val) {
+function list(val: string) {
     return val.split(',');
 }
 
@@ -31,8 +32,12 @@ if (typeof firstArg === 'undefined') {
     process.exit(1);
 }
 
+import validatorBaseImport = require('./validator');
+import docsBaseImport = require('./docs');
+
 if(firstArg == "validate"){
-    const validator = require('./validator');
+
+    const validator = require('./validator') as typeof validatorBaseImport;
 
     if(program.parameters){
         for(let param of program.parameters){
@@ -51,7 +56,6 @@ if(firstArg == "validate"){
     }
 
     let result = validator.validateFile(secondArg);
-
     // Show the errors
     console.log((result['errors']['info'].length + " infos").grey);
     for(let info of result['errors']['info']){
@@ -82,8 +86,7 @@ if(firstArg == "validate"){
         process.exit(0)
     }
 
-
 }else if(firstArg == "docs"){
-    const docs = require('./docs');
+    const docs = require('./docs') as typeof docsBaseImport;
     console.log(docs.getDoc(secondArg))
 }
