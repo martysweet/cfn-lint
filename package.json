@@ -17,6 +17,7 @@
     "cloudformation-js-yaml-schema": "0.3.0",
     "colors": "latest",
     "commander": "latest",
+    "core-js": "^2.5.1",
     "js-yaml": "^3.7.0",
     "opn": "latest",
     "winston": "latest"

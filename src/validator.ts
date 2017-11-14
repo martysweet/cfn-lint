@@ -18,6 +18,8 @@ import CustomError = require('./util/CustomError');
 import sms = require('source-map-support');
 sms.install();
 
+require('./util/polyfills');
+
 let parameterRuntimeOverride: {[parameter: string]: string | string[]} = {};
 // Todo: Allow override for RefOverrides ex. Regions
 
