@@ -512,5 +512,35 @@ describe('validator', () => {
             expect(result['errors']['warn']).to.have.lengthOf(0);
         });
 
+        describe('a template with an output referencing a resource and a resource attribute', () => {
+            let result: any;
+            const input = 'testData/valid/yaml/outputs.yaml';
+            result = validator.validateFile(input);
+
+            it('should result in a valid template', () => {
+                expect(result).to.have.deep.property('templateValid', true);
+            });
+
+            it('should populate errorObject outputs correctly', () => {
+                expect(Object.keys(result['outputs'])).to.have.lengthOf(2);
+                expect(result['outputs']['Bucket']).to.equal('mock-ref-Bucket');
+                expect(result['outputs']['BucketArn']).to.match(/^arn:aws:/);
+            });
+
+            it('should populate errorObject exports correctly', () => {
+                expect(Object.keys(result['exports'])).to.have.lengthOf(1);
+                expect(result['exports']['my-global-bucket-export']).to.match(/^arn:aws:/);
+            });
+        });
+
+        it('a template with an exported output missing a Name should result in validTemplate = false, 1 crit error', () => {
+            const input = 'testData/invalid/yaml/invalid_outputs.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]).to.have.property('message', 'Output BucketArn exported with no Name');
+            expect(result['errors']['crit'][0]).to.have.property('resource', 'Outputs > BucketArn');
+        })
+
     });
 });
