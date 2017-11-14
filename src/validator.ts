@@ -1157,7 +1157,11 @@ export function getPropertyType(objectType: NamedProperty | PrimitiveType) {
     }
     else if (isDoubleSchema(objectType)) {
         return KnownTypes.Double;
-    } else {
+    }
+    else if (isTimestampSchema(objectType)) {
+        return KnownTypes.Timestamp;
+    }
+    else {
         const property = (objectType.type === 'PROPERTY')
             ? resourcesSpec.getType(objectType.parentType).Properties[objectType.propertyName]
             : undefined;
@@ -1204,6 +1208,9 @@ function check(objectType: ObjectType, objectToCheck: any) {
                     break;
                 case KnownTypes.Double:
                     verify(isDouble, objectToCheck);
+                    break;
+                case KnownTypes.Timestamp:
+                    verify(isTimestamp, objectToCheck);
                     break;
                 default:
                     const check: never = propertyType;
@@ -1398,6 +1405,21 @@ const isJson = verificationFunction(
     'Expecting a JSON object'
 );
 
+const r = String.raw;
+// adapted from https://github.com/segmentio/is-isodate (and fixed slightly)
+const timestampRegex = RegExp(
+    r`^\d{4}-\d{2}-\d{2}`         +  // Match YYYY-MM-DD
+    r`(` +                           // time part
+        r`(T\d{2}:\d{2}(:\d{2})?)`   +  // Match THH:mm:ss
+        r`(\.\d{1,6})?`               +  // Match .sssss
+        r`(Z|(\+|-)\d{2}(\:?\d{2}))?` +  // Time zone (Z or +hh:mm or +hhmm)
+    r`)?$`
+);
+
+export const isTimestamp = verificationFunction(
+    (o: any) => (typeof o === 'string') && timestampRegex.test(o) && !isNaN(Date.parse(o)),
+    'Expecting an ISO8601-formatted string'
+);
 
 
 function isPropertySchema(objectType: NamedProperty | PrimitiveType) {
@@ -1439,6 +1461,7 @@ const isIntegerSchema = wrapCheck((primitiveType) => primitiveType == 'Integer' 
 const isBooleanSchema = wrapCheck((primitiveType) => primitiveType == 'Boolean');
 const isJsonSchema = wrapCheck((primitiveType) => primitiveType == 'Json');
 const isDoubleSchema = wrapCheck((primitiveType) => primitiveType == 'Double');
+const isTimestampSchema = wrapCheck((primitiveType) => primitiveType == 'Timestamp');
 
 function checkForMissingProperties(properties: {[k: string]: any}, objectTypeName: string){
 

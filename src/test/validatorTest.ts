@@ -378,6 +378,24 @@ describe('validator', () => {
             expect(result['errors']['crit'][0]['resource']).to.contain('Resources > 0-ParameterGroupWithAMap > Properties > Parameters > key');
         });
 
+        it('a valid (valid_timestamp.yaml) template with a Timestamp should return an objcet with validTemplate = true', () => {
+            const input = 'testData/valid/yaml/valid_timestamp.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        })
+
+        it('a (invalid_timestamp.yaml) template with an invalid Timestamp should return an objcet with validTemplate = false, 2 crit errors', () => {
+            const input = 'testData/invalid/yaml/invalid_timestamp.yaml';
+            let result = validator.validateFile(input);
+            console.dir(result['errors']['crit']);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(3);
+            expect(result['errors']['crit'][0]).to.have.property('message', 'Expecting an ISO8601-formatted string, got \'some random string\'');
+            expect(result['errors']['crit'][1]).to.have.property('message', 'Expecting an ISO8601-formatted string, got \'2017-08-08 00:08\'');
+            expect(result['errors']['crit'][2]).to.have.property('message', 'Expecting an ISO8601-formatted string, got 1502150400');
+        })
+
     });
 
     describe('validateYamlFile', ()=> {
@@ -580,5 +598,47 @@ describe('validator', () => {
                 }
             }
         })
-    })
+    });
+
+    describe('type checking unit tests', () => {
+        describe('isTimestamp', () => {
+            const validTimestamps = [
+                '2012-12-30',
+                '2012-12-30T20:10',
+                '2012-12-30T20:12Z',
+                '2012-12-30T20:12:22',
+                '2012-12-30T20:12:22+01:00',
+                // valid ISO8601 but invalid Javascript date string (Date.parse -> NaN).
+                // Cloudformation does actually accept this format but
+                // it will be a huge pain for us to support.
+                // '2012-12-30T20:12:22+01',
+                '2012-12-30T20:12:22+0100',
+                '2012-12-30T20:12:22-05:00',
+                '2012-12-30T20:12:22.222',
+                '2012-12-30T20:12:22.222Z',
+                '2012-12-30T20:12:22.222222'
+            ];
+
+            for (let timestamp of validTimestamps) {
+                it(`${timestamp} should be valid`, () => {
+                    expect(validator.isTimestamp(timestamp)).to.be.true;
+                });
+            };
+
+            const invalidTimestamps = [
+                '2012',
+                '2012-12',
+                '2012-12-30T',
+                '2012-12-30T10',
+                '2012-12-30T20:12:22+1',
+                '2012-12-30T20:12:22+100',
+            ];
+            
+            for (let timestamp of invalidTimestamps) {
+                it(`${timestamp} should be invalid`, () => {
+                    expect(validator.isTimestamp(timestamp)).to.be.false;
+                });
+            };
+        })
+    });
 });
