@@ -1299,7 +1299,7 @@ function verificationFunction(f: (o: any) => boolean, message: string): Verifica
     return Object.assign(f, {failureMessage: message});
 }
 
-const isList = verificationFunction(
+export const isList = verificationFunction(
     (o: any) => (typeof o === 'object' && o.constructor === Array),
     'Expecting a list'
 );
@@ -1314,7 +1314,7 @@ function checkList(objectType: NamedProperty, listToCheck: any[]) {
 }
 
 
-const isObject = verificationFunction(
+export const isObject = verificationFunction(
     (o: any) => (typeof o === 'object' && o.constructor === Object),
     'Expecting an object'
 );
@@ -1331,20 +1331,20 @@ function checkMap(objectType: NamedProperty, mapToCheck: {[k: string]: any}) {
 }
 
 
-const isString = verificationFunction(
+export const isString = verificationFunction(
     (o: any) => (typeof o === 'string') || (typeof o === 'number'), // wtf cfn.
     'Expecting a string'
 );
 
 
-const isArn = verificationFunction(
+export const isArn = verificationFunction(
     (o: any) => (typeof o === 'string') && o.indexOf('arn:aws') == 0,
     'Expecting an ARN'
 );
 
 
-const integerRegex = /-?\d+/;
-const isInteger = verificationFunction(
+const integerRegex = /^-?\d+$/;
+export const isInteger = verificationFunction(
     (o: any) => {
         if (typeof o === 'number') {
             return (o === Math.round(o));
@@ -1359,7 +1359,7 @@ const isInteger = verificationFunction(
 
 
 const doubleRegex = /^-?\d+(.\d*)?([eE][-+]?\d+)?$/;
-const isDouble = verificationFunction(
+export const isDouble = verificationFunction(
     (o: any) => {
         if (typeof o === 'number') {
             return !isNaN(o);
@@ -1373,12 +1373,13 @@ const isDouble = verificationFunction(
 );
 
 
-const isBoolean = verificationFunction(
+export const isBoolean = verificationFunction(
         (o: any) => {
         if (typeof o === 'boolean') {
             return true
         } else if (typeof o === 'string') {
-            return o === 'True' || o === 'true' || o === 'False' || o === 'false';
+            const oLower = o.toLowerCase();
+            return oLower === 'true' || oLower === 'false';
         } else {
             return false;
         }
@@ -1387,7 +1388,7 @@ const isBoolean = verificationFunction(
 );
 
 
-const isJson = verificationFunction(
+export const isJson = verificationFunction(
     (o: any) => {
         if (isObject(o)) {
             return true;

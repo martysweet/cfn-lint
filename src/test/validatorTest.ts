@@ -2,8 +2,11 @@ import chai = require('chai');
 const expect = chai.expect;
 const assert = chai.assert;
 import validator = require('../validator');
+import yaml = require('js-yaml');
 
 import {awsResources} from '../awsData';
+import util = require('util');
+import { isObject } from 'util';
 
 describe('validator', () => {
 
@@ -601,6 +604,176 @@ describe('validator', () => {
     });
 
     describe('type checking unit tests', () => {
+
+        function runTests(checkFunction: (f: any) => boolean, valid: any[], invalid: any[]) {
+
+            for (let timestamp of valid) {
+                it(`${util.inspect(timestamp)} should be valid`, () => {
+                    expect(checkFunction(timestamp)).to.be.true;
+                });
+            };
+
+            for (let timestamp of invalid) {
+                it(`${util.inspect(timestamp)} should be invalid`, () => {
+                    expect(checkFunction(timestamp)).to.be.false;
+                });
+            };
+        }
+
+        describe('isObject', () => {
+            const validObjects = [
+                {},
+                JSON.parse("{}"),
+                yaml.safeLoad("{}")
+            ];
+
+            const invalidObjects = [
+                'string',
+                ['array'],
+                42,
+            ];
+
+            // not checked: the pathlogical primitive wrapper objects (new Number()) etc. They will
+            // return True if checked by isObject when arguably they should be False.
+            // However in practice these are never used in this project.
+
+            runTests(validator.isObject, validObjects, invalidObjects);
+
+        });
+
+
+        describe('isList', () => {
+            const validLists = [
+                ['a', 'b'],
+                JSON.parse("[42]"),
+            ];
+
+            const invalidLists = [
+                'string',
+                42,
+                {}
+            ];
+
+            runTests(validator.isList, validLists, invalidLists);
+        });
+
+        describe('isArn', () => {
+            const validArns = [
+                'arn:aws:region:something',
+                'arn:aws::::'
+            ];
+
+            const invalidArns = [
+                'notarn:aws:region:something',
+                'not even close',
+                42,
+                {},
+                ['arn:aws:region:something']
+            ];
+
+            runTests(validator.isArn, validArns, invalidArns);
+        });
+
+        describe('isString', () => {
+            const validStrings = [
+                'string',
+                42 // because CloudFormation. e.g. Route53.Recordset.TTL is "String" but accepts an integer.
+                   //  http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-route53-recordset.html#cfn-route53-recordset-ttl
+            ];
+            const invalidStrings = [
+                ['asd'],
+                {},
+            ];
+
+            runTests(validator.isString, validStrings, invalidStrings);
+        });
+
+        describe('isInteger', () => {
+            const validIntegers = [
+                123,
+                '123',
+                '-123',
+                '0',
+                '-0',
+                '00',
+            ];
+
+            const invalidIntegers = [
+                123.32,
+                '123.32',
+                '-123.32',
+                '123asdf',
+                'not even close'
+            ];
+
+            runTests(validator.isInteger, validIntegers, invalidIntegers);
+
+        });
+
+        describe('isDouble', () => {
+            const validDoubles = [
+                123,
+                123.123,
+                '123.123',
+                '0',
+                '0.0',
+                '-123.0',
+                '-123'
+            ];
+
+            const invalidDoubles = [
+                '123.32asdf',
+                'not even close',
+                '123.123.123'
+            ]
+
+            runTests(validator.isDouble, validDoubles, invalidDoubles);
+
+        });
+
+        describe('isBoolean', () => {
+            const validBooleans = [
+                true,
+                false,
+                'TrUe',
+                'FaLse',
+                'true',
+                'false'
+            ];
+
+            const invalidBooleans = [
+                'true1',
+                'y',
+                1,
+                0,
+            ]
+
+            runTests(validator.isBoolean, validBooleans, invalidBooleans);
+        });
+
+        describe('isJson', () => {
+            const validJson = [
+                {},
+                {obj: {with: 'values'}},
+                // these are accepted for some PrimitiveType: Json (e.g. IAM Policies, EMR::SecurityConfiguration),
+                // but rejected for others, e.g. RDS cluster parameters. Yay cfn. Erring on the side of
+                // accepting them here.
+                JSON.stringify({}),
+                JSON.stringify({obj: {with: 'values'}}),
+            ]
+
+            const invalidJson = [
+                [],
+                'string',
+                JSON.stringify([]),
+                JSON.stringify('string')
+            ];
+
+            runTests(validator.isJson, validJson, invalidJson);
+
+
+        })
+
         describe('isTimestamp', () => {
             const validTimestamps = [
                 '2012-12-30',
@@ -619,11 +792,6 @@ describe('validator', () => {
                 '2012-12-30T20:12:22.222222'
             ];
 
-            for (let timestamp of validTimestamps) {
-                it(`${timestamp} should be valid`, () => {
-                    expect(validator.isTimestamp(timestamp)).to.be.true;
-                });
-            };
 
             const invalidTimestamps = [
                 '2012',
@@ -633,12 +801,9 @@ describe('validator', () => {
                 '2012-12-30T20:12:22+1',
                 '2012-12-30T20:12:22+100',
             ];
+
+            runTests(validator.isTimestamp, validTimestamps, invalidTimestamps);
             
-            for (let timestamp of invalidTimestamps) {
-                it(`${timestamp} should be invalid`, () => {
-                    expect(validator.isTimestamp(timestamp)).to.be.false;
-                });
-            };
         })
     });
 });
