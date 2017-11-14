@@ -391,7 +391,6 @@ describe('validator', () => {
         it('a (invalid_timestamp.yaml) template with an invalid Timestamp should return an objcet with validTemplate = false, 2 crit errors', () => {
             const input = 'testData/invalid/yaml/invalid_timestamp.yaml';
             let result = validator.validateFile(input);
-            console.dir(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(3);
             expect(result['errors']['crit'][0]).to.have.property('message', 'Expecting an ISO8601-formatted string, got \'some random string\'');
