@@ -606,15 +606,15 @@ describe('validator', () => {
 
         function runTests(checkFunction: (f: any) => boolean, valid: any[], invalid: any[]) {
 
-            for (let timestamp of valid) {
-                it(`${util.inspect(timestamp)} should be valid`, () => {
-                    expect(checkFunction(timestamp)).to.be.true;
+            for (let validValue of valid) {
+                it(`${util.inspect(validValue)} should be valid`, () => {
+                    expect(checkFunction(validValue)).to.be.true;
                 });
             };
 
-            for (let timestamp of invalid) {
-                it(`${util.inspect(timestamp)} should be invalid`, () => {
-                    expect(checkFunction(timestamp)).to.be.false;
+            for (let invalidValue of invalid) {
+                it(`${util.inspect(invalidValue)} should be invalid`, () => {
+                    expect(checkFunction(invalidValue)).to.be.false;
                 });
             };
         }
