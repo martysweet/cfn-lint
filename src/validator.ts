@@ -13,6 +13,8 @@ import docs = require('./docs');
 
 import util = require('util');
 
+import CustomError = require('./util/CustomError');
+
 import sms = require('source-map-support');
 sms.install();
 
@@ -1264,10 +1266,10 @@ const isTimestampSchema = wrapCheck((primitiveType) => primitiveType == 'Timesta
 // Functions to verify incoming data shapes against their expected types.
 //
 
-class VerificationError extends Error {
+class VerificationError extends CustomError {
     constructor(message: string) {
         super(message)
-        Error.captureStackTrace(this, VerificationError);
+        CustomError.fixErrorInheritance(this, VerificationError);
     }
 }
 

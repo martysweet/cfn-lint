@@ -7,38 +7,33 @@ import {
     AWSPrimitiveType
 } from './awsData';
 
-// https://github.com/Microsoft/TypeScript-wiki/blob/master/Breaking-Changes.md#extending-built-ins-like-error-array-and-map-may-no-longer-work
-// safe to remove when targeting es6
-function fixErrorInheritance(e: Error, constructor: Function) {
-    (e as any).__proto__ = constructor.prototype;
-}
-
-class NoSuchProperty extends Error {
+import CustomError = require('./util/CustomError');
+class NoSuchProperty extends CustomError {
     type: string;
     propertyName: string;
     constructor(type: string, propertyName: string) {
         super(`No such property ${propertyName} on ${type}`);
 
-        fixErrorInheritance(this, NoSuchProperty)
+        CustomError.fixErrorInheritance(this, NoSuchProperty)
 
         this.type = type;
         this.propertyName = propertyName;
     }
 }
 
-class NoSuchResourceType extends Error {
+class NoSuchResourceType extends CustomError {
     resourceType: string;
     constructor(type: string) {
         super(`No such resource ${type}`);
-        fixErrorInheritance(this, NoSuchResourceType)
+        CustomError.fixErrorInheritance(this, NoSuchResourceType)
     }
 }
 
-class NoSuchPropertyType extends Error {
+class NoSuchPropertyType extends CustomError {
     propertyType: string;
     constructor(type: string) {
         super(`No such property type ${type}`);
-        fixErrorInheritance(this, NoSuchPropertyType)
+        CustomError.fixErrorInheritance(this, NoSuchPropertyType)
     }
 }
 
