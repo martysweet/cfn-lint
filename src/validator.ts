@@ -865,11 +865,14 @@ function fnJoin(join: any, parts: any){
     return parts.join(join);
 }
 
-function fnGetAtt(reference: string, attribute: string){
+export function fnGetAtt(reference: string, attribute: string){
     if(workingInput['Resources'].hasOwnProperty(reference)){
-        if(workingInput['Resources'][reference]['Attributes'].hasOwnProperty(attribute)){
-            return workingInput['Resources'][reference]['Attributes'][attribute];
-        }
+        const resource = workingInput['Resources'][reference];
+        if (resource['Attributes'].hasOwnProperty(attribute)){
+            return resource['Attributes'][attribute];
+        } else if (resource['Type'].indexOf('Custom::') === 0 || resource['Type'] === 'AWS::CloudFormation::CustomResource') {
+            return `mockAttr_${reference}_${attribute}`;
+        } 
     }
     // Return null if not found
     return null;
