@@ -19,7 +19,12 @@ program
     .arguments('<cmd> <file>')
     .option('-p, --parameters <items>', 'List of params', list)
     .option('-p, --pseudo <items>', 'List of pseudo overrides', list)
+    // https://github.com/tj/commander.js/issues/108
+    // might get fixed by https://github.com/tj/commander.js/issues/691
+    // as a workaround, we can actually leave this out. It defaults to true and the unparsed parameter will be ignored.
+//  .option('--guess-parameters', 'Guess any parameters that are not explicitely passed in and have no Default. This is the default behaviour.')
     .option('-G, --no-guess-parameters', 'Fail validation if a parameter with no Default is not passed')
+    .option('-g, --only-guess-parameters <items>', 'Guess the provided parameters, and fail validation if a parameter with no Default is passed', list)
     .action(function (arg1, arg2) {
         firstArg = arg1;
         secondArg = arg2;
@@ -56,8 +61,17 @@ if(firstArg == "validate"){
         }
     }
 
+    let guessParameters: string[] | undefined;
+    if (program.guessParameters === false) {
+        guessParameters = [];
+    } else if (program.onlyGuessParameters) {
+        guessParameters = program.onlyGuessParameters;
+    } else {
+        guessParameters = undefined;
+    }
+
     const options = {
-        guessParameterValues: (program.guessParameters !== false)
+        guessParameters
     };
 
     let result = validator.validateFile(secondArg, options);

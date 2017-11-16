@@ -20,7 +20,8 @@ sms.install();
 
 require('./util/polyfills');
 
-let parameterRuntimeOverride: {[parameter: string]: string | string[]} = {};
+export type ParameterValue = string | string[];
+let parameterRuntimeOverride: {[parameter: string]: ParameterValue | undefined} = {};
 // Todo: Allow override for RefOverrides ex. Regions
 
 export interface ErrorRecord {
@@ -56,19 +57,31 @@ export function resetValidator(){
     parameterRuntimeOverride = {};
 };
 
-export function validateFile(path: string){
+export interface ValidateOptions {
+    /**
+     * List of parameters for which guessing is allowed.
+     * undefined implies all parameters can be guessed.
+     */
+    guessParameters: string[] | undefined;
+}
+
+const defaultValidateOptions: ValidateOptions = {
+    guessParameters: undefined
+};
+
+export function validateFile(path: string, options?: Partial<ValidateOptions>){
     // Convert to object, this will throw an exception on an error
     workingInput = parser.openFile(path);
     // Let's go!
-   return validateWorkingInput();
+   return validateWorkingInput(options);
 };
 
-export function validateJsonObject(obj: any){
+export function validateJsonObject(obj: any, options?: Partial<ValidateOptions>){
     workingInput = obj;
-    return validateWorkingInput();
+    return validateWorkingInput(options);
 };
 
-export function addParameterValue(parameter: string, value: string){
+export function addParameterValue(parameter: string, value: ParameterValue){
     addParameterOverride(parameter, value);
 };
 
@@ -95,13 +108,14 @@ export function addPseudoValue(parameter: string, value: string){
     }
 };
 
-function addParameterOverride(parameter: string, value: string){
+function addParameterOverride(parameter: string, value: ParameterValue){
     parameterRuntimeOverride[parameter] = value;
 }
 
-function validateWorkingInput(){
+function validateWorkingInput(passedOptions?: Partial<ValidateOptions>) {
     // Ensure we are working from a clean slate
     //exports.resetValidator();
+    const options = Object.assign({}, defaultValidateOptions, passedOptions);
 
     // Check AWS Template Format Version
     if(workingInput.hasOwnProperty(['AWSTemplateFormatVersion'])){
@@ -125,7 +139,7 @@ function validateWorkingInput(){
 
 
     // Check parameters and assign outputs
-    assignParametersOutput();
+    assignParametersOutput(options.guessParameters);
 
     // Evaluate Conditions
     assignConditionsOutputs();
@@ -153,10 +167,13 @@ function validateWorkingInput(){
 
 }
 
-function assignParametersOutput() {
+function assignParametersOutput(guessParameters?: string[]) {
     if(!workingInput.hasOwnProperty('Parameters')){
         return false; // This isn't an issue
     }
+
+    const guessAll = (guessParameters === undefined);
+    const guessParametersSet = new Set(guessParameters || []);
 
     // For through each parameter
     for(let parameterName in workingInput['Parameters']) {
@@ -169,7 +186,11 @@ function assignParametersOutput() {
             parameter['Type'] = 'String';
         }
 
-        const parameterValue = guessParameterValue(parameterName, parameter);
+        // if the user hasn't specified any parameters to mock, assume all are ok; otherwise,
+        // only mock the allowed ones.
+        const okToGuess = (guessAll) || (guessParametersSet.has(parameterName));
+
+        const parameterValue = inferParameterValue(parameterName, parameter, okToGuess);
 
         if (parameter.hasOwnProperty('AllowedValues') && parameter['AllowedValues'].indexOf(parameterValue) < 0) {
             addError('crit', `Parameter value '${parameterValue}' for ${parameterName} is`
@@ -185,7 +206,7 @@ function assignParametersOutput() {
 }
 
 
-function guessParameterValue(parameterName: string, parameter: any): string | string[] {
+function inferParameterValue(parameterName: string, parameter: any, okToGuess: boolean): string | string[] {
 
     const parameterDefaultsByType = {
         'string': `string_input_${parameterName}`,
@@ -194,47 +215,53 @@ function guessParameterValue(parameterName: string, parameter: any): string | st
     }
 
     // Check if the Ref for the parameter has been defined at runtime
-    if (parameterRuntimeOverride.hasOwnProperty(parameterName)) {
+    const parameterOverride = parameterRuntimeOverride[parameterName]
+    if (parameterOverride !== undefined) {
         // Check the parameter provided at runtime is within the allowed property list (if specified)
-        return parameterRuntimeOverride[parameterName];
+        return parameterOverride;
     } else if (parameter.hasOwnProperty('Default')) {
         // See if Default property is present and populate
         return parameter['Default'];
-    } else if (parameter.hasOwnProperty('AllowedValues') && parameter['AllowedValues'].length > 0) {
-        // See if AllowedValues has been specified
-        return parameter['AllowedValues'][0];
     } else {
-        const rawParameterType = parameter['Type'];
-
-        const listMatch = /^List<(.+)>$/.exec(rawParameterType);
-        let isList: boolean;
-        let parameterType: string;
-
-        if (listMatch) {
-            isList = true;
-            parameterType = listMatch[1];
+        if (!okToGuess) {
+            addError('crit', 'Value for parameter was not provided', ['Parameters', parameterName], 'Parameters')
+        }
+        if (parameter.hasOwnProperty('AllowedValues') && parameter['AllowedValues'].length > 0) {
+            // See if AllowedValues has been specified
+            return parameter['AllowedValues'][0];
         } else {
-            parameterType = rawParameterType;
-            isList = false;
-        }
+            const rawParameterType = parameter['Type'];
 
-        if (!parameterTypesSpec.hasOwnProperty(parameterType)) {
-            addError('crit', `Parameter ${parameterName} has an invalid type of ${rawParameterType}.`, ['Parameters', parameterName], "Parameters");
-            parameterType = 'String';
-        }
+            const listMatch = /^List<(.+)>$/.exec(rawParameterType);
+            let isList: boolean;
+            let parameterType: string;
 
-        let normalizedType = parameterTypesSpec[parameterType!];
-        if (normalizedType == 'array') {
-            isList = true;
-            parameterType = 'String';
-            normalizedType = 'string';
-        }
+            if (listMatch) {
+                isList = true;
+                parameterType = listMatch[1];
+            } else {
+                parameterType = rawParameterType;
+                isList = false;
+            }
 
-        const parameterDefault = parameterDefaultsByType[parameterTypesSpec[parameterType]!]! 
-        if (isList) {
-            return [parameterDefault];
-        } else {
-            return parameterDefault;
+            if (!parameterTypesSpec.hasOwnProperty(parameterType)) {
+                addError('crit', `Parameter ${parameterName} has an invalid type of ${rawParameterType}.`, ['Parameters', parameterName], "Parameters");
+                parameterType = 'String';
+            }
+
+            let normalizedType = parameterTypesSpec[parameterType!];
+            if (normalizedType == 'array') {
+                isList = true;
+                parameterType = 'String';
+                normalizedType = 'string';
+            }
+
+            const parameterDefault = parameterDefaultsByType[parameterTypesSpec[parameterType]!]! 
+            if (isList) {
+                return [parameterDefault];
+            } else {
+                return parameterDefault;
+            }
         }
     }
 }

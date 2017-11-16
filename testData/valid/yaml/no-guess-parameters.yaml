@@ -1,0 +1,15 @@
+Parameters:
+  Param1:
+    Type: String
+    AllowedValues:
+      - val1
+  Param2:
+    Type: String
+
+Resources:
+  Bucket:
+    Type: AWS::S3::Bucket
+
+Outputs:
+  Output1: !Ref Param1
+  Output2: !Ref Param2

@@ -29,6 +29,8 @@ If you get `/usr/bin/env: 'node': No such file or directory` ensure your system 
 
 `cfn-lint validate my_template.yaml --parameters key="my value",key2=value2,key3=3`
 
+`cfn-lint validate my_template.yaml --parameters key="my value",key2=value2 --no-guess-parameters`
+
 `cfn-lint validate my_template.yaml --pseudo AWS::StackName="My-Stack"`
 
 `cfn-lint validate my_template.yaml --parameters key="my value" --pseudo AWS::Region=ap-northeast-1,AWS::AccountId=000000000000`
@@ -56,6 +58,21 @@ Documentation: http://docs.aws.amazon.com/search/doc-search.html?searchPath=docu
 
 Template invalid!
 ```
+
+### Flags
+`--parameters <param values>`: Provide a list of comma-separated key=value pairs of parameters to use when validating your template. If a parameter is not specified here, `cfn-lint` will guess a mock value based on the Parameter's Type and AllowedValues. e.g.
+  - `--parameters InstanceType=t2.micro,Memory=512`
+
+`--pseudo <psuedo param values>`: Provide a list of comma-separated key=value pairs of CloudFormation pseudo-parameters to use when validating your template. e.g.
+  - `--pseudo AWS::Region=ap-southeast-2`
+
+`--guess-parameters`: Guess any parameters if they don't have any Default value in the template. Parameters will be guessed/mocked based on their `AllowedValues` or `Type`. This is the default behaviour; it's only included as an option for explicitness.
+
+`--no-guess-parameters`: Disable the guessing of parameters if they don't have a Default. If you don't provide them on the CLI in this situation, a critical error will be raised instead of the parameter value being mocked.
+
+`--only-guess-parameters <param names>`: Only guess the provided parameters, and disable the guessing of all others without Defaults. A critical error will be raised for missing parameters, as above. e.g.
+ - `--only-guess-parameters InstanceType,Memory`
+
 
 ### What can cfn-lint do?
 * Read JSON + YAML (Including YAML short form)
@@ -128,11 +145,13 @@ interface ValidationOptions {
   pseudoParameters?: {
     'AWS::Region': 'ap-southeast-2',
     // ...
-  }
+  },
+  guessParameters?: string[] | undefined // default undefined
 }
 ```
 `parameters` get passed into the template's Parameters before validation, and `pseudoParameters` are used to override AWS' pseudo-parameters, like `AWS::Region`, `AWS::AccountId`, etc.
 
+If `guessParameters` is set to a list of parameter names, a critical error will be raised if any Parameter with no Default is not specified in the `parameters` or `guessParameters` options. An empty list can be used to enforce that all parameters must be specified in `parameters`. Leaving as `undefined` preserves the default loose behaviour, where parameters are guessed as needed without causing an error.
 
 ```ts
 interface ErrorRecord {

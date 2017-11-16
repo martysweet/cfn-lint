@@ -1,0 +1,11 @@
+---
+Parameters:
+  Env:
+    Description: Environment
+    Type: String
+
+Resources:
+  S3One:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref Env
