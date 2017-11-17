@@ -98,6 +98,66 @@ Template invalid!
 ### Features that would be nice, but aren't currently possible
 * Detect conditional required properties (Information doesn't exist in AWS Resource Specification)
 
+### API
+`cfn-lint` can also be used as a Node library:
+```ts
+const cfnLint = require('cfn-lint')
+```
+
+The following methods are considered public:
+
+```ts
+cfnLint.validateFile(fileName: string, options?: ValidationOptions): ValidationResult
+```
+Validates a file, and returns an ValidationResult with the results.
+
+
+```ts
+cfnLint.validateJsonObject(object: any, options?: ValidationOptions): ValidationResult
+```
+Validates an object, and returns an ValidationResult with the results. The object
+is what you might get from `JSON.parse`ing a Cloudformation template.
+
+
+```ts
+interface ValidationOptions {
+  parameters?: {
+    Param1: Param1value,
+    // ...
+  }
+  pseudoParameters?: {
+    'AWS::Region': 'ap-southeast-2',
+    // ...
+  }
+}
+```
+`parameters` get passed into the template's Parameters before validation, and `pseudoParameters` are used to override AWS' pseudo-parameters, like `AWS::Region`, `AWS::AccountId`, etc.
+
+
+```ts
+interface ErrorRecord {
+  message: string,
+  resource: string,
+  documentation: string
+}
+interface ValidationResult {
+  templateValid: boolean,
+  errors: {
+    crit: ErrorRecord[],
+    warn: ErrorRecord[],
+    info: ErrorRecord[]
+  },
+  outputs: {
+      [outputName: string]: string;
+  };
+  exports: {
+      [outputName: string]: string;
+  };
+}
+```
+Represents the result of a validation.
+
+
 ## Deploying your template
 
 CloudFormation tends to involve a bit of trail and error. To enable quick development, 

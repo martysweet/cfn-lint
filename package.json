@@ -45,6 +45,8 @@
     "type": "git",
     "url": "git+https://github.com/martysweet/cfn-lint.git"
   },
+  "types": "./lib/api.d.ts",
+  "main": "./lib/api.js",
   "bin": {
     "cfn-lint": "./lib/index.js"
   }

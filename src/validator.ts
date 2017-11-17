@@ -13,21 +13,31 @@ import docs = require('./docs');
 let parameterRuntimeOverride: {[parameter: string]: string | string[]} = {};
 // Todo: Allow override for RefOverrides ex. Regions
 
-interface ErrorRecord {
+export interface ErrorRecord {
     message: string,
     resource: string,
     documentation: string
 }
 
-let errorObject = {
+export interface ErrorObject {
+    templateValid: boolean,
+    errors: {
+        crit: ErrorRecord[],
+        warn: ErrorRecord[],
+        info: ErrorRecord[]
+    },
+    outputs: {[outputName: string]: string},
+    exports: {[outputName: string]: string}
+}
+let errorObject: ErrorObject = {
     "templateValid": true,
     "errors": {
-        "info": [] as ErrorRecord[],
-        "warn": [] as ErrorRecord[],
-        "crit": [] as ErrorRecord[]
+        "info": [],
+        "warn": [],
+        "crit": []
     },
-    "outputs": {} as {[outputName: string]: string},
-    "exports": {} as {[exportName: string]: string},
+    "outputs": {},
+    "exports": {}
 };
 
 export function resetValidator(){
