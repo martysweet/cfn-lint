@@ -4,13 +4,13 @@ export const awsExtraDocs = require('../data/aws_extra_docs.json') as AWSExtraDo
 
 export type AWSPrimitiveType = 'String' | 'Integer' | 'Boolean' | 'Json';
 
-interface PropertyBase {
+export interface PropertyBase {
     Required: boolean,
     Documentation: string,
     UpdateType: 'Mutable' | 'Immutable' | 'Conditional',
 }
 
-interface PrimitiveProperty extends PropertyBase {
+export interface PrimitiveProperty extends PropertyBase {
     PrimitiveType: AWSPrimitiveType,
 
     Type: undefined
@@ -18,7 +18,7 @@ interface PrimitiveProperty extends PropertyBase {
     PrimitiveItemType: undefined
 }
 
-interface ComplexProperty extends PropertyBase {
+export interface ComplexProperty extends PropertyBase {
     Type: string,
 
     PrimitiveType: undefined
@@ -26,28 +26,28 @@ interface ComplexProperty extends PropertyBase {
     PrimitiveItemType: undefined
 }
 
-interface ListPropertyBase extends PropertyBase {
+export interface ListPropertyBase extends PropertyBase {
     Type: 'List',
     DuplicatesAllowed: boolean,
 
     PrimitiveType: undefined
 }
 
-interface PrimitiveItemType {
+export interface PrimitiveItemType {
     PrimitiveItemType: AWSPrimitiveType,
 
     ItemType: undefined
 }
 
-interface ItemType {
+export interface ItemType {
     ItemType: string,
 
     PrimitiveItemType: undefined
 }
 
-type ListProperty = ListPropertyBase & (PrimitiveItemType | ItemType)
+export type ListProperty = ListPropertyBase & (PrimitiveItemType | ItemType)
 
-interface MapPropertyBase extends PropertyBase {
+export interface MapPropertyBase extends PropertyBase {
     Type: 'Map',
     DuplicatesAllowed: boolean,
 
@@ -55,7 +55,7 @@ interface MapPropertyBase extends PropertyBase {
     ItemType: undefined
 }
 
-type MapProperty = MapPropertyBase & (PrimitiveItemType | ItemType)
+export type MapProperty = MapPropertyBase & (PrimitiveItemType | ItemType)
 
 export type Property = PrimitiveProperty | ComplexProperty | ListProperty | MapProperty
 
@@ -71,18 +71,18 @@ export interface ResourceType {
     AdditionalProperties?: boolean
 }
 
-interface PrimitiveAttribute {
+export interface PrimitiveAttribute {
     ItemType: AWSPrimitiveType
 }
 
-interface ListAttribute {
+export interface ListAttribute {
     Type: 'List',
     PrimitiveItemType: AWSPrimitiveType
 }
 
-type Attribute = PrimitiveAttribute | ListAttribute;
+export type Attribute = PrimitiveAttribute | ListAttribute;
 
-interface AWSResourcesSpecification {
+type AWSResourcesSpecification = {
     PropertyTypes: {[propertyName: string]: ResourcePropertyType}
     ResourceTypes: {[resourceName: string]: ResourceType}
 }

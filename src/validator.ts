@@ -13,23 +13,35 @@ import docs = require('./docs');
 let parameterRuntimeOverride: {[parameter: string]: string | string[]} = {};
 // Todo: Allow override for RefOverrides ex. Regions
 
-interface ErrorRecord {
+export interface ErrorRecord {
     message: string,
     resource: string,
     documentation: string
 }
 
-let errorObject = {
+export interface ErrorObject {
+    templateValid: boolean,
+    errors: {
+        crit: ErrorRecord[],
+        warn: ErrorRecord[],
+        info: ErrorRecord[]
+    },
+    outputs: {[outputName: string]: string},
+    exports: {[outputName: string]: string}
+}
+let errorObject: ErrorObject = {
     "templateValid": true,
     "errors": {
-        "info": [] as ErrorRecord[],
-        "warn": [] as ErrorRecord[],
-        "crit": [] as ErrorRecord[]
-    }
+        "info": [],
+        "warn": [],
+        "crit": []
+    },
+    "outputs": {},
+    "exports": {}
 };
 
 export function resetValidator(){
-    errorObject = {"templateValid": true, "errors": {"info": [], "warn": [], "crit": []}};
+    errorObject = {"templateValid": true, "errors": {"info": [], "warn": [], "crit": []}, outputs: {}, exports: {}};
     stopValidation = false;
     parameterRuntimeOverride = {};
 };
@@ -123,6 +135,9 @@ function validateWorkingInput(){
 
     // Go through the hopefully resolved properties of each resource
     checkResourceProperties();
+
+    // Assign template outputs to the error object
+    collectOutputs();
 
     return errorObject;
 
@@ -906,6 +921,36 @@ function getRef(reference: string){
 
     // We have not found a ref
     return null;
+}
+
+function collectOutputs() {
+    placeInTemplate.push('Outputs');
+
+    const outputs = workingInput['Outputs'] || {};
+    for (let outputName in outputs) {
+        placeInTemplate.push(outputName);
+
+        try {
+            const output = outputs[outputName];
+            const outputValue = output['Value'];
+            if (outputValue === undefined) { continue; }
+
+            errorObject['outputs'][outputName] = outputValue;
+
+            if (output['Export']) {
+                const exportName = output['Export']['Name']
+                if (!exportName) {
+                    addError('crit', `Output ${outputName} exported with no Name`, placeInTemplate, 'Outputs');
+                    continue;
+                }
+                errorObject['exports'][exportName] = outputValue;
+            }
+        } finally {
+            placeInTemplate.pop();
+        }
+    }
+
+    placeInTemplate.pop();
 }
 
 let baseResourceType: string = null!;
