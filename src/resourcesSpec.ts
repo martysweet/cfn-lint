@@ -8,7 +8,7 @@ import {
 } from './awsData';
 
 import CustomError = require('./util/CustomError');
-class NoSuchProperty extends CustomError {
+export class NoSuchProperty extends CustomError {
     type: string;
     propertyName: string;
     constructor(type: string, propertyName: string) {
@@ -21,7 +21,7 @@ class NoSuchProperty extends CustomError {
     }
 }
 
-class NoSuchResourceType extends CustomError {
+export class NoSuchResourceType extends CustomError {
     resourceType: string;
     constructor(type: string) {
         super(`No such resource ${type}`);
@@ -29,7 +29,7 @@ class NoSuchResourceType extends CustomError {
     }
 }
 
-class NoSuchPropertyType extends CustomError {
+export class NoSuchPropertyType extends CustomError {
     propertyType: string;
     constructor(type: string) {
         super(`No such property type ${type}`);
@@ -37,7 +37,7 @@ class NoSuchPropertyType extends CustomError {
     }
 }
 
-function getResourceType(type: string){
+export function getResourceType(type: string){
     // If the type starts with Custom::, it's a custom resource.
     if(type.indexOf('Custom::') === 0){
         return specification.ResourceTypes['AWS::CloudFormation::CustomResource']!;
@@ -61,7 +61,7 @@ function getPropertyType(type: string){
 /**
  * Get a Resource or Property type from the specification.
  */
-function getType(type: string): ResourceType | ResourcePropertyType {
+export function getType(type: string): ResourceType | ResourcePropertyType {
     if(isPropertyTypeFormat(type)){
         return getPropertyType(type);
     }else{
@@ -82,7 +82,7 @@ function isPropertyTypeFormat(type: string){
     return (type.indexOf('.') != -1) || type == 'Tag';
 }
 
-function getRefOverride(resourceType: string){
+export function getRefOverride(resourceType: string){
     return resourceRefOverride[resourceType] || null;
 }
 
@@ -91,18 +91,18 @@ function getRefOverride(resourceType: string){
  * @param parentPropertyType a ResourceType or PropertyType
  * @param propertyName name of the property to check against the specification
  */
-function isValidProperty(parentPropertyType: string, propertyName: string){
+export function isValidProperty(parentPropertyType: string, propertyName: string){
     return getType(parentPropertyType).Properties.hasOwnProperty(propertyName);
 }
 
 /**
  * Checks the resource type and returns true if the propertyName is required.
  */
-function isRequiredProperty(parentPropertyType: string, propertyName: string){
+export function isRequiredProperty(parentPropertyType: string, propertyName: string){
     return getProperty(parentPropertyType, propertyName).Required;
 }
 
-function isArnProperty(propertyName: string){
+export function isArnProperty(propertyName: string){
     // Check if the parentPropertyType exists
     return (propertyName.indexOf('Arn') != -1);
 }
@@ -110,16 +110,17 @@ function isArnProperty(propertyName: string){
 function isSinglePrimitivePropertyType(parentPropertyType: string, propertyName: string){
     return Boolean(getProperty(parentPropertyType, propertyName).PrimitiveType);
 }
+export { isSinglePrimitivePropertyType as isPrimitiveProperty };
 
-function isAdditionalPropertiesEnabled(resourceType: string){
+export function isAdditionalPropertiesEnabled(resourceType: string){
     return getType(resourceType).AdditionalProperties === true;
 }
 
-function isPropertyTypeList(type: string, propertyName: string) {
+export function isPropertyTypeList(type: string, propertyName: string) {
     return getProperty(type, propertyName).Type === 'List';
 }
 
-function isPropertyTypeMap(type: string, propertyName: string)  {
+export function isPropertyTypeMap(type: string, propertyName: string)  {
     return getProperty(type, propertyName).Type === 'Map';
 }
 
@@ -133,8 +134,9 @@ function getPropertyTypeApi(baseType: string, propType: string, key: string) {
     
     return baseType + '.' + property.Type;
 }
+export { getPropertyTypeApi as getPropertyType };
 
-function getItemType(baseType: string, propType: string, key: string) {
+export function getItemType(baseType: string, propType: string, key: string) {
     const property = getProperty(propType, key);
 
     if (!property.ItemType) {
@@ -146,19 +148,19 @@ function getItemType(baseType: string, propType: string, key: string) {
     }
 }
 
-function hasPrimitiveItemType(type: string, propertyName: string) {
+export function hasPrimitiveItemType(type: string, propertyName: string) {
     return Boolean(getProperty(type, propertyName).PrimitiveItemType);
 }
 
-function getPrimitiveItemType(type: string, key: string): AWSPrimitiveType | undefined {
+export function getPrimitiveItemType(type: string, key: string): AWSPrimitiveType | undefined {
     return getProperty(type, key).PrimitiveItemType;
 }
 
-function getPrimitiveType(type: string, key: string): AWSPrimitiveType | undefined {
+export function getPrimitiveType(type: string, key: string): AWSPrimitiveType | undefined {
     return getProperty(type, key).PrimitiveType;
 }
 
-function getRequiredProperties(type: string){
+export function getRequiredProperties(type: string){
     let spec = getType(type);
     let requiredProperties = [];
 
@@ -170,25 +172,3 @@ function getRequiredProperties(type: string){
 
     return requiredProperties;
 }
-
-export = {
-    NoSuchProperty,
-    NoSuchPropertyType,
-    NoSuchResourceType,
-    getType,
-    getResourceType,
-    isValidProperty,
-    isRequiredProperty,
-    isPrimitiveProperty: isSinglePrimitivePropertyType,
-    isArnProperty,
-    getRefOverride,
-    isPropertyTypeList,
-    isPropertyTypeMap,
-    getPropertyType: getPropertyTypeApi,
-    getItemType,
-    getPrimitiveType,
-    getPrimitiveItemType,
-    hasPrimitiveItemType,
-    getRequiredProperties,
-    isAdditionalPropertiesEnabled
-};
