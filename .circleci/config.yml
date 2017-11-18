@@ -2,6 +2,7 @@ version: 2
 dependencies:
   pre:
     - echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+
 jobs:
   build:
     working_directory: ~/cfn-lint
