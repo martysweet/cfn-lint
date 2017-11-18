@@ -1,0 +1,61 @@
+version: 2
+dependencies:
+  pre:
+    - echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+jobs:
+  build:
+    working_directory: ~/cfn-lint
+    docker:
+      - image: circleci/node:4.8.2
+    steps:
+      - checkout
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@latest'
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+      - run:
+          name: run npm install
+          command: npm install
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+      - run:
+          name: test
+          command: npm test
+
+  deploy:
+    working_directory: ~/cfn-lint
+    docker:
+      - image: circleci/node:4.8.2
+    steps:
+      - attach_workspace:
+          at: ~/cfn-lint
+      - run:
+          name: Write NPM Token to ~/.npmrc
+          command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+      - run:
+          name: Install dot-json package
+          command: npm install dot-json
+      - run:
+          name: Write version to package.json
+          command: node_modules/.bin/dot-json package.json version ${CIRCLE_TAG:1}
+      - run:
+          name: Publish to NPM
+          command: npm publish
+
+workflows:
+  version: 2
+  buildtestdeploy:
+    jobs:
+      - build
+      - deploy:
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*/
+            branches:
+              ignore: /.*/
+          requires:
+            - build
+            - test
