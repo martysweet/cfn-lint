@@ -398,6 +398,14 @@ describe('validator', () => {
             expect(result['errors']['crit'][2]).to.have.property('message', 'Expecting an ISO8601-formatted string, got 1502150400');
         })
 
+        it('a valid template with APIG string results in validTemplate = true, 0 crit error', () => {
+            const input = 'testData/valid/yaml/issue-81-api-gateway.yaml';
+            let result = validator.validateFile(input);
+            console.log(result['errors']['crit']);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
     });
 
     describe('validateYamlFile', ()=> {

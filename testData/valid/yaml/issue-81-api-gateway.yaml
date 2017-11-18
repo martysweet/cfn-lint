@@ -1,0 +1,45 @@
+Resources:
+    APIGatewayResource:
+      Type: "AWS::ApiGateway::Resource"
+      Properties:
+        ParentId: "something"
+        PathPart: "{myPathPart}"
+        RestApiId: "someapigid"
+    APIGatewayGetMethod:
+      Type: "AWS::ApiGateway::Method"
+      Properties:
+        ApiKeyRequired: false
+        AuthorizationType: "NONE"
+        HttpMethod: GET
+        Integration:
+          Type: "AWS"
+          PassthroughBehavior: WHEN_NO_TEMPLATES
+          IntegrationHttpMethod: POST
+          IntegrationResponses:
+            - StatusCode: 200
+            - StatusCode: 500
+              ResponseTemplates:
+                application/json: "error"
+              SelectionPattern: .*InternalServerError.*
+            - StatusCode: 400
+              SelectionPattern: .*BadRequest.*
+              ResponseTemplates:
+                application/json: "error"
+            - StatusCode: 404
+              SelectionPattern: .*NotFound.*
+              ResponseTemplates:
+                application/json: "error"
+          RequestTemplates:
+            application/json: "valid"
+          Uri: "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/some-lambda/invocations"
+
+        MethodResponses:
+          - StatusCode: 200
+            ResponseModels:
+              application/json: "respmodel"
+          - StatusCode: 500
+          - StatusCode: 400
+          - StatusCode: 404
+        ResourceId:
+          Ref: APIGatewayResource
+        RestApiId: "someapigid"
