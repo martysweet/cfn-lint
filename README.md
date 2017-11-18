@@ -202,6 +202,12 @@ Ask a question on the [Github Issue Page](https://github.com/martysweet/cfn-lint
 
 ## Development
 
+### Language
+
+This project is written in [TypeScript](http://www.typescriptlang.org/docs/home.html), a
+superset of JavaScript which allows for type checking at compile time. The project currently
+aims to support Node 4 and above.
+
 ### Unit Tests
 
 Tests can be run using `npm test`. There should be a test case for every template error, 
@@ -213,9 +219,9 @@ The tests depend on `Mocha` and `chai`.
 If you use a JetBrains editor, the following Run Configuration can be setup 
 for the Mocha test suite:
 
-Node Options: --harmony
-Extra Mocha Options: --compilers js:babel-register --require babel-polyfill
-Test Directory: <working dir>\test
+Node Options: None
+Extra Mocha Options: None
+Test Directory: <working dir>/lib/test
 
 ### Local testing of CLI
 
