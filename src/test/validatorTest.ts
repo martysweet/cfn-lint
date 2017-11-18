@@ -191,6 +191,16 @@ describe('validator', () => {
 
     });
 
+    describe('Fn::GetAtt', () => {
+        it('Fn::GetAtt for an arbitrary attribute on a custom resource should return a mock result', () => {
+            const input = 'testData/valid/yaml/valid_getatt_custom_resource.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.property('templateValid', true);
+            expect(validator.fnGetAtt('Custom', 'SomeAttribute')).to.equal('mockAttr_Custom_SomeAttribute');
+            expect(validator.fnGetAtt('Custom2', 'SomeAttribute')).to.equal('mockAttr_Custom2_SomeAttribute');
+        })
+    })
+
     describe('conditions', () => {
 
         it('1 invalid if condition arguments should return an object with validTemplate = false, 1 crit errors', () => {
