@@ -1005,31 +1005,31 @@ function collectOutputs() {
 let baseResourceType: string = null!;
 
 // these types all represent schemas that the working input may need to be validated against.
-interface ResourceType {
+export interface ResourceType {
     type: 'RESOURCE',
     resourceType: string
 }
 
-interface NamedProperty {
+export interface NamedProperty {
     type: 'PROPERTY',
     resourceType: string,
     parentType: string // perhaps property type or resource type
     propertyName: string
 }
 
-interface PropertyType {
+export interface PropertyType {
     type: 'PROPERTY_TYPE',
     propertyType: string,
     resourceType: string
   }
 
-interface PrimitiveType {
+export interface PrimitiveType {
     type: 'PRIMITIVE_TYPE',
     resourceType: string,
     primitiveType: string
 }
   
-type ObjectType = ResourceType | NamedProperty | PropertyType | PrimitiveType;
+export type ObjectType = ResourceType | NamedProperty | PropertyType | PrimitiveType;
 
 /**
  * get the name of the ResourceType or PropertyType that this ObjectType refers to.
@@ -1118,7 +1118,7 @@ function checkResourceProperties() {
     placeInTemplate.pop();
 }
 
-enum KnownTypes {
+export enum KnownTypes {
     ComplexObject,
     List,
     Map,
@@ -1275,7 +1275,7 @@ class VerificationError extends CustomError {
     }
 }
 
-interface VerificationFunction {
+export interface VerificationFunction {
     (o: any): boolean,
     failureMessage: string
 }
