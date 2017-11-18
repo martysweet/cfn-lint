@@ -5,7 +5,7 @@ export const awsExtraDocs = require('../data/aws_extra_docs.json') as AWSExtraDo
 export type AWSPrimitiveType = 'String' | 'Integer' | 'Boolean' | 'Json';
 
 export interface PropertyBase {
-    Required: string,
+    Required: boolean,
     Documentation: string,
     UpdateType: 'Mutable' | 'Immutable' | 'Conditional',
 }
