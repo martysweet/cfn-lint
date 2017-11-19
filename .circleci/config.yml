@@ -38,7 +38,6 @@ jobs:
       - attach_workspace:
           at: ~/cfn-lint
 
-
   deploy:
     working_directory: ~/cfn-lint
     docker:
