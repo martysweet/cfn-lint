@@ -30,14 +30,6 @@ jobs:
           paths:
             - "*"
 
-  on_master:
-    working_directory: ~/cfn-lint
-    docker:
-      - image: circleci/node:4.8.2
-    steps:
-      - attach_workspace:
-          at: ~/cfn-lint
-
   deploy:
     working_directory: ~/cfn-lint
     docker:
@@ -62,18 +54,15 @@ workflows:
   version: 2
   main:
     jobs:
-      - build
-      - on_master:
+      - build:
           filters:
-            branches:
-              only: master
-          requires:
-            - build
+            tags:
+              only: /.*/    # Build for all branches and all tags
       - deploy:
           filters:
             tags:
-              only: /v[0-9]+(\.[0-9]+)*/
+              only: /v[0-9]+(\.[0-9]+)*/  # Run if version tag supplied
             branches:
-              ignore: /.*/
+              ignore: /.*/  # Do not run on branch pushes
           requires:
-            - on_master
+            - build
