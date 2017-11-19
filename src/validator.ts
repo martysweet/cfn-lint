@@ -206,7 +206,7 @@ function guessParameterValue(parameterName: string, parameter: any): string | st
     } else {
         const rawParameterType = parameter['Type'];
 
-        const listMatch = /^List<(\w+)>$/.exec(rawParameterType);
+        const listMatch = /^List<(.+)>$/.exec(rawParameterType);
         let isList: boolean;
         let parameterType: string;
 
