@@ -23,6 +23,9 @@ jobs:
           paths:
             - ./node_modules
       - run:
+          name: Check all required dependencies exist
+          command: ./node_modules/.bin/dependency-check package.json --no-dev
+      - run:
           name: test
           command: npm test
       - persist_to_workspace:
