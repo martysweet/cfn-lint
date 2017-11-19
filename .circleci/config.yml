@@ -25,6 +25,10 @@ jobs:
       - run:
           name: test
           command: npm test
+      - persist_to_workspace:
+          root: ~/cfn-lint
+          paths:
+            - "*"
 
   deploy:
     working_directory: ~/cfn-lint
