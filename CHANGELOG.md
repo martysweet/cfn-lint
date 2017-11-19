@@ -6,9 +6,8 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- Attempt to fix tagged releases
 
-## [1.3.0] - 2017-11-19
+## [1.3.4] - 2017-11-19
 ### Changed
 - Merge PR #72, JavaScript to TypeScript
 - Merge PR #76, Refactor validation
@@ -20,6 +19,11 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Added
 - Merge PR #82, allow inclusion as a module
+
+## [1.3.3] - 2017-11-19 [YANKED]
+## [1.3.2] - 2017-11-19 [YANKED]
+## [1.3.1] - 2017-11-19 [YANKED]
+## [1.3.0] - 2017-11-19 [YANKED]
 
 ## [1.2.0] - 2017-11-08
 ### Changed
@@ -62,8 +66,8 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Added
 - Add pseudo parameter support
 
-[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.3.0...HEAD
-[1.3.0]: https://github.com/martysweet/cfn-lint/compare/v1.2.0...v1.3.0
+[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.3.4...HEAD
+[1.3.4]: https://github.com/martysweet/cfn-lint/compare/v1.2.0...v1.3.4
 [1.2.0]: https://github.com/martysweet/cfn-lint/compare/v1.1.7...v1.2.0
 [1.1.7]: https://github.com/martysweet/cfn-lint/compare/v1.1.6...v1.1.7
 [1.1.6]: https://github.com/martysweet/cfn-lint/compare/v1.1.5...v1.1.6
