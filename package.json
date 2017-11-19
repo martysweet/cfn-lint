@@ -1,6 +1,6 @@
 {
   "name": "cfn-lint",
-  "version": "1.2.0",
+  "version": "0.0.0",
   "description": "A more friendly CloudFormation JSON and YAML Validator",
   "author": "Marty Sweet <npm@martysweet.co.uk>",
   "homepage": "https://github.com/martysweet/cfn-lint#readme",
@@ -20,7 +20,8 @@
     "core-js": "^2.5.1",
     "js-yaml": "^3.7.0",
     "opn": "latest",
-    "winston": "latest"
+    "winston": "latest",
+    "source-map-support": "^0.5.0"
   },
   "devDependencies": {
     "@types/chai": "^4.0.4",
@@ -34,8 +35,8 @@
     "@types/winston": "^2.3.7",
     "chai": "latest",
     "mocha": "latest",
-    "source-map-support": "^0.5.0",
-    "typescript": "^2.6.1"
+    "typescript": "^2.6.1",
+    "dependency-check": "^2.9.1"
   },
   "scripts": {
     "build": "tsc",

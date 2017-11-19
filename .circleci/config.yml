@@ -23,8 +23,16 @@ jobs:
           paths:
             - ./node_modules
       - run:
+          name: Check all required dependencies exist
+          command: ./node_modules/.bin/dependency-check package.json --no-dev
+      - run:
           name: test
           command: npm test
+      - run:
+          name: package for debug
+          command: npm pack
+      - store_artifacts:
+          path: cfn-lint-0.0.0.tgz
       - persist_to_workspace:
           root: ~/cfn-lint
           paths:
