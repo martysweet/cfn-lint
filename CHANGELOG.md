@@ -7,6 +7,19 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.3.0] - 2017-11-19
+### Changed
+- Merge PR #72, JavaScript to TypeScript
+- Merge PR #76, Refactor validation
+- Merge PR #84, CircleCI 2.0
+- Merge PR #85, Update README/CONTRIBUTING
+
+### Fixed
+- Merge PR #80, Fn::GetAtt with CustomResource
+
+### Added
+- Merge PR #82, allow inclusion as a module
+
 ## [1.2.0] - 2017-11-08
 ### Changed
 - Merge PR #67, change format of CHANGELOG to standardised approach
@@ -48,7 +61,8 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Added
 - Add pseudo parameter support
 
-[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/martysweet/cfn-lint/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/martysweet/cfn-lint/compare/v1.1.7...v1.2.0
 [1.1.7]: https://github.com/martysweet/cfn-lint/compare/v1.1.6...v1.1.7
 [1.1.6]: https://github.com/martysweet/cfn-lint/compare/v1.1.5...v1.1.6
