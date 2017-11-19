@@ -1,0 +1,14 @@
+
+Resources:
+  Bucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: ofw-appsvc01-temp
+      LifecycleConfiguration:
+        Rules:
+          - Status: Disabled
+            ExpirationDate: some random string
+          - Status: Disabled
+            ExpirationDate: "2017-08-08 00:08"
+          - Status: Disabled
+            ExpirationDate: 1502150400

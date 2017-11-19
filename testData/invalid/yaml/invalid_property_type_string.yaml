@@ -5,8 +5,10 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       SecurityGroupIds:
-      - "##"
-      SubnetId: "##"
+      - [42]
+      SubnetId:
+        Not:
+          - a string
       InstanceType: 't1.micro'
       AvailabilityZone: "eu-west-1"
       ImageId: "ami-aaaaaaa"

@@ -2,7 +2,7 @@ type AWSExtraDocs = {[k: string]: string}
 
 export const awsExtraDocs = require('../data/aws_extra_docs.json') as AWSExtraDocs;
 
-export type AWSPrimitiveType = 'String' | 'Integer' | 'Boolean' | 'Json';
+export type AWSPrimitiveType = 'String' | 'Integer' | 'Boolean' | 'Json' | 'Double' | 'Long' | 'Timestamp';
 
 export interface PropertyBase {
     Required: boolean,
@@ -61,13 +61,15 @@ export type Property = PrimitiveProperty | ComplexProperty | ListProperty | MapP
 
 export interface ResourcePropertyType {
     Documentation: string,
-    Properties: {[propertyName: string]: Property}
+    Properties: {[propertyName: string]: Property | undefined}
+    
+    AdditionalProperties: undefined;
 }
 
 export interface ResourceType {
     Documentation: string,
-    Properties: {[propertyName: string]: Property},
-    Attributes?: {[attributeName: string]: Attribute},
+    Properties: {[propertyName: string]: Property | undefined},
+    Attributes?: {[attributeName: string]: Attribute | undefined},
     AdditionalProperties?: boolean
 }
 
@@ -83,17 +85,17 @@ export interface ListAttribute {
 export type Attribute = PrimitiveAttribute | ListAttribute;
 
 type AWSResourcesSpecification = {
-    PropertyTypes: {[propertyName: string]: ResourcePropertyType}
-    ResourceTypes: {[resourceName: string]: ResourceType}
+    PropertyTypes: {[propertyName: string]: ResourcePropertyType | undefined}
+    ResourceTypes: {[resourceName: string]: ResourceType | undefined}
 }
 
 export const awsResources = require('../data/aws_resources_specification.json') as AWSResourcesSpecification;
 
-type ResourceRefTypes = {[resourceName: string]: string};
+type ResourceRefTypes = {[resourceName: string]: string | undefined};
 
 export const awsResourceRefTypes = require('../data/aws_resource_ref_types.json') as ResourceRefTypes;
 
-type ParameterTypes = {[parameterName: string]: 'string' | 'array'};
+type ParameterTypes = {[parameterName: string]: 'string' | 'number' | 'array' | undefined};
 
 export const awsParameterTypes = require('../data/aws_parameter_types.json') as ParameterTypes;
 
@@ -113,7 +115,7 @@ for (let functionName in awsIntrinsicFunctions) {
 type RefOverrides = {
     "AWS::AccountId": string,
     "AWS::NotificationARNs": string[],
-    "AWS::NoValue": "",
+    "AWS::NoValue": undefined,
     "AWS::Region": string,
     "AWS::StackId": string,
     "AWS::StackName": string,
@@ -121,3 +123,4 @@ type RefOverrides = {
 };
 
 export const awsRefOverrides = require('../data/aws_ref_override.json') as RefOverrides;
+awsRefOverrides["AWS::NoValue"] = undefined;

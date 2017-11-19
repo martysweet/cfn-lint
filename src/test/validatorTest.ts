@@ -2,6 +2,11 @@ import chai = require('chai');
 const expect = chai.expect;
 const assert = chai.assert;
 import validator = require('../validator');
+import yaml = require('js-yaml');
+
+import {awsResources} from '../awsData';
+import util = require('util');
+import { isObject } from 'util';
 
 describe('validator', () => {
 
@@ -16,7 +21,6 @@ describe('validator', () => {
         it('a valid (1.json) template should return an object with validTemplate = true, no crit errors', () => {
             const input = require('../../testData/valid/json/1.json');
             let result = validator.validateJsonObject(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
@@ -32,7 +36,6 @@ describe('validator', () => {
         it('a valid (3.json) template should return an object with validTemplate = true, no crit errors', () => {
             const input = require('../../testData/valid/json/3.json');
             let result = validator.validateJsonObject(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
@@ -48,7 +51,6 @@ describe('validator', () => {
         it('2 invalid resource types should return an object with validTemplate = false, 2 crit errors', () => {
             const input = require('../../testData/invalid/json/1_invalid_resource_type.json');
             let result = validator.validateJsonObject(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(2);
         });
@@ -120,7 +122,6 @@ describe('validator', () => {
         it('1 invalid Ref within Parameters should return an object with validTemplate = false, 1 crit errors', () => {
             const input = require('../../testData/invalid/json/1_intrinsic_function_in_parameters.json');
             let result = validator.validateJsonObject(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
@@ -137,7 +138,6 @@ describe('validator', () => {
             const input = require('../../testData/invalid/json/1_warning_ref_get_azs_parameter.json');
             validator.addParameterValue('InstanceType', 't1.micro');
             let result = validator.validateJsonObject(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['warn']).to.have.lengthOf(1);
         });
@@ -176,13 +176,20 @@ describe('validator', () => {
         it('1 invalid Fn::ImportValue should return an object with validTemplate = false, 1 crit errors', () => {
             const input = './testData/invalid/yaml/invalid_import_value_intrinsic_function.yaml';
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
             expect(result['errors']['crit'][0]['message']).to.contain('Fn::ImportValue does not support function');
         });
 
-        it('1 invalid Fn::ImportValue should return an object with validTemplate = true, 0 crit errors', () => {
+        it('1 invalid Fn::ImportValue should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = './testData/invalid/yaml/invalid_import_value_type.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]['message']).to.contain('Expecting an integer');
+        });
+
+        it('a valid Fn::ImportValue should return an object with validTemplate = true, 0 crit errors', () => {
             const input = './testData/valid/yaml/valid_import_value.yaml';
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', true);
@@ -272,7 +279,7 @@ describe('validator', () => {
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
-            expect(result['errors']['crit'][0]['message']).to.contain('is expecting an Arn');
+            expect(result['errors']['crit'][0]['message']).to.contain('Expecting an ARN');
         });
 
         it('1 invalid property name of ResourceType should return an object with validTemplate = false, 1 crit errors', () => {
@@ -287,7 +294,6 @@ describe('validator', () => {
         it('1 invalid property name of PropertyType should return an object with validTemplate = false, 1 crit errors', () => {
             const input = './testData/invalid/yaml/invalid_propertytype_property_name.yaml';
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
             expect(result['errors']['crit'][0]['message']).to.contain('S3Buckettttt is not a valid property of AWS::Lambda::Function.Code');
@@ -296,7 +302,6 @@ describe('validator', () => {
         it('1 invalid property name of Tag list should return an object with validTemplate = false, 1 crit errors', () => {
             const input = './testData/invalid/yaml/invalid_ec2_tags_property_name.yaml';
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
             expect(result['errors']['crit'][0]['message']).to.contain('Keyyyyy is not a valid property of');
@@ -306,16 +311,14 @@ describe('validator', () => {
             const input = './testData/invalid/yaml/invalid_property_type_string.yaml';
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', false);
-            console.log(result['errors']['crit']);
             expect(result['errors']['crit']).to.have.lengthOf(2);
-            expect(result['errors']['crit'][0]['message']).to.contain('Expected type String for 0');
-            expect(result['errors']['crit'][1]['message']).to.contain('Expected type String for SubnetId');
+            expect(result['errors']['crit'][0]['message']).to.contain('Expecting a string');
+            expect(result['errors']['crit'][1]['message']).to.contain('Expecting a string');
         });
 
         it('1 missing propertyType property should return an object with validTemplate = false, 1 crit errors', () => {
             const input = './testData/invalid/yaml/invalid_required_propertytype_prop_missing.yaml';
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
             expect(result['errors']['crit'][0]['message']).to.contain('Required property Key missing for type Tag');
@@ -324,7 +327,14 @@ describe('validator', () => {
         it('1 missing resourceType  property should return an object with validTemplate = false, 1 crit errors', () => {
             const input = './testData/invalid/yaml/invalid_required_resourcetype_prop_missing.yaml';
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]['message']).to.contain('Required property Runtime missing for type AWS::Lambda::Function');
+        });
+
+        it('1 missing (via AWS::NoValue) property should return an object with validTemplate = false, 1 crit errors', () => {
+            const input = './testData/invalid/yaml/invalid_required_resourcetype_prop_no_value.yaml';
+            let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
             expect(result['errors']['crit'][0]['message']).to.contain('Required property Runtime missing for type AWS::Lambda::Function');
@@ -334,16 +344,15 @@ describe('validator', () => {
             const input = './testData/invalid/yaml/invalid_boolean_type.yaml';
             validator.addParameterValue('CertificateArn', 'arn:aws:region:something');
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
-            expect(result['errors']['crit'][0]['message']).to.contain('Expected type Boolean for Compress, got value \'trueeeee\'');
+            expect(result['errors']['crit'][0]['message']).to.contain('Expecting a Boolean, got \'trueeeee\'');
+            expect(result['errors']['crit'][0]['resource']).to.contain('Resources > CloudFrontDistribution > Properties > DistributionConfig > DefaultCacheBehavior > Compress');
         });
 
         it('4 invalid nested properties should return an object with validTemplate = false, 4 crit errors', () => {
             const input = './testData/invalid/yaml/invalid_missing_nested_property.yaml';
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(4);
             expect(result['errors']['crit'][0]['message']).to.contain('Required property TargetOriginId missing for type AWS::CloudFront::Distribution.DefaultCacheBehavior');
@@ -368,8 +377,33 @@ describe('validator', () => {
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
-            expect(result['errors']['crit'][0]['message']).to.contain('Expected type String for key, got value \'[object Object]\'');
-            expect(result['errors']['crit'][0]['resource']).to.contain('Resources > 0-ParameterGroupWithAMap > Properties > key');
+            expect(result['errors']['crit'][0]['message']).to.contain('Expecting a string, got { not: \'a string\' }');
+            expect(result['errors']['crit'][0]['resource']).to.contain('Resources > 0-ParameterGroupWithAMap > Properties > Parameters > key');
+        });
+
+        it('a valid (valid_timestamp.yaml) template with a Timestamp should return an objcet with validTemplate = true', () => {
+            const input = 'testData/valid/yaml/valid_timestamp.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        })
+
+        it('a (invalid_timestamp.yaml) template with an invalid Timestamp should return an objcet with validTemplate = false, 2 crit errors', () => {
+            const input = 'testData/invalid/yaml/invalid_timestamp.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(3);
+            expect(result['errors']['crit'][0]).to.have.property('message', 'Expecting an ISO8601-formatted string, got \'some random string\'');
+            expect(result['errors']['crit'][1]).to.have.property('message', 'Expecting an ISO8601-formatted string, got \'2017-08-08 00:08\'');
+            expect(result['errors']['crit'][2]).to.have.property('message', 'Expecting an ISO8601-formatted string, got 1502150400');
+        })
+
+        it('a valid template with APIG string results in validTemplate = true, 0 crit error', () => {
+            const input = 'testData/valid/yaml/issue-81-api-gateway.yaml';
+            let result = validator.validateFile(input);
+            console.log(result['errors']['crit']);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
         });
 
     });
@@ -388,7 +422,6 @@ describe('validator', () => {
             const input = 'testData/valid/yaml/2.yaml';
             validator.addParameterValue('CertificateArn', 'arn:aws:region:something');
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
             expect(result['errors']['warn']).to.have.lengthOf(0);
@@ -398,7 +431,6 @@ describe('validator', () => {
         it('a valid (valid_minus_one_as_string.yaml) template should return an object with validTemplate = true, no crit errors', () => {
             const input = 'testData/valid/yaml/valid_minus_one_as_string.yaml';
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
@@ -415,7 +447,6 @@ describe('validator', () => {
         it('both methods of defining a custom resource should result in validTemplate = true, no crit errors', () => {
             const input = 'testData/valid/yaml/issue-28-custom-resource.yaml';
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
@@ -423,7 +454,6 @@ describe('validator', () => {
         it('numeric properties should result in validTemplate = true, no crit errors, no warn errors', () => {
             const input = 'testData/valid/yaml/issue-27-numeric-properties.yaml';
             let result = validator.validateFile(input);
-            console.log(result['errors']['warn']);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
             expect(result['errors']['warn']).to.have.lengthOf(0);
@@ -439,8 +469,6 @@ describe('validator', () => {
         it('Reference to RDS attribute validTemplate=true, no crit errors, no warn errors', () => {
             const input = 'testData/valid/yaml/issue-44-database-endpoint.yaml';
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
-            console.log(result['errors']['warn']);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
@@ -449,8 +477,6 @@ describe('validator', () => {
             const input = 'testData/valid/yaml/issue-61.yaml';
             validator.addParameterValue('Env', 'Production');
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
-            console.log(result['errors']['warn']);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
@@ -459,10 +485,10 @@ describe('validator', () => {
             const input = 'testData/valid/yaml/issue-61.yaml';
             validator.addParameterValue('Env', 'Dev');
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
-            console.log(result['errors']['warn']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(2);
+            expect(result['errors']['crit'][0]).to.have.property('message', 'Required property FunctionName missing for type AWS::Lambda::Version');
+            expect(result['errors']['crit'][1]).to.have.property('message', 'Required property FunctionName missing for type AWS::Lambda::Version');
         });
     });
 
@@ -486,9 +512,9 @@ describe('validator', () => {
         it('an empty parameter value provided at runtime picks up the empty default (which will throw an error)', () => {
             const input = 'testData/valid/yaml/parameters-allowed-values.yaml';
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]).to.has.property('message', 'Parameter value \'\' for Env is not within the parameters AllowedValues');
         });
     });
 
@@ -552,5 +578,239 @@ describe('validator', () => {
             expect(result['errors']['crit'][0]).to.have.property('resource', 'Outputs > BucketArn');
         })
 
+    });
+
+    describe('type checking coverage', () => {
+        it('should be able to determine the type of every property of every resource', () => {
+            for (let resourceName in awsResources.ResourceTypes) {
+                const resource = awsResources.ResourceTypes[resourceName]!;
+                for (let propertyName in resource.Properties) {
+                    expect(() => validator.getPropertyType({
+                        'type': 'PROPERTY',
+                        resourceType: resourceName,
+                        parentType: resourceName,
+                        propertyName: propertyName
+                    })).not.to.throw();
+                }
+            }
+        });
+
+        it('should be able to determine the type of every property of every propertytype', () => {
+            for (let propertyTypeName in awsResources.PropertyTypes) {
+                const propertyType = awsResources.PropertyTypes[propertyTypeName]!;
+                for (let propertyName in propertyType.Properties) {
+                    expect(() => validator.getPropertyType({
+                        'type': 'PROPERTY',
+                        resourceType: 'TEST',
+                        parentType: propertyTypeName,
+                        propertyName: propertyName
+                    })).not.to.throw();
+                }
+            }
+        })
+    });
+
+    describe('type checking unit tests', () => {
+
+        function runTests(checkFunction: (f: any) => boolean, valid: any[], invalid: any[]) {
+
+            for (let validValue of valid) {
+                it(`${util.inspect(validValue)} should be valid`, () => {
+                    expect(checkFunction(validValue)).to.be.true;
+                });
+            };
+
+            for (let invalidValue of invalid) {
+                it(`${util.inspect(invalidValue)} should be invalid`, () => {
+                    expect(checkFunction(invalidValue)).to.be.false;
+                });
+            };
+        }
+
+        describe('isObject', () => {
+            const validObjects = [
+                {},
+                JSON.parse("{}"),
+                yaml.safeLoad("{}")
+            ];
+
+            const invalidObjects = [
+                'string',
+                ['array'],
+                42,
+            ];
+
+            // not checked: the pathlogical primitive wrapper objects (new Number()) etc. They will
+            // return True if checked by isObject when arguably they should be False.
+            // However in practice these are never used in this project.
+
+            runTests(validator.isObject, validObjects, invalidObjects);
+
+        });
+
+
+        describe('isList', () => {
+            const validLists = [
+                ['a', 'b'],
+                JSON.parse("[42]"),
+            ];
+
+            const invalidLists = [
+                'string',
+                42,
+                {}
+            ];
+
+            runTests(validator.isList, validLists, invalidLists);
+        });
+
+        describe('isArn', () => {
+            const validArns = [
+                'arn:aws:region:something',
+                'arn:aws::::'
+            ];
+
+            const invalidArns = [
+                'notarn:aws:region:something',
+                'not even close',
+                42,
+                {},
+                ['arn:aws:region:something']
+            ];
+
+            runTests(validator.isArn, validArns, invalidArns);
+        });
+
+        describe('isString', () => {
+            const validStrings = [
+                'string',
+                42 // because CloudFormation. e.g. Route53.Recordset.TTL is "String" but accepts an integer.
+                   //  http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-route53-recordset.html#cfn-route53-recordset-ttl
+            ];
+            const invalidStrings = [
+                ['asd'],
+                {},
+            ];
+
+            runTests(validator.isString, validStrings, invalidStrings);
+        });
+
+        describe('isInteger', () => {
+            const validIntegers = [
+                123,
+                '123',
+                '-123',
+                '0',
+                '-0',
+                '00',
+            ];
+
+            const invalidIntegers = [
+                123.32,
+                '123.32',
+                '-123.32',
+                '123asdf',
+                'not even close'
+            ];
+
+            runTests(validator.isInteger, validIntegers, invalidIntegers);
+
+        });
+
+        describe('isDouble', () => {
+            const validDoubles = [
+                123,
+                123.123,
+                '123.123',
+                '0',
+                '0.0',
+                '-123.0',
+                '-123'
+            ];
+
+            const invalidDoubles = [
+                '123.32asdf',
+                'not even close',
+                '123.123.123'
+            ]
+
+            runTests(validator.isDouble, validDoubles, invalidDoubles);
+
+        });
+
+        describe('isBoolean', () => {
+            const validBooleans = [
+                true,
+                false,
+                'TrUe',
+                'FaLse',
+                'true',
+                'false'
+            ];
+
+            const invalidBooleans = [
+                'true1',
+                'y',
+                1,
+                0,
+            ]
+
+            runTests(validator.isBoolean, validBooleans, invalidBooleans);
+        });
+
+        describe('isJson', () => {
+            const validJson = [
+                {},
+                {obj: {with: 'values'}},
+                // these are accepted for some PrimitiveType: Json (e.g. IAM Policies, EMR::SecurityConfiguration),
+                // but rejected for others, e.g. RDS cluster parameters. Yay cfn. Erring on the side of
+                // accepting them here.
+                JSON.stringify({}),
+                JSON.stringify({obj: {with: 'values'}}),
+            ]
+
+            const invalidJson = [
+                [],
+                'string',
+                JSON.stringify([]),
+                JSON.stringify('string')
+            ];
+
+            runTests(validator.isJson, validJson, invalidJson);
+
+
+        })
+
+        describe('isTimestamp', () => {
+            const validTimestamps = [
+                '2012-12-30',
+                '2012-12-30T20:10',
+                '2012-12-30T20:12Z',
+                '2012-12-30T20:12:22',
+                '2012-12-30T20:12:22+01:00',
+                // valid ISO8601 but invalid Javascript date string (Date.parse -> NaN).
+                // Cloudformation does actually accept this format but
+                // it will be a huge pain for us to support.
+                // '2012-12-30T20:12:22+01',
+                '2012-12-30T20:12:22+0100',
+                '2012-12-30T20:12:22-05:00',
+                '2012-12-30T20:12:22.222',
+                '2012-12-30T20:12:22.222Z',
+                '2012-12-30T20:12:22.222222'
+            ];
+
+
+            const invalidTimestamps = [
+                '2012',
+                '2012-12',
+                '2012-12-30T',
+                '2012-12-30T10',
+                '2012-12-30T20:12:22+1',
+                '2012-12-30T20:12:22+100',
+            ];
+
+            runTests(validator.isTimestamp, validTimestamps, invalidTimestamps);
+            
+        })
     });
 });

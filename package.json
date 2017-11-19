@@ -17,6 +17,7 @@
     "cloudformation-js-yaml-schema": "0.3.0",
     "colors": "latest",
     "commander": "latest",
+    "core-js": "^2.5.1",
     "js-yaml": "^3.7.0",
     "opn": "latest",
     "winston": "latest"
@@ -29,9 +30,11 @@
     "@types/mocha": "^2.2.44",
     "@types/node": "^8.0.50",
     "@types/opn": "^3.0.28",
+    "@types/source-map-support": "^0.4.0",
     "@types/winston": "^2.3.7",
     "chai": "latest",
     "mocha": "latest",
+    "source-map-support": "^0.5.0",
     "typescript": "^2.6.1"
   },
   "scripts": {

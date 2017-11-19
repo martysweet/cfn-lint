@@ -9,12 +9,12 @@ Resources:
   WebServerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: "Enable HTTP access via port 80 locked down to the load balancer + SSH access"
+      GroupDescription:
+        Fn::ImportValue:
+          !Sub '${OtherStack}.Description'
       SecurityGroupIngress:
       - CidrIp: 0.0.0.0/0
-        FromPort:
-          Fn::ImportValue:
-            !Sub '${OtherStack}.OutputPort'
+        FromPort: '80'
         IpProtocol: tcp
         ToPort: '80'
 
