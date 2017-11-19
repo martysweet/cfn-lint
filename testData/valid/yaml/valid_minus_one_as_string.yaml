@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  OtherStack:
+    Type: String
+    Description: Stack which does something else
+
+Resources:
+  WebServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription:
+          Fn::ImportValue:
+            !Sub '${OtherStack}.OutputPort'
+      SecurityGroupIngress:
+      - CidrIp: 0.0.0.0/0
+        FromPort: '80'
+        IpProtocol: '-1'
+        ToPort: '80'
+

@@ -98,6 +98,66 @@ Template invalid!
 ### Features that would be nice, but aren't currently possible
 * Detect conditional required properties (Information doesn't exist in AWS Resource Specification)
 
+### API
+`cfn-lint` can also be used as a Node library:
+```ts
+const cfnLint = require('cfn-lint')
+```
+
+The following methods are considered public:
+
+```ts
+cfnLint.validateFile(fileName: string, options?: ValidationOptions): ValidationResult
+```
+Validates a file, and returns an ValidationResult with the results.
+
+
+```ts
+cfnLint.validateJsonObject(object: any, options?: ValidationOptions): ValidationResult
+```
+Validates an object, and returns an ValidationResult with the results. The object
+is what you might get from `JSON.parse`ing a Cloudformation template.
+
+
+```ts
+interface ValidationOptions {
+  parameters?: {
+    Param1: Param1value,
+    // ...
+  }
+  pseudoParameters?: {
+    'AWS::Region': 'ap-southeast-2',
+    // ...
+  }
+}
+```
+`parameters` get passed into the template's Parameters before validation, and `pseudoParameters` are used to override AWS' pseudo-parameters, like `AWS::Region`, `AWS::AccountId`, etc.
+
+
+```ts
+interface ErrorRecord {
+  message: string,
+  resource: string,
+  documentation: string
+}
+interface ValidationResult {
+  templateValid: boolean,
+  errors: {
+    crit: ErrorRecord[],
+    warn: ErrorRecord[],
+    info: ErrorRecord[]
+  },
+  outputs: {
+      [outputName: string]: string;
+  };
+  exports: {
+      [outputName: string]: string;
+  };
+}
+```
+Represents the result of a validation.
+
+
 ## Deploying your template
 
 CloudFormation tends to involve a bit of trail and error. To enable quick development, 
@@ -142,6 +202,12 @@ Ask a question on the [Github Issue Page](https://github.com/martysweet/cfn-lint
 
 ## Development
 
+### Language
+
+This project is written in [TypeScript](http://www.typescriptlang.org/docs/home.html), a
+superset of JavaScript which allows for type checking at compile time. The project currently
+aims to support Node 4 and above.
+
 ### Unit Tests
 
 Tests can be run using `npm test`. There should be a test case for every template error, 
@@ -153,9 +219,9 @@ The tests depend on `Mocha` and `chai`.
 If you use a JetBrains editor, the following Run Configuration can be setup 
 for the Mocha test suite:
 
-Node Options: --harmony
-Extra Mocha Options: --compilers js:babel-register --require babel-polyfill
-Test Directory: <working dir>\test
+Node Options: None
+Extra Mocha Options: None
+Test Directory: <working dir>/lib/test
 
 ### Local testing of CLI
 

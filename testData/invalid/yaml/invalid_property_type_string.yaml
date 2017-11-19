@@ -1,0 +1,17 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Resources:
+  Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      SecurityGroupIds:
+      - [42]
+      SubnetId:
+        Not:
+          - a string
+      InstanceType: 't1.micro'
+      AvailabilityZone: "eu-west-1"
+      ImageId: "ami-aaaaaaa"
+      Tags:
+      - Key: environment
+        Value: p

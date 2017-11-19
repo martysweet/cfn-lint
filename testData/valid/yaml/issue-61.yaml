@@ -1,0 +1,42 @@
+---
+Parameters:
+  Env:
+    Description: Which Environment
+    Type: String
+    Default: Dev
+    AllowedValues:
+      - Dev
+      - QA
+      - PreProd
+      - Production
+
+Conditions:
+  isProd: !Equals [!Ref Env, Production]
+  isNotDev:
+    !Not [!Equals [!Ref Env, Dev]]
+
+Mappings:
+  App:
+    Production:
+      CertificateId: 09187234234
+      CertificateArn: NA
+
+Resources:
+  LambdaOne:
+    Type: AWS::Lambda::Version
+    Properties:
+      FunctionName: !If
+        - isProd
+        - !FindInMap [App, !Ref Env, CertificateId]
+        - !Ref "AWS::NoValue" # To cause a validation error
+
+  LambdaTwo:
+    Type: AWS::Lambda::Version
+    Properties:
+      FunctionName: !If
+          - isNotDev
+          - "Some Value"
+          - !Ref "AWS::NoValue" # To cause a validation error
+
+
+    

@@ -1,0 +1,17 @@
+Resources:
+  AutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      DesiredCapacity: 3
+      MaxSize: 7
+      MinSize: 3
+      MetricsCollection:
+        - Granularity: 1Minute
+      HealthCheckType: EC2
+      LaunchConfigurationName: "Some Config"
+      VPCZoneIdentifier:
+        - "Some VPC"
+      Tags:
+        - Key: Auto-Discover
+          Value: !Sub "Discover-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}"
+          PropagateAtLaunch: true

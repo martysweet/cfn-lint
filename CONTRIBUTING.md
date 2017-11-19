@@ -28,7 +28,8 @@ fail, for example `1_ref_not_string_param.json`. If your feature has many possib
 ## Submitting Pull Requests
 
 0. If you don't know how to fork and PR, [see here](https://help.github.com/articles/about-pull-requests/).
-1. Fork the repo.
-2. Add a test for your change. Only refactoring and documentation changes require no new tests. If you are adding functionality or fixing a bug, we need a test!
+1. Fork the repo and create a new branch based from the master branch
+2. Write your code
+3. Add a test for your change. Only refactoring and documentation changes require no new tests. If you are adding functionality or fixing a bug, add some tests!
 4. Make the tests pass and make sure you follow our syntax guidelines.
-5. Push to your fork and submit a pull request to the appropriate branch
+5. Push to your fork and submit a pull request to the appropriate branch, the CI will hopefully confirm all the tests pass!

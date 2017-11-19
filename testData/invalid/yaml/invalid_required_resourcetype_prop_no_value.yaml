@@ -1,0 +1,13 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Resources:
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: SomeBucket
+        S3Key: SomeKey
+      Description: Some Description
+      Handler: file.handler
+      Role: "some arn"
+      Runtime: !Ref AWS::NoValue
