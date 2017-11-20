@@ -6,6 +6,7 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Merge PR #96, fix invalid List<ParameterValue> validation
 
 ## [1.3.4] - 2017-11-19
 ### Changed

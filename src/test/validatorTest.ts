@@ -490,6 +490,13 @@ describe('validator', () => {
             expect(result['errors']['crit'][0]).to.have.property('message', 'Required property FunctionName missing for type AWS::Lambda::Version');
             expect(result['errors']['crit'][1]).to.have.property('message', 'Required property FunctionName missing for type AWS::Lambda::Version');
         });
+
+        it('a list of an extended parameter type should be properly mocked without causing an exception', () => {
+            const input = 'testData/valid/yaml/issue-94-list-security-group.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        })
     });
 
     describe('parameters-validation', () => {
