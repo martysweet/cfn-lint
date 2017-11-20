@@ -72,6 +72,14 @@ describe('index', () => {
             });
         }).timeout(5000);
 
+        
+        it('no-guess-parameters throws errors if we leave out parameters', (done) => {
+            exec('node lib/index.js validate testData/valid/json/2.json --no-guess-parameters', function(error, stdout, stderr) {
+                expect(stdout).to.contain('4 crit');
+                expect(stdout).to.contain('Guessing parameter value');
+                done();
+            });
+        }).timeout(5000);
     });
 
 });

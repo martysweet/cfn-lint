@@ -19,6 +19,7 @@ program
     .arguments('<cmd> <file>')
     .option('-p, --parameters <items>', 'List of params', list)
     .option('-p, --pseudo <items>', 'List of pseudo overrides', list)
+    .option('-G, --no-guess-parameters', 'Fail validation if a parameter with no Default is not passed')
     .action(function (arg1, arg2) {
         firstArg = arg1;
         secondArg = arg2;
@@ -55,7 +56,11 @@ if(firstArg == "validate"){
         }
     }
 
-    let result = validator.validateFile(secondArg);
+    const options = {
+        guessParameterValues: (program.guessParameters !== false)
+    };
+
+    let result = validator.validateFile(secondArg, options);
     // Show the errors
     console.log((result['errors']['info'].length + " infos").grey);
     for(let info of result['errors']['info']){
