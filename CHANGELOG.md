@@ -5,8 +5,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## Unreleased
+
+## [1.4.0] - 2017-11-29
+### Fixed
 - Merge PR #96, fix invalid List<ParameterValue> validation
+
+### Added
 - Merge PR #97, allow control over whether parameters are guessed or not.
 
 ## [1.3.4] - 2017-11-19
@@ -68,7 +73,8 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Added
 - Add pseudo parameter support
 
-[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.3.4...HEAD
+[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/martysweet/cfn-lint/compare/v1.3.4...v1.4.0
 [1.3.4]: https://github.com/martysweet/cfn-lint/compare/v1.2.0...v1.3.4
 [1.2.0]: https://github.com/martysweet/cfn-lint/compare/v1.1.7...v1.2.0
 [1.1.7]: https://github.com/martysweet/cfn-lint/compare/v1.1.6...v1.1.7
