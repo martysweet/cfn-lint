@@ -216,6 +216,11 @@ expected parameters for intrinsic functions, resource types and general structur
 AWS API does not detect incorrect resource property names or incorrect resource property types (e.g. string, bool, list) which are typically 
 only detected when CloudFormation attempts to deploy the resources with the incorrect configurations.
 
+### How does cfn-lint know what is valid?
+AWS provide a CloudFormation specification file for each region. cfn-lint uses the US East (N. Virginia) CloudFormationResourceSpecification.json
+file available on the [AWS CloudFormation Resource Specification](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-resource-specification.html) page.
+Currently, updates of this JSON file are manual and baked into each major, minor or bug fix release as needed.
+
 ### Got any other questions?
 Ask a question on the [Github Issue Page](https://github.com/martysweet/cfn-lint/issues)!
 
