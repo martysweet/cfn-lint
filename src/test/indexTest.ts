@@ -29,8 +29,6 @@ describe('index', () => {
         it('validate simple yaml', (done) => {
 
             exec('node lib/index.js validate testData/valid/yaml/issue-28-custom-resource.yaml', function(error, stdout, stderr) {
-                console.log(stderr);
-                console.log(stdout);
                 expect(stdout).to.contain('0 crit');
                 done();
             });
@@ -72,6 +70,36 @@ describe('index', () => {
             });
         }).timeout(5000);
 
+
+        it('guess-parameters should explicitely opt in to parameter mocking', (done) => {
+            exec('node lib/index.js validate testData/valid/yaml/no-guess-parameters.yaml --guess-parameters', function(error, stdout, stderr) {
+                expect(stdout).to.contain('0 crit');
+                done();
+            });
+        }).timeout(5000);
+
+        it('no-guess-parameters throws errors if we leave out parameters', (done) => {
+            exec('node lib/index.js validate testData/valid/yaml/no-guess-parameters.yaml --no-guess-parameters', function(error, stdout, stderr) {
+                expect(stdout).to.contain('2 crit');
+                expect(stdout).to.contain('Value for parameter was not provided');
+                done();
+            });
+        }).timeout(5000);
+
+        it('only-guess-parameters should allow opting in to parameter mocking', (done) => {
+            exec('node lib/index.js validate testData/valid/yaml/no-guess-parameters.yaml --only-guess-parameters Param1', function(error, stdout, stderr) {
+                expect(stdout).to.contain('1 crit');
+                expect(stdout).to.contain('Value for parameter was not provided');
+                done();
+            });
+        }).timeout(5000);
+
+        it('only-guess-parameters should allow opting in to parameter mocking with multiple params', (done) => {
+            exec('node lib/index.js validate testData/valid/yaml/no-guess-parameters.yaml --only-guess-parameters Param1,Param2', function(error, stdout, stderr) {
+                expect(stdout).to.contain('0 crit');
+                done();
+            });
+        }).timeout(5000);
     });
 
 });

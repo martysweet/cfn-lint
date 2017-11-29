@@ -7,6 +7,7 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 - Merge PR #96, fix invalid List<ParameterValue> validation
+- Merge PR #97, allow control over whether parameters are guessed or not.
 
 ## [1.3.4] - 2017-11-19
 ### Changed

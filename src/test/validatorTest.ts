@@ -523,6 +523,22 @@ describe('validator', () => {
             expect(result['errors']['crit']).to.have.lengthOf(1);
             expect(result['errors']['crit'][0]).to.has.property('message', 'Parameter value \'\' for Env is not within the parameters AllowedValues');
         });
+
+        it('missing parameters should cause an error when guessParameters is set', () => {
+            const input = 'testData/valid/yaml/parameters.yaml';
+            let result = validator.validateFile(input, {guessParameters: []});
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]).to.has.property('message', 'Value for parameter was not provided');
+        });
+
+        it('parameters in guessParameters should be permitted to be guessed', () => {
+            const input = 'testData/valid/yaml/parameters.yaml';
+            let result = validator.validateFile(input, {guessParameters: ['Env']});
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+            expect(result['errors']['info']).to.have.lengthOf(0);
+        })
     });
 
     describe('pseudo-parmeters', () => {

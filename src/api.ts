@@ -1,15 +1,18 @@
 import validator = require('./validator');
 
-export interface ValidationOptions {
+export interface APIValidationOptions {
   parameters: {[parameterName: string]: any}
   pseudoParameters: {[pseudoParameterName: string]: any}
 }
+
+export type ValidationOptions = APIValidationOptions & validator.ValidateOptions;
 
 export type ValidationResult = validator.ErrorObject;
 
 const defaultOptions: ValidationOptions = {
   parameters: {},
-  pseudoParameters: {}
+  pseudoParameters: {},
+  guessParameters: undefined
 }
 
 /**
@@ -19,7 +22,7 @@ const defaultOptions: ValidationOptions = {
  */
 export function validateFile(fileName: string, options?: Partial<ValidationOptions>): ValidationResult {
   setupValidator(options);
-  return validator.validateFile(fileName);
+  return validator.validateFile(fileName, options);
 }
 
 /**
@@ -30,7 +33,7 @@ export function validateFile(fileName: string, options?: Partial<ValidationOptio
  */
 export function validateJsonObject(objectToValidate: any, options?: Partial<ValidationOptions>): ValidationResult {
   setupValidator(options);
-  return validator.validateJsonObject(objectToValidate);
+  return validator.validateJsonObject(objectToValidate, options);
 }
 
 function setupValidator(passedOptions?: Partial<ValidationOptions>) {
