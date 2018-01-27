@@ -526,7 +526,9 @@ function resolveIntrinsicFunction(ref: any, key: string) : string | boolean | st
         case 'Fn::Not':
             return doIntrinsicNot(ref, key);
         case 'Fn::ImportValue':
-            return doIntrinsicImportValue(ref, key);
+          return doIntrinsicImportValue(ref, key);
+        case 'Fn::Select':
+          return doIntrinsicSelect(ref, key);
         default:
             addError("warn", `Unhandled Intrinsic Function ${key}, this needs implementing. Some errors might be missed.`, placeInTemplate, "Functions");
             return null;
@@ -677,6 +679,46 @@ function doIntrinsicGetAZs(ref: any, key: string){
     AZs.push(region + 'b');
     AZs.push(region + 'c');
     return AZs;
+
+}
+
+function doIntrinsicSelect(ref: any, key: string){
+  let toGet = ref[key];
+  if(!Array.isArray(toGet) || toGet.length < 2) {
+    addError('crit', "Fn::Select only supports an array of two elements", placeInTemplate, "Fn::Select");
+    return 'INVALID_SELECT';
+  }
+  if (toGet[0] === undefined ) {
+     addError('crit', "Fn::Select only supports an array of two elements", placeInTemplate, "Fn::Select");
+     return 'INVALID_SELECT';
+  }
+
+  let index = toGet[0];
+  if (typeof index !== 'number') {
+    addError('crit', "First element of Fn::Select must be a number", placeInTemplate, "Fn::Select");
+    return 'INVALID_SELECT';
+  }
+  if (toGet[1] === undefined ) {
+     addError('crit', "Fn::Select only supports an array of two elements", placeInTemplate, "Fn::Select");
+     return 'INVALID_SELECT';
+  }
+
+  let list = toGet[1]
+  if (!Array.isArray(list)) {
+    //we may need to resolve it
+    list = resolveIntrinsicFunction(list, Object.keys(list)[0]);
+    if (!Array.isArray(list)) {
+      addError('crit', "Fn::Select requires the second element to be a list, function call did not resolve to a list", placeInTemplate, "Fn::Select");
+      return 'INVALID_SELECT';
+    }
+  }
+  if (index >= 0 && index < list.length) {
+    return list[index];
+  } else {
+    addError('warn', "First element of Fn::Select exceeds the length of the list, if list is a function, make sure it returns a longer list", placeInTemplate, "Fn::Select");
+    return 'INVALID_SELECT';
+  }
+
 
 }
 
