@@ -693,7 +693,7 @@ function doIntrinsicSelect(ref: any, key: string){
      return 'INVALID_SELECT';
   }
 
-  let index = toGet[0];
+  let index = parseInt(toGet[0]);
   if (typeof index !== 'number') {
     addError('crit', "First element of Fn::Select must be a number", placeInTemplate, "Fn::Select");
     return 'INVALID_SELECT';
