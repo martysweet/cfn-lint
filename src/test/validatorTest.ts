@@ -166,7 +166,6 @@ describe('validator', () => {
             it("should error if first element is not a number or does not parse to a number", () => {
               const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_3.json');
               let result = validator.validateJsonObject(input);
-              console.log(JSON.stringify(result));
               expect(result).to.have.deep.property('templateValid', false);
               expect(result['errors']['crit']).to.have.lengthOf(1);
               expect(result['errors']['warn']).to.have.lengthOf(0);
@@ -174,7 +173,6 @@ describe('validator', () => {
             it("should error if first element is not defined or is null", () => {
               const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_4.json');
               let result = validator.validateJsonObject(input);
-              console.log(JSON.stringify(result));
               expect(result).to.have.deep.property('templateValid', false);
               expect(result['errors']['crit']).to.have.lengthOf(1);
               expect(result['errors']['warn']).to.have.lengthOf(0);
