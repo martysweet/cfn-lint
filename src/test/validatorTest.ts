@@ -141,6 +141,67 @@ describe('validator', () => {
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['warn']).to.have.lengthOf(1);
         });
+        describe('Fn::Select', () => {
+            it("should pass validation, with flat list and intrinsic list", () => {
+              const input = require('../../testData/valid/json/5_valid_intrinsic_select.json');
+              let result = validator.validateJsonObject(input);
+              expect(result).to.have.deep.property('templateValid', true);
+              expect(result['errors']['crit']).to.have.lengthOf(0);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+            });
+             it("should warn if index is greater than list size", () => {
+              const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_1.json');
+              let result = validator.validateJsonObject(input);
+              expect(result).to.have.deep.property('templateValid', true);
+              expect(result['errors']['crit']).to.have.lengthOf(0);
+              expect(result['errors']['warn']).to.have.lengthOf(1);
+            });       
+            it("should error if second element is not a list or a function", () => {
+              const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_2.json');
+              let result = validator.validateJsonObject(input);
+              expect(result).to.have.deep.property('templateValid', false);
+              expect(result['errors']['crit']).to.have.lengthOf(1);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+            });
+            it("should error if first element is not a number or does not parse to a number", () => {
+              const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_3.json');
+              let result = validator.validateJsonObject(input);
+              console.log(JSON.stringify(result));
+              expect(result).to.have.deep.property('templateValid', false);
+              expect(result['errors']['crit']).to.have.lengthOf(1);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+            });
+            it("should error if first element is not defined or is null", () => {
+              const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_4.json');
+              let result = validator.validateJsonObject(input);
+              console.log(JSON.stringify(result));
+              expect(result).to.have.deep.property('templateValid', false);
+              expect(result['errors']['crit']).to.have.lengthOf(1);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+            });
+            it("should error if only one element as argument list", () => {
+              const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_5.json');
+              let result = validator.validateJsonObject(input);
+              expect(result).to.have.deep.property('templateValid', false);
+              expect(result['errors']['crit']).to.have.lengthOf(1);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+            });
+            it("should error if second element is null or undefined", () => {
+              const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_6.json');
+              let result = validator.validateJsonObject(input);
+              expect(result).to.have.deep.property('templateValid', false);
+              expect(result['errors']['crit']).to.have.lengthOf(1);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+            });
+            it("should error if second element does not resolve to a list", () => {
+              const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_7.json');
+              let result = validator.validateJsonObject(input);
+              expect(result).to.have.deep.property('templateValid', false);
+              expect(result['errors']['crit']).to.have.lengthOf(1);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+            });
+        });
+
 
     });
 
