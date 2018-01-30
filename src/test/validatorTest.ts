@@ -149,12 +149,13 @@ describe('validator', () => {
               expect(result['errors']['crit']).to.have.lengthOf(0);
               expect(result['errors']['warn']).to.have.lengthOf(0);
             });
-             it("should warn if index is greater than list size", () => {
+             it("should error if index is greater than list size", () => {
               const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_1.json');
               let result = validator.validateJsonObject(input);
-              expect(result).to.have.deep.property('templateValid', true);
-              expect(result['errors']['crit']).to.have.lengthOf(0);
-              expect(result['errors']['warn']).to.have.lengthOf(1);
+              expect(result).to.have.deep.property('templateValid', false);
+              expect(result['errors']['crit']).to.have.lengthOf(1);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+              // console.log(result['errors']['crit'][0]['message']);
             });       
             it("should error if second element is not a list or a function", () => {
               const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_2.json');
@@ -162,6 +163,7 @@ describe('validator', () => {
               expect(result).to.have.deep.property('templateValid', false);
               expect(result['errors']['crit']).to.have.lengthOf(1);
               expect(result['errors']['warn']).to.have.lengthOf(0);
+              // console.log(result['errors']['crit'][0]['message']);
             });
             it("should error if first element is not a number or does not parse to a number", () => {
               const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_3.json');
@@ -169,6 +171,7 @@ describe('validator', () => {
               expect(result).to.have.deep.property('templateValid', false);
               expect(result['errors']['crit']).to.have.lengthOf(1);
               expect(result['errors']['warn']).to.have.lengthOf(0);
+              // console.log(result['errors']['crit'][0]['message']);
             });
             it("should error if first element is not defined or is null", () => {
               const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_4.json');
@@ -176,6 +179,7 @@ describe('validator', () => {
               expect(result).to.have.deep.property('templateValid', false);
               expect(result['errors']['crit']).to.have.lengthOf(1);
               expect(result['errors']['warn']).to.have.lengthOf(0);
+              // console.log(result['errors']['crit'][0]['message']);
             });
             it("should error if only one element as argument list", () => {
               const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_5.json');
@@ -183,6 +187,7 @@ describe('validator', () => {
               expect(result).to.have.deep.property('templateValid', false);
               expect(result['errors']['crit']).to.have.lengthOf(1);
               expect(result['errors']['warn']).to.have.lengthOf(0);
+              // console.log(result['errors']['crit'][0]['message']);
             });
             it("should error if second element is null or undefined", () => {
               const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_6.json');
@@ -190,6 +195,7 @@ describe('validator', () => {
               expect(result).to.have.deep.property('templateValid', false);
               expect(result['errors']['crit']).to.have.lengthOf(1);
               expect(result['errors']['warn']).to.have.lengthOf(0);
+              // console.log(result['errors']['crit'][0]['message']);
             });
             it("should error if second element does not resolve to a list", () => {
               const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_7.json');
@@ -197,7 +203,50 @@ describe('validator', () => {
               expect(result).to.have.deep.property('templateValid', false);
               expect(result['errors']['crit']).to.have.lengthOf(1);
               expect(result['errors']['warn']).to.have.lengthOf(0);
+              // console.log(result['errors']['crit'][0]['message']);
             });
+            it("should error if first element does not resolve to a number", () => {
+              const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_8.json');
+              let result = validator.validateJsonObject(input);
+              expect(result).to.have.deep.property('templateValid', false);
+              expect(result['errors']['crit']).to.have.lengthOf(1);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+              // console.log(result['errors']['crit'][0]['message']);
+            });
+            it("should error if first element attempts an invalid intrinsic function", () => {
+              const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_9.json');
+              let result = validator.validateJsonObject(input);
+              expect(result).to.have.deep.property('templateValid', false);
+              expect(result['errors']['crit']).to.have.lengthOf(1);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+              // console.log(result['errors']['crit'][0]['message']);
+            });
+            it("should error if first element is anything other than non-array object, number or string", () => {
+              const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_10.json');
+              let result = validator.validateJsonObject(input);
+              expect(result).to.have.deep.property('templateValid', false);
+              expect(result['errors']['crit']).to.have.lengthOf(1);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+              // console.log(result['errors']['crit'][0]['message']);
+            });
+          
+            it("should error if second element attempts an invalid intrinsic function", () => {
+              const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_11.json');
+              let result = validator.validateJsonObject(input);
+              expect(result).to.have.deep.property('templateValid', false);
+              expect(result['errors']['crit']).to.have.lengthOf(1);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+              // console.log(result['errors']['crit'][0]['message']);
+            });
+            it("should error if second element contains a list with null values", () => {
+              const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_12.json');
+              let result = validator.validateJsonObject(input);
+              expect(result).to.have.deep.property('templateValid', false);
+              expect(result['errors']['crit']).to.have.lengthOf(1);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+              // console.log(result['errors']['crit'][0]['message']);
+            });
+           
         });
 
 

@@ -6,8 +6,8 @@
 
   "Mappings" : {
     "ListsInAMap" : {
-      "Lists1" : { "a": [], "b": [], "c": ["", "sts:AssumeRole"] },
-      "Lists2" : { "a": "1"}
+      "Lists1" : { "a": [], "b": [], "c": "sts:AssumeRole" },
+      "Lists2" : { "a": "1", "b": ["asd"] }
     }
   },
 
@@ -20,7 +20,7 @@
           "Statement"  : [{
             "Effect"   : "Allow",
             "Principal": { "Service": "ec2.amazonaws.com"},
-            "Action"   : { "Fn::Select" : [ "2", {"Fn::FindInMap" : ["ListsInAMap", "Lists1", "c" ] }]}
+            "Action"   : { "Fn::Select" : [ {"Fn::FindInMap" : ["ListsInAMap", "Lists2", "b"]}, ["sts:AssumeRole"]]}
           } ]
         },
         "Path": "/"

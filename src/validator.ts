@@ -683,46 +683,82 @@ function doIntrinsicGetAZs(ref: any, key: string){
 }
 
 function doIntrinsicSelect(ref: any, key: string){
-  let toGet = ref[key];
-  if(!Array.isArray(toGet) || toGet.length < 2) {
-    addError('crit', "Fn::Select only supports an array of two elements", placeInTemplate, "Fn::Select");
-    return 'INVALID_SELECT';
-  }
-  if (toGet[0] === undefined || toGet[0] === null) {
-     addError('crit', "Fn::Select first element cannot be null or undefined", placeInTemplate, "Fn::Select");
-     return 'INVALID_SELECT';
-  }
+    let toGet = ref[key];
+    if(!Array.isArray(toGet) || toGet.length < 2) {
+        addError('crit', "Fn::Select only supports an array of two elements", placeInTemplate, "Fn::Select");
+        return 'INVALID_SELECT';
+    }
+    if (toGet[0] === undefined || toGet[0] === null) {
+        addError('crit', "Fn::Select first element cannot be null or undefined", placeInTemplate, "Fn::Select");
+        return 'INVALID_SELECT';
+    }
+    let index: number;
+    if (typeof toGet[0]  == 'object' && !Array.isArray(toGet[0])) {
+        let keys = Object.keys(toGet[0]);
+        if(awsIntrinsicFunctions['Fn::Select::Index']['supportedFunctions'].indexOf(keys[0]) != -1) {
+            let resolvedIndex = resolveIntrinsicFunction(toGet[0], keys[0]);
+            if(typeof resolvedIndex === 'string') {
+                index = parseInt(resolvedIndex);
+            } else if (typeof resolvedIndex === 'number') {
+                index = resolvedIndex;
+            } else {
+                addError('crit', "Fn::Select's first argument did not resolve to a string for parsing or a numeric value.", placeInTemplate, "Fn::Select");
+                return 'INVALID_SELECT';
+            }
 
-  let index = parseInt(toGet[0]);
-  if (typeof index !== 'number' || isNaN(index)) {
-    addError('crit', "First element of Fn::Select must be a number", placeInTemplate, "Fn::Select");
-    return 'INVALID_SELECT';
-  }
-  if (toGet[1] === undefined || toGet[1] === null) {
-     addError('crit', "Fn::Select Second element cannot be null or undefined", placeInTemplate, "Fn::Select");
-     return 'INVALID_SELECT';
-  }
-
-  let list = toGet[1]
-  if (!Array.isArray(list)) {
-    //we may need to resolve it
-    if (typeof list !== 'string') {
-      list = resolveIntrinsicFunction(list, Object.keys(list)[0]);
+        } else {
+            addError('crit', `Fn::Select does not support the ${keys[0]} function in argument 1`);
+            return 'INVALID_SELECT';
+        }
+    } else if (typeof toGet[0] === 'string') {
+          index = parseInt(toGet[0])
+    } else if (typeof toGet[0] === 'number'){
+          index = toGet[0];
     } else {
-      addError('crit', "Fn::Select requires the second element to resolve to a list, it appears to be a string", placeInTemplate, "Fn::Select");
+      addError('crit', `Fn:Select's first arguement must be a number or resolve to a number, it appears to be a ${typeof(toGet[0])}`, placeInTemplate, "Fn::Select");
       return 'INVALID_SELECT';
     }
+
+    if (typeof index === undefined || typeof index !== 'number' || isNaN(index)) {
+        addError('crit', "First element of Fn::Select must be a number", placeInTemplate, "Fn::Select");
+        return 'INVALID_SELECT';
+    }
+    if (toGet[1] === undefined || toGet[1] === null) {
+        addError('crit', "Fn::Select Second element cannot be null or undefined", placeInTemplate, "Fn::Select");
+        return 'INVALID_SELECT';
+    }
+
+    let list = toGet[1]
     if (!Array.isArray(list)) {
-      addError('crit', "Fn::Select requires the second element to be a list, function call did not resolve to a list", placeInTemplate, "Fn::Select");
-      return 'INVALID_SELECT';
+        //we may need to resolve it
+        if (typeof list !== 'object') {
+            addError('crit', `Fn::Select requires the second element to resolve to a list, it appears to be a ${typeof list}`, placeInTemplate, "Fn::Select");
+            return 'INVALID_SELECT';
+        } else if(typeof list  == 'object'){
+            let keys = Object.keys(list);
+            if(awsIntrinsicFunctions['Fn::Select::List']['supportedFunctions'].indexOf(keys[0]) != -1) {
+                list = resolveIntrinsicFunction(list, keys[0]);
+            } else {
+                addError('crit', `Fn::Select does not support the ${keys[0]} function in argument 2`);
+                return 'INVALID_SELECT';
+            }
+        }
+
+
+        if (!Array.isArray(list)) {
+            addError('crit', "Fn::Select requires the second element to be a list, function call did not resolve to a list", placeInTemplate, "Fn::Select");
+            return 'INVALID_SELECT';
+        }
+    } else if (list.indexOf(null) > -1) {
+        addError('crit', "FnSelect requires that the list be free of null values", placeInTemplate, "Fn::Select");
+    
     }
-  }
-  if (index >= 0 && index < list.length) {
-    return list[index];
-  } else {
-    addError('warn', "First element of Fn::Select exceeds the length of the list, if list is a function, make sure it returns a longer list", placeInTemplate, "Fn::Select");
-    return 'INVALID_SELECT';
-  }
+    if (index >= 0 && index < list.length) {
+        return list[index];
+    } else {
+        addError('crit', "First element of Fn::Select exceeds the length of the list, if list is a function, make sure it returns a longer list", placeInTemplate, "Fn::Select");
+        return 'INVALID_SELECT';
+    }
 
 
 }
