@@ -149,7 +149,18 @@ describe('validator', () => {
               expect(result['errors']['crit']).to.have.lengthOf(0);
               expect(result['errors']['warn']).to.have.lengthOf(0);
             });
-             it("should error if index is greater than list size", () => {
+            it("should pass validation with Parameter Collection", () => {
+              const input = require('../../testData/valid/json/5_valid_intrinsic_select_2.json');
+              let result = validator.validateJsonObject(input);
+              console.log(JSON.stringify(result, null, 4));
+              expect(result).to.have.deep.property('templateValid', true);
+              expect(result['errors']['crit']).to.have.lengthOf(0);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+              // console.log(JSON.stringify(result, null, 3));
+            });
+
+          
+            it("should error if index is greater than list size", () => {
               const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_1.json');
               let result = validator.validateJsonObject(input);
               expect(result).to.have.deep.property('templateValid', false);

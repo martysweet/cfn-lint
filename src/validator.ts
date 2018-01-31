@@ -190,12 +190,22 @@ function assignParametersOutput(guessParameters?: string[]) {
         // only mock the allowed ones.
         const okToGuess = (guessAll) || (guessParametersSet.has(parameterName));
 
-        const parameterValue = inferParameterValue(parameterName, parameter, okToGuess);
+        let parameterValue = inferParameterValue(parameterName, parameter, okToGuess);
+
 
         if (parameter.hasOwnProperty('AllowedValues') && parameter['AllowedValues'].indexOf(parameterValue) < 0) {
             addError('crit', `Parameter value '${parameterValue}' for ${parameterName} is`
                             + ` not within the parameters AllowedValues`, ['Parameters', parameterName], "Parameters");
 
+        }
+
+        if(parameter['Type'] === "CommaDelimitedList" && typeof parameterValue === 'string') {
+            parameterValue = parameterValue.split(',').map(x => x.trim());
+            parameterValue.forEach(val => {
+              if (val === ""){
+                addError('crit', `Parameter ${parameterName} contains a CommaDelimitedList where the number of commas appears to be equal or greater than the list of items.`, ['Parameters', parameterName], "Parameters");
+              }
+            })
         }
 
         // Assign an Attribute Ref regardless of any failures above
@@ -742,11 +752,19 @@ function doIntrinsicSelect(ref: any, key: string){
                 addError('crit', `Fn::Select does not support the ${keys[0]} function in argument 2`);
                 return 'INVALID_SELECT';
             }
+            console.log(keys[0]);
+          if (keys[0] === "Ref" ) {
+              // check if it was a paramter which might be converted to a list
+              const parameterName = toGet[1][keys[0]];
+            if (workingInput['Parameters'][parameterName] !== undefined ) {
+                list = workingInput['Parameters'][parameterName]['Attributes']['Ref'];
+              }
+            }
         }
 
 
         if (!Array.isArray(list)) {
-            addError('crit', "Fn::Select requires the second element to be a list, function call did not resolve to a list", placeInTemplate, "Fn::Select");
+            addError('crit', `Fn::Select requires the second element to be a list, function call did not resolve to a list. It contains value ${list}`, placeInTemplate, "Fn::Select");
             return 'INVALID_SELECT';
         }
     } else if (list.indexOf(null) > -1) {
