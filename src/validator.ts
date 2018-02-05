@@ -536,9 +536,9 @@ function resolveIntrinsicFunction(ref: any, key: string) : string | boolean | st
         case 'Fn::Not':
             return doIntrinsicNot(ref, key);
         case 'Fn::ImportValue':
-          return doIntrinsicImportValue(ref, key);
+            return doIntrinsicImportValue(ref, key);
         case 'Fn::Select':
-          return doIntrinsicSelect(ref, key);
+            return doIntrinsicSelect(ref, key);
         default:
             addError("warn", `Unhandled Intrinsic Function ${key}, this needs implementing. Some errors might be missed.`, placeInTemplate, "Functions");
             return null;
@@ -725,7 +725,7 @@ function doIntrinsicSelect(ref: any, key: string){
     } else if (typeof toGet[0] === 'number'){
           index = toGet[0];
     } else {
-      addError('crit', `Fn:Select's first arguement must be a number or resolve to a number, it appears to be a ${typeof(toGet[0])}`, placeInTemplate, "Fn::Select");
+      addError('crit', `Fn:Select's first argument must be a number or resolve to a number, it appears to be a ${typeof(toGet[0])}`, placeInTemplate, "Fn::Select");
       return 'INVALID_SELECT';
     }
 
