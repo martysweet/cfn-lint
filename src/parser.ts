@@ -63,7 +63,7 @@ function cleanupYaml(ref: any){
             let key = Object.keys(ref)[i];
 
             // Resolve the function
-            if(ref[key].hasOwnProperty('class') && ref[key].hasOwnProperty('data')){
+            if( ref[key] !== null && ref[key].hasOwnProperty('class') && ref[key].hasOwnProperty('data')){
 
                 // We have a Yaml generated object
 
@@ -96,7 +96,7 @@ function cleanupYaml(ref: any){
                 ref[key] = {};
                 ref[key][outputKeyName] = outputData;
 
-            }else if(key != 'Attributes' && typeof ref[key] == "object"){
+            }else if(key != 'Attributes' && typeof ref[key] == "object" && ref[key] !== null){
                 lastPlaceInTemplate = ref;
                 lastKeyInTemplate = key;
                 cleanupYaml(ref[key]);

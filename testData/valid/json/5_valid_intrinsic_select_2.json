@@ -19,7 +19,7 @@
         "AssumeRolePolicyDocument" : {
           "Statement"  : [{
             "Effect"   : "Allow",
-            "Principal": "ec2.amazonaws.com",
+            "Principal": { "Service" : "ec2.amazonaws.com"},
             "Action"   : { "Fn::Select" : ["0", { "Ref": "RoleActions"} ]}
           } ]
         },

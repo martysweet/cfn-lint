@@ -752,7 +752,6 @@ function doIntrinsicSelect(ref: any, key: string){
                 addError('crit', `Fn::Select does not support the ${keys[0]} function in argument 2`);
                 return 'INVALID_SELECT';
             }
-            console.log(keys[0]);
           if (keys[0] === "Ref" ) {
               // check if it was a paramter which might be converted to a list
               const parameterName = toGet[1][keys[0]];
@@ -768,13 +767,13 @@ function doIntrinsicSelect(ref: any, key: string){
             return 'INVALID_SELECT';
         }
     } else if (list.indexOf(null) > -1) {
-        addError('crit', "FnSelect requires that the list be free of null values", placeInTemplate, "Fn::Select");
+        addError('crit', "Fn::Select requires that the list be free of null values", placeInTemplate, "Fn::Select");
     
     }
     if (index >= 0 && index < list.length) {
         return list[index];
     } else {
-        addError('crit', "First element of Fn::Select exceeds the length of the list, if list is a function, make sure it returns a longer list", placeInTemplate, "Fn::Select");
+        addError('crit', "First element of Fn::Select exceeds the length of the list.", placeInTemplate, "Fn::Select");
         return 'INVALID_SELECT';
     }
 

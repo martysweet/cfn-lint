@@ -19,7 +19,7 @@
         "AssumeRolePolicyDocument" : {
           "Statement"  : [{
             "Effect"   : "Allow",
-            "Principal": { "Fn::Select" : [ "0", ["ec2.amazonaws.com"]]},
+            "Principal": { "Service": {"Fn::Select" : [ "0", ["ec2.amazonaws.com"]]}},
             "Action"   : { "Fn::Select" : [ {"Fn::FindInMap" : ["ListsInAMap", "Lists2", "a"]}, {"Fn::FindInMap" : ["ListsInAMap", "Lists1", "c" ] }]}
           } ]
         },

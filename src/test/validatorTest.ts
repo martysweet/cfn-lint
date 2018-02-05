@@ -152,11 +152,9 @@ describe('validator', () => {
             it("should pass validation with Parameter Collection", () => {
               const input = require('../../testData/valid/json/5_valid_intrinsic_select_2.json');
               let result = validator.validateJsonObject(input);
-              console.log(JSON.stringify(result, null, 4));
               expect(result).to.have.deep.property('templateValid', true);
               expect(result['errors']['crit']).to.have.lengthOf(0);
               expect(result['errors']['warn']).to.have.lengthOf(0);
-              // console.log(JSON.stringify(result, null, 3));
             });
 
           
@@ -259,6 +257,130 @@ describe('validator', () => {
             });
            
         });
+
+
+    });
+
+    describe('Fn::Select', () => {
+      it('should validate in yaml with literal and intrinic elements in array', () => {
+        const input = './testData/valid/yaml/5_valid_intrinsic_select.yaml';
+        let result = validator.validateFile(input);
+        expect(result).to.have.deep.property('templateValid', true);
+        expect(result['errors']['crit']).to.have.lengthOf(0);
+        expect(result['errors']['warn']).to.have.lengthOf(0);
+    
+      
+      });
+    
+       it('should validate in yaml with Comma Separated List Param', () => {
+        const input = './testData/valid/yaml/5_valid_intrinsic_select_2.yaml';
+        let result = validator.validateFile(input);
+        expect(result).to.have.deep.property('templateValid', true);
+        expect(result['errors']['crit']).to.have.lengthOf(0);
+        expect(result['errors']['warn']).to.have.lengthOf(0);
+    
+      
+       });  
+
+
+            it("should error if index is greater than list size", () => {
+              const input = './testData/invalid/yaml/5_invalid_intrinsic_select_1.yaml';
+              let result = validator.validateFile(input);
+              expect(result).to.have.deep.property('templateValid', false);
+              expect(result['errors']['crit']).to.have.lengthOf(1);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+              console.log(result['errors']['crit'][0]['message']);
+            });       
+            it("should error if second element is not a list or a function", () => {
+              const input = './testData/invalid/yaml/5_invalid_intrinsic_select_2.yaml';
+              let result = validator.validateFile(input);
+              expect(result).to.have.deep.property('templateValid', false);
+              expect(result['errors']['crit']).to.have.lengthOf(1);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+              console.log(result['errors']['crit'][0]['message']);
+            });
+            it("should error if first element is not a number or does not parse to a number", () => {
+              const input = './testData/invalid/yaml/5_invalid_intrinsic_select_3.yaml';
+              let result = validator.validateFile(input);
+              expect(result).to.have.deep.property('templateValid', false);
+              expect(result['errors']['crit']).to.have.lengthOf(1);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+              console.log(result['errors']['crit'][0]['message']);
+            });
+            it("should error if first element is not defined or is null", () => {
+              const input = './testData/invalid/yaml/5_invalid_intrinsic_select_4.yaml';
+              let result = validator.validateFile(input);
+              expect(result).to.have.deep.property('templateValid', false);
+              expect(result['errors']['crit']).to.have.lengthOf(1);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+              console.log(result['errors']['crit'][0]['message']);
+            });
+            it("should error if only one element as argument list", () => {
+              const input = './testData/invalid/yaml/5_invalid_intrinsic_select_5.yaml';
+              let result = validator.validateFile(input);
+              expect(result).to.have.deep.property('templateValid', false);
+              expect(result['errors']['crit']).to.have.lengthOf(1);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+              console.log(result['errors']['crit'][0]['message']);
+            });
+            it("should error if second element is null or undefined", () => {
+              const input = './testData/invalid/yaml/5_invalid_intrinsic_select_6.yaml';
+              let result = validator.validateFile(input);
+              expect(result).to.have.deep.property('templateValid', false);
+              expect(result['errors']['crit']).to.have.lengthOf(1);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+              console.log(result['errors']['crit'][0]['message']);
+            });
+            it("should error if second element does not resolve to a list", () => {
+              const input = './testData/invalid/yaml/5_invalid_intrinsic_select_7.yaml';
+              let result = validator.validateFile(input);
+              expect(result).to.have.deep.property('templateValid', false);
+              expect(result['errors']['crit']).to.have.lengthOf(1);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+              console.log(result['errors']['crit'][0]['message']);
+            });
+            it("should error if first element does not resolve to a number", () => {
+              const input = './testData/invalid/yaml/5_invalid_intrinsic_select_8.yaml';
+              let result = validator.validateFile(input);
+              expect(result).to.have.deep.property('templateValid', false);
+              expect(result['errors']['crit']).to.have.lengthOf(1);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+              console.log(result['errors']['crit'][0]['message']);
+            });
+            it("should error if first element attempts an invalid intrinsic function", () => {
+              const input = './testData/invalid/yaml/5_invalid_intrinsic_select_9.yaml';
+              let result = validator.validateFile(input);
+              expect(result).to.have.deep.property('templateValid', false);
+              expect(result['errors']['crit']).to.have.lengthOf(1);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+              console.log(result['errors']['crit'][0]['message']);
+            });
+            it("should error if first element is anything other than non-array object, number or string", () => {
+              const input = './testData/invalid/yaml/5_invalid_intrinsic_select_10.yaml';
+              let result = validator.validateFile(input);
+              expect(result).to.have.deep.property('templateValid', false);
+              expect(result['errors']['crit']).to.have.lengthOf(1);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+              console.log(result['errors']['crit'][0]['message']);
+            });
+          
+            it("should error if second element attempts an invalid intrinsic function", () => {
+              const input = './testData/invalid/yaml/5_invalid_intrinsic_select_11.yaml';
+              let result = validator.validateFile(input);
+              expect(result).to.have.deep.property('templateValid', false);
+              expect(result['errors']['crit']).to.have.lengthOf(1);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+              console.log(result['errors']['crit'][0]['message']);
+            });
+            it("should error if second element contains a list with null values", () => {
+              const input = './testData/invalid/yaml/5_invalid_intrinsic_select_12.yaml';
+              let result = validator.validateFile(input);
+              expect(result).to.have.deep.property('templateValid', false);
+              expect(result['errors']['crit']).to.have.lengthOf(1);
+              expect(result['errors']['warn']).to.have.lengthOf(0);
+              console.log(result['errors']['crit'][0]['message']);
+            });
+
 
 
     });
