@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Template to deploy a Role using Fn::Select with literal and intrinsic values'
+Description: 'Malformed Fn::Select, second element does not resolve to a list'
 Mappings:
   ListsInAMap:
     Lists1:

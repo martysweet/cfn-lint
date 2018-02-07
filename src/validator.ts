@@ -730,7 +730,7 @@ function doIntrinsicSelect(ref: any, key: string){
     }
 
     if (typeof index === undefined || typeof index !== 'number' || isNaN(index)) {
-        addError('crit', "First element of Fn::Select must be a number", placeInTemplate, "Fn::Select");
+        addError('crit', "First element of Fn::Select must be a number, or it must use an intrinsic fuction that returns a number", placeInTemplate, "Fn::Select");
         return 'INVALID_SELECT';
     }
     if (toGet[1] === undefined || toGet[1] === null) {

@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
 
-  "Description": "Template to deploy a Role using Fn::Select with invalid value",
+  "Description": "Malformed Fn::Select, index's intrinsic does not resolve to a numeric",
   
 
   "Mappings" : {

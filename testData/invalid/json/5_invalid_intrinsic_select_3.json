@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
 
-  "Description": "Template to deploy a Role using Fn::Select with invalid value",
+  "Description": "Malformed Fn::Select where first elememt is a string that does not parse to a number",
   
 
   "Mappings" : {
