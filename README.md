@@ -93,6 +93,7 @@ Template invalid!
 * Fn::Or
 * Fn::And
 * Fn::ImportValue
+* Fn::Select
 * Condition support
 * Ref
 * Go to the documentation from Command Line (see above examples)
@@ -102,7 +103,6 @@ Template invalid!
 ### Feature backlog
 * Verbose parsing errors when reading invalid JSON
 * Fn::ImportValue - to support CLI injection (Like Params currently does)
-* Fn::Select
 * Fn::Split
 * Test coverage for Conditions and Property checking
 * Refactor Property checking to be clearer

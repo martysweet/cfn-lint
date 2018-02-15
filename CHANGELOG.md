@@ -7,6 +7,10 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.5.0] - 2018-02-15
+### Added
+- Merge PR #104, adding Fn::Select functionality, add support for CommaDelimitedList parameter types
+
 ## [1.4.1] - 2018-01-31
 ### Changed
 - Update CloudFormation specification (downloaded 31-Jan-2018) - version: 1.13.0
@@ -80,7 +84,9 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Added
 - Add pseudo parameter support
 
-[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/martysweet/cfn-lint/compare/v1.4.1...v1.5.0
+[1.4.1]: https://github.com/martysweet/cfn-lint/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/martysweet/cfn-lint/compare/v1.3.4...v1.4.0
 [1.3.4]: https://github.com/martysweet/cfn-lint/compare/v1.2.0...v1.3.4
 [1.2.0]: https://github.com/martysweet/cfn-lint/compare/v1.1.7...v1.2.0
