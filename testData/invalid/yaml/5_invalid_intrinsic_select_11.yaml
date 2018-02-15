@@ -1,0 +1,24 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'TMalformed Fn::Select with use of invalid intrinsic function for param 2.'
+Mappings:
+  ListsInAMap:
+    Lists1:
+      a: []
+      b: []
+      c: 'sts:AssumeRole'
+    Lists2:
+      a: 1
+      b: ['asd'] 
+Resources:
+  WebServerRole:
+    Type: 'AWS::IAM::Role'
+    Properties: 
+      AssumeRolePolicyDocument: 
+          Statement:
+            - Effect: 'Allow'
+              Principal:  
+                Service: 'ec2.amazonaws.com'
+              Action: !Select ["0", !Select ["0", [["InvalidLists"], "sts::AssumeRole"]]]
+      Path: '/'
+
+

@@ -1,0 +1,32 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+
+  "Description": "Malformed Fn::Select, second element does not resolve to a list",
+  
+
+  "Mappings" : {
+    "ListsInAMap" : {
+      "Lists1" : { "a": [], "b": [], "c": "sts:AssumeRole" },
+      "Lists2" : { "a": "1"}
+    }
+  },
+
+
+  "Resources": {
+    "WebServerRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties" : {
+        "AssumeRolePolicyDocument" : {
+          "Statement"  : [{
+            "Effect"   : "Allow",
+            "Principal": { "Service": "ec2.amazonaws.com"},
+            "Action"   : { "Fn::Select" : [ "0", { "Fn::FindInMap": ["ListsInAMap", "Lists1", "c"]}]}
+          } ]
+        },
+        "Path": "/"
+      }
+    }
+
+  }
+}
+

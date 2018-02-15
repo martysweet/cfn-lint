@@ -1,0 +1,31 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+
+  "Description": "Template to deploy a Role using Fn::Select with literal and intrinsic values",
+  
+
+  "Mappings" : {
+    "ListsInAMap" : {
+      "Lists1" : { "a": [], "b": [], "c": ["", "sts:AssumeRole"] },
+      "Lists2" : { "a": "1"}
+    }
+  },
+
+
+  "Resources": {
+    "WebServerRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties" : {
+        "AssumeRolePolicyDocument" : {
+          "Statement"  : [{
+            "Effect"   : "Allow",
+            "Principal": { "Service": {"Fn::Select" : [ "0", ["ec2.amazonaws.com"]]}},
+            "Action"   : { "Fn::Select" : [ {"Fn::FindInMap" : ["ListsInAMap", "Lists2", "a"]}, {"Fn::FindInMap" : ["ListsInAMap", "Lists1", "c" ] }]}
+          } ]
+        },
+        "Path": "/"
+      }
+    }
+
+  }
+}
