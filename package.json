@@ -34,16 +34,18 @@
     "@types/source-map-support": "^0.4.0",
     "@types/winston": "^2.3.7",
     "chai": "latest",
+    "dependency-check": "^2.9.1",
     "mocha": "latest",
     "typescript": "~2.6.2",
-    "dependency-check": "^2.9.1"
+    "node-deb": "^0.10.3"
   },
   "scripts": {
     "build": "tsc",
     "test": "mocha lib/test",
     "watch": "tsc -w",
     "prepublish": "npm run build",
-    "deploy": "npm publish"
+    "deploy": "npm publish",
+    "build-deb": "node-deb -- lib/ data/"
   },
   "repository": {
     "type": "git",
@@ -53,5 +55,12 @@
   "main": "./lib/api.js",
   "bin": {
     "cfn-lint": "./lib/index.js"
+  },
+  "node_deb": {
+    "init": "none",
+    "dependencies": "nodejs",
+    "entrypoints": {
+      "cli": "lib/index.js"
+    }
   }
 }
