@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Template with invalid null element in Fn::Select param 2'
+Mappings:
+  ListsInAMap:
+    Lists1:
+      a: []
+      b: []
+      c: 'sts:AssumeRole'
+    Lists2:
+      a: 1
+      b: ['asd'] 
+Resources:
+  WebServerRole:
+    Type: 'AWS::IAM::Role'
+    Properties: 
+      AssumeRolePolicyDocument: 
+          Statement:
+            - Effect: 'Allow'
+              Principal:  
+                Service: 'ec2.amazonaws.com'
+              Action: !Select ["0", ["sts:AssumeRole", null]]
+
+      Path: '/'
+
+
+

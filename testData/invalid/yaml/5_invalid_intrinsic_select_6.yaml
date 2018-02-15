@@ -1,0 +1,24 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Malformed Fn::Select with second element null'
+Mappings:
+  ListsInAMap:
+    Lists1:
+      a: []
+      b: []
+      c: 
+        - '' 
+        - 'sts:AssumeRole'
+    Lists2:
+      a: 1
+Resources:
+  WebServerRole:
+    Type: 'AWS::IAM::Role'
+    Properties: 
+      AssumeRolePolicyDocument: 
+          Statement:
+            - Effect: 'Allow'
+              Principal:  
+                Service: 'ec2.amazonaws.com'
+              Action: !Select [ "0", null ]
+      Path: '/'
+

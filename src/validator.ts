@@ -190,12 +190,22 @@ function assignParametersOutput(guessParameters?: string[]) {
         // only mock the allowed ones.
         const okToGuess = (guessAll) || (guessParametersSet.has(parameterName));
 
-        const parameterValue = inferParameterValue(parameterName, parameter, okToGuess);
+        let parameterValue = inferParameterValue(parameterName, parameter, okToGuess);
+
 
         if (parameter.hasOwnProperty('AllowedValues') && parameter['AllowedValues'].indexOf(parameterValue) < 0) {
             addError('crit', `Parameter value '${parameterValue}' for ${parameterName} is`
                             + ` not within the parameters AllowedValues`, ['Parameters', parameterName], "Parameters");
 
+        }
+
+        if(parameter['Type'] === "CommaDelimitedList" && typeof parameterValue === 'string') {
+            parameterValue = parameterValue.split(',').map(x => x.trim());
+            parameterValue.forEach(val => {
+              if (val === ""){
+                addError('crit', `Parameter ${parameterName} contains a CommaDelimitedList where the number of commas appears to be equal or greater than the list of items.`, ['Parameters', parameterName], "Parameters");
+              }
+            })
         }
 
         // Assign an Attribute Ref regardless of any failures above
@@ -527,6 +537,8 @@ function resolveIntrinsicFunction(ref: any, key: string) : string | boolean | st
             return doIntrinsicNot(ref, key);
         case 'Fn::ImportValue':
             return doIntrinsicImportValue(ref, key);
+        case 'Fn::Select':
+            return doIntrinsicSelect(ref, key);
         default:
             addError("warn", `Unhandled Intrinsic Function ${key}, this needs implementing. Some errors might be missed.`, placeInTemplate, "Functions");
             return null;
@@ -677,6 +689,94 @@ function doIntrinsicGetAZs(ref: any, key: string){
     AZs.push(region + 'b');
     AZs.push(region + 'c');
     return AZs;
+
+}
+
+function doIntrinsicSelect(ref: any, key: string){
+    let toGet = ref[key];
+    if(!Array.isArray(toGet) || toGet.length < 2) {
+        addError('crit', "Fn::Select only supports an array of two elements", placeInTemplate, "Fn::Select");
+        return 'INVALID_SELECT';
+    }
+    if (toGet[0] === undefined || toGet[0] === null) {
+        addError('crit', "Fn::Select first element cannot be null or undefined", placeInTemplate, "Fn::Select");
+        return 'INVALID_SELECT';
+    }
+    let index: number;
+    if (typeof toGet[0]  == 'object' && !Array.isArray(toGet[0])) {
+        let keys = Object.keys(toGet[0]);
+        if(awsIntrinsicFunctions['Fn::Select::Index']['supportedFunctions'].indexOf(keys[0]) != -1) {
+            let resolvedIndex = resolveIntrinsicFunction(toGet[0], keys[0]);
+            if(typeof resolvedIndex === 'string') {
+                index = parseInt(resolvedIndex);
+            } else if (typeof resolvedIndex === 'number') {
+                index = resolvedIndex;
+            } else {
+                addError('crit', "Fn::Select's first argument did not resolve to a string for parsing or a numeric value.", placeInTemplate, "Fn::Select");
+                return 'INVALID_SELECT';
+            }
+
+        } else {
+            addError('crit', `Fn::Select does not support the ${keys[0]} function in argument 1`);
+            return 'INVALID_SELECT';
+        }
+    } else if (typeof toGet[0] === 'string') {
+          index = parseInt(toGet[0])
+    } else if (typeof toGet[0] === 'number'){
+          index = toGet[0];
+    } else {
+      addError('crit', `Fn:Select's first argument must be a number or resolve to a number, it appears to be a ${typeof(toGet[0])}`, placeInTemplate, "Fn::Select");
+      return 'INVALID_SELECT';
+    }
+
+    if (typeof index === undefined || typeof index !== 'number' || isNaN(index)) {
+        addError('crit', "First element of Fn::Select must be a number, or it must use an intrinsic fuction that returns a number", placeInTemplate, "Fn::Select");
+        return 'INVALID_SELECT';
+    }
+    if (toGet[1] === undefined || toGet[1] === null) {
+        addError('crit', "Fn::Select Second element cannot be null or undefined", placeInTemplate, "Fn::Select");
+        return 'INVALID_SELECT';
+    }
+
+    let list = toGet[1]
+    if (!Array.isArray(list)) {
+        //we may need to resolve it
+        if (typeof list !== 'object') {
+            addError('crit', `Fn::Select requires the second element to resolve to a list, it appears to be a ${typeof list}`, placeInTemplate, "Fn::Select");
+            return 'INVALID_SELECT';
+        } else if(typeof list  == 'object'){
+            let keys = Object.keys(list);
+            if(awsIntrinsicFunctions['Fn::Select::List']['supportedFunctions'].indexOf(keys[0]) != -1) {
+                list = resolveIntrinsicFunction(list, keys[0]);
+            } else {
+                addError('crit', `Fn::Select does not support the ${keys[0]} function in argument 2`);
+                return 'INVALID_SELECT';
+            }
+          if (keys[0] === "Ref" ) {
+              // check if it was a paramter which might be converted to a list
+              const parameterName = toGet[1][keys[0]];
+            if (workingInput['Parameters'][parameterName] !== undefined ) {
+                list = workingInput['Parameters'][parameterName]['Attributes']['Ref'];
+              }
+            }
+        }
+
+
+        if (!Array.isArray(list)) {
+            addError('crit', `Fn::Select requires the second element to be a list, function call did not resolve to a list. It contains value ${list}`, placeInTemplate, "Fn::Select");
+            return 'INVALID_SELECT';
+        }
+    } else if (list.indexOf(null) > -1) {
+        addError('crit', "Fn::Select requires that the list be free of null values", placeInTemplate, "Fn::Select");
+    
+    }
+    if (index >= 0 && index < list.length) {
+        return list[index];
+    } else {
+        addError('crit', "First element of Fn::Select exceeds the length of the list.", placeInTemplate, "Fn::Select");
+        return 'INVALID_SELECT';
+    }
+
 
 }
 

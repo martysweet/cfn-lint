@@ -11,6 +11,8 @@
   "Fn::ImportValue": {"supportedFunctions": ["Fn::Base64", "Fn::FindInMap", "Fn::If", "Fn::Join", "Fn::Select", "Fn::Split", "Fn::Sub", "Fn::Ref"]},
   "Fn::Join": {},
   "Fn::Select": {},
+  "Fn::Select::Index": {"supportedFunctions": ["Ref", "Fn::FindInMap"]},
+  "Fn::Select::List": {"supportedFunctions" : ["Fn::FindInMap", "Fn::GetAtt", "Fn::GetAZs", "Fn::If", "Fn::Split", "Ref"] },
   "Fn::Split": {},
   "Fn::Sub": { "supportedFunctions": ["Fn::Base64", "Fn::FindInMap", "Fn::GetAtt", "Fn::GetAZs", "Fn::If", "Fn::Join", "Fn::Select", "Ref"]},
   "Ref": {}
