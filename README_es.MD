@@ -40,7 +40,6 @@ Si lo consigues `/usr/bin/env: 'node': No such file or directory (El archivo o d
 
 `cfn-lint docs AWS::Lambda::Function.Code.S3Bucket`
 
-**Nota: El orden de `--parameters` y` --pseudo` actualmente importa. Esto debería abordarse en una nueva versión.**
 
 [//]: # (Translation Section: Example Output)
 ### Ejemplo de salida
@@ -81,20 +80,20 @@ Documentación: http://docs.aws.amazon.com/search/doc-search.html?searchPath=doc
 * <tt>Detect invalid mappings</tt> Detecta mapeos inválidas
 * <tt>Detect invalid format</tt> Detecta formato inválido
 * <tt>Missing or invalid AWSTemplateFormatVersion</tt> Faltante o inválido Versión de formato de plantilla AWS
-* <tt>Fn::FindInMap</tt> (Encontrar en mapa)
-* <tt>Fn::GetAtt</tt> (Obtener Att)
-* <tt>Fn::GetAZs</tt> (Obtener AZs)
-* <tt>Fn::Join</tt> (Unirse)
+* <tt>Fn::FindInMap</tt> Encontrar en mapa
+* <tt>Fn::GetAtt</tt> Obtener Att
+* <tt>Fn::GetAZs</tt> Obtener AZs
+* <tt>Fn::Join</tt> Unirse
 * <tt>Fn::Base64</tt>
 * <tt>Fn::Sub</tt>
-* <tt>Fn::If</tt> (sí)
-* <tt>Fn::Equals</tt> (Iguales)
-* <tt>Fn::Not</tt> (No)
-* <tt>Fn::Or</tt> (O)
-* <tt>Fn::And</tt> (Y)
-* <tt>Fn::ImportValue</tt> (Importar valor)
-* <tt>Fn::Select</tt> (Seleccionar)
-* <tt>Condition support</tt> (Condición de soporte)
+* <tt>Fn::If</tt> sí
+* <tt>Fn::Equals</tt> Iguales
+* <tt>Fn::Not</tt> No
+* <tt>Fn::Or</tt> O
+* <tt>Fn::And</tt> Y
+* <tt>Fn::ImportValue</tt> Importar valor
+* <tt>Fn::Select</tt> Seleccionar
+* <tt>Condition support</tt> Condición de soporte
 * <tt>Ref</tt>
 * Vaya a la documentación desde la línea de comandos (consulte los ejemplos anteriores)
 * Detectando tipos de propiedad inválidos
@@ -281,7 +280,8 @@ Cada función intrínseca tiene una firma de `doIntrinsicXYZ (ref, key)` y es ll
 el valor resuelto de la función. Por ejemplo, para Fn :: Sub, una entrada de `"Mi $ {MiInstancia}"`
  devolvería una cadena similar a `"Mi i-0a0a0a0a0a`.
 
-[//]: # (Translation Section:Contributions)
-## Contribuciones
+## Translations
+This document is available in:
 
-Consulte la [Contributor's Guide](CONTRIBUTING.md) para obtener más información sobre cómo comenzar.
+- [English](https://github.com/martysweet/cfn-lint/blob/master/README.md)
+- [Español](https://github.com/martysweet/cfn-lint/blob/master/README_es.md)
