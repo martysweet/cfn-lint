@@ -40,6 +40,7 @@ Si lo consigues `/usr/bin/env: 'node': No such file or directory (El archivo o d
 
 `cfn-lint docs AWS::Lambda::Function.Code.S3Bucket`
 
+**Nota: El orden de `--parameters` y` --pseudo` actualmente importa. Esto debería abordarse en una nueva versión.**
 
 [//]: # (Translation Section: Example Output)
 ### Ejemplo de salida
@@ -279,6 +280,11 @@ Cada función intrínseca tiene una firma de `doIntrinsicXYZ (ref, key)` y es ll
  la función `resolveIntrinsicFunction (ref, key)`. La función `doIntrinsic..` debe devolver 
 el valor resuelto de la función. Por ejemplo, para Fn :: Sub, una entrada de `"Mi $ {MiInstancia}"`
  devolvería una cadena similar a `"Mi i-0a0a0a0a0a`.
+
+[//]: # (Translation Section:Contributions)
+## Contribuciones
+
+Consulte la [Guía para colaborar] (CONTRIBUTING.md) para obtener más información sobre cómo comenzar.
 
 ## Translations
 This document is available in:
