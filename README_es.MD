@@ -284,7 +284,7 @@ el valor resuelto de la función. Por ejemplo, para Fn :: Sub, una entrada de `"
 [//]: # (Translation Section:Contributions)
 ## Contribuciones
 
-Consulte la [Guía para colaborar] (CONTRIBUTING.md) para obtener más información sobre cómo comenzar.
+Consulte la [Guía para colaboradores](CONTRIBUTING.md) para obtener más información sobre cómo comenzar.
 
 ## Translations
 This document is available in:
