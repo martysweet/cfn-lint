@@ -48,15 +48,15 @@ Si lo consigues `/usr/bin/env: 'node': No such file or directory (El archivo o d
 0 infos
 0 warn
 2 crit
-Recurso: Recursos> MyInstance> Propiedades
-Mensaje: Requiere propiedad de imagenId faltante por tipear. AWS::EC2::Instance
-Documentación: http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-instance.html
+Resource: Resources > MyInstance > Properties
+Message: Required property ImageId missing for type AWS::EC2::Instance
+Documentation: http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-instance.html
 
-Recurso: Recursos> MyInstance> Propiedades
-Mensaje: Falta el valor de propiedad requerido para el tipo de etiqueta
-Documentación: http://docs.aws.amazon.com/search/doc-search.html?searchPath=documentation-guide&searchQuery=Tag&x=0&y=0&this_doc_product=AWS+CloudFormation&this_doc_guide=User+Guide&doc_locale=en_us#facet_doc_product=AWS%20CloudFormation&facet_doc_guide=User%20Guide
+Resource: Resources > MyInstance > Properties
+Message: Required property Value missing for type Tag
+Documentation: http://docs.aws.amazon.com/search/doc-search.html?searchPath=documentation-guide&searchQuery=Tag&x=0&y=0&this_doc_product=AWS+CloudFormation&this_doc_guide=User+Guide&doc_locale=en_us#facet_doc_product=AWS%20CloudFormation&facet_doc_guide=User%20Guide
 
-¡Plantilla inválida!
+Template invalid!
 ```
 [//]: # (Translation Section: Flags)
 ### Flags
@@ -286,8 +286,9 @@ el valor resuelto de la función. Por ejemplo, para Fn :: Sub, una entrada de `"
 
 Consulte la [Guía para colaboradores](CONTRIBUTING.md) para obtener más información sobre cómo comenzar.
 
-## Translations
-This document is available in:
+[//]: # (Translation Section:Translations)
+## Traducciones
+Este documento está disponible en:
 
 - [English](https://github.com/martysweet/cfn-lint/blob/master/README.md)
 - [Español](https://github.com/martysweet/cfn-lint/blob/master/README_es.md)
