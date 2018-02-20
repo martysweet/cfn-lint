@@ -40,7 +40,7 @@ Si lo consigues `/usr/bin/env: 'node': No such file or directory (El archivo o d
 
 `cfn-lint docs AWS::Lambda::Function.Code.S3Bucket`
 
-**Nota: El orden de `--parameters` y` --pseudo` actualmente importa. Esto debería abordarse en una nueva versión.**
+**Nota: El orden de `--parameters` y `--pseudo` actualmente importa. Esto debería abordarse en una nueva versión.**
 
 [//]: # (Translation Section: Example Output)
 ### Ejemplo de salida
