@@ -7,6 +7,14 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.5.1] - 2018-02-22
+### Added
+- Merge PR #113, adding a Spanish translation for README.md
+
+### Changed
+- Update README.md to link to translation
+- Update CloudFormation specification (downloaded 22-Feb-2018) - version: 1.14.0
+
 ## [1.5.0] - 2018-02-15
 ### Added
 - Merge PR #104, adding Fn::Select functionality, add support for CommaDelimitedList parameter types

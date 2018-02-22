@@ -275,3 +275,11 @@ would return a string similar to `"My i-0a0a0a0a0a`.
 ## Contributions
 
 Please check out the [Contributor's Guide](CONTRIBUTING.md) for more information on how to get started.
+
+## Translations
+This document is available in:
+
+- [English](https://github.com/martysweet/cfn-lint/blob/master/README.md)
+- [Español](https://github.com/martysweet/cfn-lint/blob/master/README_es.md)
+
+If you wish to translate this document to another language, we welcome your contribution!
