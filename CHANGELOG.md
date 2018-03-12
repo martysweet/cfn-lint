@@ -7,13 +7,16 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [1.5.1] - 2018-02-22
+## [1.5.1] - 2018-03-12
 ### Added
 - Merge PR #113, adding a Spanish translation for README.md
+- Merge PR #116, adding node_modules to .gitignore
 
 ### Changed
 - Update README.md to link to translation
-- Update CloudFormation specification (downloaded 22-Feb-2018) - version: 1.14.0
+- Update CloudFormation specification (downloaded 12-Mar-2018) - version: 2.0.0
+- Patched CloudFormation specification with proper Tag specification
+- Force specific dependency versions, fixing issue #117
 
 ## [1.5.0] - 2018-02-15
 ### Added
