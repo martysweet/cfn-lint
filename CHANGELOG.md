@@ -6,7 +6,7 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-### Changed
+### Fixed
 - Merge PR #120, fixing dependency issue with "@types/colors"
 
 ## [1.5.1] - 2018-03-12
