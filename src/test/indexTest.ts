@@ -100,6 +100,23 @@ describe('index', () => {
                 done();
             });
         }).timeout(5000);
+
+        it('handle validation exceptions - non-verbose', (done) => {
+            exec('node lib/index.js validate testData/invalid/some_file_that_does_not_exist', function(error, stdout, stderr) {
+                expect(error).to.have.property('code', 1);
+                expect(stdout).to.contain('Unable to parse template!');
+                done();
+            });
+        }).timeout(5000);
+
+        it('handle validation exceptions - verbose', (done) => {
+            exec('node lib/index.js validate testData/invalid/some_file_that_does_not_exist --verbose', function(error, stdout, stderr) {
+                expect(error).to.have.property('code', 1);
+                expect(stdout).to.contain('Unable to parse template!');
+                expect(stderr).to.contain('Could not find file');
+                done();
+            });
+        }).timeout(5000);
     });
 
 });
