@@ -735,7 +735,7 @@ describe('validator', () => {
         });
 
         it('a null property value should not cause an exception', () => {
-            const input = 'testData/valid/yaml/null_value.yaml';
+            const input = 'testData/invalid/yaml/null_value.yaml';
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
