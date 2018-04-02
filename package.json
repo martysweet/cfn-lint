@@ -21,7 +21,8 @@
     "js-yaml": "^3.7.0",
     "opn": "^5.2.0",
     "winston": "^2.4.0",
-    "source-map-support": "^0.5.0"
+    "source-map-support": "^0.5.0",
+    "safer-buffer": "^2.1.0"
   },
   "devDependencies": {
     "@types/chai": "^4.0.4",
