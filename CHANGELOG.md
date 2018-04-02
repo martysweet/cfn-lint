@@ -11,6 +11,9 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 - Merge PR #127, implementing "safer-buffer" polyfill to be compatible with older NodeJS versions
 - Merge PR #126, improving null value validation when null is passed into a template
 
+### Changed
+- Merge PR #124, adding the `--verbose` flag and returning exit code `1` on a fatal exception or parsing error
+
 ## [1.5.1] - 2018-03-12
 ### Added
 - Merge PR #113, adding a Spanish translation for README.md
