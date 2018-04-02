@@ -1,0 +1,5 @@
+Resources:
+  MyBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      Tags: null

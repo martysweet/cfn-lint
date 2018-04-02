@@ -732,7 +732,15 @@ describe('validator', () => {
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
-        })
+        });
+
+        it('a null property value should not cause an exception', () => {
+            const input = 'testData/invalid/yaml/null_value.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]).to.have.property('message', 'Expecting a list, got null');
+        });
     });
 
     describe('parameters-validation', () => {
