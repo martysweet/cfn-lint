@@ -79,7 +79,18 @@ if(firstArg == "validate"){
     try {
       result = validator.validateFile(secondArg, options);
     } catch(err) {
-      console.log('Unable to parse template!');
+      let error: string = function(msg: string, errors: any) {
+        for (let error of Object.keys(errors)) {
+          if (RegExp(error).test(msg)) {
+            return errors[error];
+          }
+        }
+        return errors[''];
+      }(err.message, {
+        'Could not find file .*. Check the input path.': 'No such file.',
+        '': 'Unable to parse template! Use --verbose for more information.'
+      });
+      console.log(error);
       if (program.verbose) {
         console.error(err);
       }
