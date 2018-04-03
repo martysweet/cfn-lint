@@ -9,8 +9,9 @@ node_versions=$(cat nodes_available.log)
 # Run the tests on all available versions
 for version in ${node_versions}; do
 echo "Testing node-${version}!";
-nv do "node-${version}" 'npm test' 2>&1 | tee -a "test_node_${version}.log" | grep 'Test failed.' || \
-echo ${version} >> nodes_passed.log
+nv activate --same-shell "node-${version}"
+npm test >"test_node_${version}.log" 2>&1 && echo ${version} >> nodes_passed.log
+nv deactivate
 done
 
 # Determine failed versions and display the test-run
