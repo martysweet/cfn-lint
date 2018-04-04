@@ -23,9 +23,9 @@ fi
 # Quick check
 if [ "$1" == "--quick" ]; then
   lts_versions=$(
-  for lts in 4 6 8 9; do
-    echo "${node_versions}" | grep -E "^${lts}" | tail -1
-  done
+    for lts in 4 6 8 9; do
+      echo "${node_versions}" | grep -E "^${lts}" | tail -1
+    done
   )
   node_versions=${lts_versions}
 fi
