@@ -474,7 +474,7 @@ function recursiveDecent(ref: any){
                     lastPositionInTemplate[lastPositionInTemplateKey] = functionOutput;
                 }
             }
-        }else if(key != 'Attributes' && typeof ref[key] == "object"){
+        }else if(key != 'Attributes' && ref[key] instanceof Object){
             placeInTemplate.push(key);
             lastPositionInTemplate = ref;
             lastPositionInTemplateKey = key;
@@ -1418,12 +1418,12 @@ function verificationFunction(f: (o: any) => boolean, message: string): Verifica
 }
 
 export const isList = verificationFunction(
-    (o: any) => (typeof o === 'object' && o.constructor === Array),
+    (o: any) => (o instanceof Object && o.constructor === Array),
     'Expecting a list'
 );
 
 export const isObject = verificationFunction(
-    (o: any) => (typeof o === 'object' && o.constructor === Object),
+    (o: any) => (o instanceof Object && o.constructor === Object),
     'Expecting an object'
 );
 
