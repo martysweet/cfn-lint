@@ -8,7 +8,7 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 ### Fixed
 - Merge PR #120, fixing dependency issue with "@types/colors"
-- Merge PR #127, implementing "safer-buffer" polyfill to be compatible with older NodeJS versions
+- Merge PR #130, implementing "safe-buffer" polyfill to be compatible with older NodeJS versions
 - Merge PR #126, improving null value validation when null is passed into a template
 
 ### Changed
