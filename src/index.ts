@@ -25,6 +25,7 @@ program
 //  .option('--guess-parameters', 'Guess any parameters that are not explicitely passed in and have no Default. This is the default behaviour.')
     .option('-G, --no-guess-parameters', 'Fail validation if a parameter with no Default is not passed')
     .option('-g, --only-guess-parameters <items>', 'Guess the provided parameters, and fail validation if a parameter with no Default is passed', list)
+    .option('-v, --verbose', 'Verbose error messages')
     .action(function (arg1, arg2) {
         firstArg = arg1;
         secondArg = arg2;
@@ -74,7 +75,28 @@ if(firstArg == "validate"){
         guessParameters
     };
 
-    let result = validator.validateFile(secondArg, options);
+    let result = Object();
+    try {
+      result = validator.validateFile(secondArg, options);
+    } catch(err) {
+      let error: string = function(msg: string, errors: any) {
+        for (let error of Object.keys(errors)) {
+          if (RegExp(error).test(msg)) {
+            return errors[error];
+          }
+        }
+        return errors[''];
+      }(err.message, {
+        'Could not find file .*. Check the input path.': 'No such file.',
+        '': 'Unable to parse template! Use --verbose for more information.'
+      });
+      console.log(error);
+      if (program.verbose) {
+        console.error(err);
+      }
+      process.exit(1);
+    }
+
     // Show the errors
     console.log((result['errors']['info'].length + " infos").grey);
     for(let info of result['errors']['info']){
