@@ -13,6 +13,7 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Changed
 - Merge PR #124, adding the `--verbose` flag and returning exit code `1` on a fatal exception or parsing error
+- Merge PR #131, making Winston exitOnError true
 
 ### Added
 - Merge PR #128, implement NodeJS compatibility test in CI/CD
