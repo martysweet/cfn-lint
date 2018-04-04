@@ -100,6 +100,24 @@ describe('index', () => {
                 done();
             });
         }).timeout(5000);
+
+        it('handle validation exceptions - non-verbose', (done) => {
+            exec('node lib/index.js validate testData/invalid/yaml/invalid_yaml.yaml', function(error, stdout, stderr) {
+                expect(error).to.have.property('code', 1);
+                expect(stdout).to.contain('Unable to parse template! Use --verbose for more information.');
+                expect(stderr).to.be.empty;
+                done();
+            });
+        }).timeout(5000);
+
+        it('handle validation exceptions - verbose', (done) => {
+            exec('node lib/index.js validate testData/invalid/yaml/invalid_yaml.yaml --verbose', function(error, stdout, stderr) {
+                expect(error).to.have.property('code', 1);
+                expect(stdout).to.contain('Unable to parse template! Use --verbose for more information.');
+                expect(stderr).to.contain('Error: Could not determine file type');
+                done();
+            });
+        }).timeout(5000);
     });
 
 });

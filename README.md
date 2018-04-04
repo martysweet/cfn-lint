@@ -73,6 +73,7 @@ Template invalid!
 `--only-guess-parameters <param names>`: Only guess the provided parameters, and disable the guessing of all others without Defaults. A critical error will be raised for missing parameters, as above. e.g.
  - `--only-guess-parameters InstanceType,Memory`
 
+`--verbose`: Provide verbose output and stack traces when template parsing fails.
 
 ### What can cfn-lint do?
 * Read JSON + YAML (Including YAML short form)
