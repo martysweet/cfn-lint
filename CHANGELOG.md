@@ -14,6 +14,9 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Changed
 - Merge PR #124, adding the `--verbose` flag and returning exit code `1` on a fatal exception or parsing error
 
+### Added
+- Merge PR #128, implement NodeJS compatibility test in CI/CD
+
 ## [1.5.1] - 2018-03-12
 ### Added
 - Merge PR #113, adding a Spanish translation for README.md

@@ -29,6 +29,21 @@ jobs:
           name: test
           command: npm test
       - run:
+          name: compatibility test setup
+          command: bash tools/nodejs_compatibility_checker/test_compatibility_setup.sh --quick
+      - restore_cache:
+          key: compatibility-test-cache-{{ checksum "nodes_available.log" }}
+      - run:
+          name: compatibility test environment cache generation
+          command: bash tools/nodejs_compatibility_checker/test_compatibility_cache.sh
+      - save_cache:
+          key: compatibility-test-cache-{{ checksum "nodes_available.log" }}
+          paths:
+            - ~/.envirius/envs/
+      - run:
+          name: compatibility test
+          command: bash tools/nodejs_compatibility_checker/test_compatibility.sh
+      - run:
           name: package for debug
           command: npm pack
       - store_artifacts:
