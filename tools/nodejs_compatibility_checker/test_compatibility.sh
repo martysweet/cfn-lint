@@ -8,16 +8,16 @@ node_versions=$(cat nodes_available.log)
 
 # Run the tests on all available versions
 for version in ${node_versions}; do
-echo "Testing node-${version}!";
-nv activate --same-shell "node-${version}"
-npm test >"test_node_${version}.log" 2>&1
-if [ $? -eq 0 ]; then
-  echo "PASSED"
-  echo ${version} >> nodes_passed.log
-else
-  echo "FAILED"
-fi
-nv deactivate
+  echo "Testing node-${version}!";
+  nv activate --same-shell "node-${version}"
+  npm test >"test_node_${version}.log" 2>&1
+  if [ $? -eq 0 ]; then
+    echo "PASSED"
+    echo ${version} >> nodes_passed.log
+  else
+    echo "FAILED"
+  fi
+  nv deactivate
 done
 
 # Determine failed versions and display the test-run

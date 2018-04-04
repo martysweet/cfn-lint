@@ -9,8 +9,8 @@ cd .. && \
 source ~/.envirius/nv
 
 if [ $? -ne 0 ]; then
-echo "Unable to install envirius!"
-exit 1
+  echo "Unable to install envirius!"
+  exit 1
 fi
 
 # Determine available node versions
@@ -32,5 +32,5 @@ fi
 
 # Dump available versions to file
 for version in ${node_versions}; do
-echo ${version} >> nodes_available.log
+  echo ${version} >> nodes_available.log
 done

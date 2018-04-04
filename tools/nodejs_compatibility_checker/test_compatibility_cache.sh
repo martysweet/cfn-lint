@@ -8,6 +8,6 @@ node_versions=$(cat nodes_available.log)
 
 # Cache NodeJS environments
 for version in ${node_versions}; do
-echo "Adding NodeJS ${version} into environment cache!" && \
-nv mk "node-${version}" --node-prebuilt=${version}
+  echo "Adding NodeJS ${version} into environment cache!" && \
+  nv mk "node-${version}" --node-prebuilt=${version}
 done
