@@ -592,6 +592,12 @@ function doIntrinsicJoin(ref: any, key: string){
         // Specify this as an invalid string
         return "INVALID_JOIN";
     }else{
+        // Instrinsic functions that return an array of values
+        // must be patched to be resolved
+        if ((RegExp(/^Fn::/gi).test(key)) && (!Array.isArray(parts))) {
+          parts = [parts];
+        }
+
         // Join
         return fnJoin(join, parts);
     }
