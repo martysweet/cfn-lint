@@ -594,7 +594,7 @@ function doIntrinsicJoin(ref: any, key: string){
     }else{
         // Instrinsic functions that return an array of values
         // must be patched to be resolved
-        if ((RegExp(/^Fn::/gi).test(key)) && (!Array.isArray(parts))) {
+        if (key.startsWith('Fn::') && !Array.isArray(parts)) {
           parts = [parts];
         }
 
