@@ -145,6 +145,15 @@ describe('validator', () => {
 
     });
 
+    describe('Fn::Join', () => {
+      it('should be able to join a list of values returned from an intrinsic', () => {
+          const input = './testData/valid/yaml/intrinsic_array_value.yaml';
+          let result = validator.validateFile(input);
+          expect(result).to.have.deep.property('templateValid', true);
+          expect(result['errors']['crit']).to.have.lengthOf(0);
+      });
+    });
+
     describe('Fn::Select JSON', () => {
         it("should pass validation, with flat list and intrinsic list", () => {
           const input = require('../../testData/valid/json/5_valid_intrinsic_select.json');

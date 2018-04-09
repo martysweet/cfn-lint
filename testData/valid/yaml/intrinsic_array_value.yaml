@@ -1,0 +1,16 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  AllSecurityGroups:
+    Type: Custom::Split
+    Properties:
+      ServiceToken: "somefunctionarn"
+
+Outputs:
+  AllSecurityGroups:
+    Description: Security Groups that are associated with the EC2 instance
+    Value:
+      Fn::Join:
+      - ", "
+      - Fn::GetAtt:
+        - AllSecurityGroups
+        - Value
