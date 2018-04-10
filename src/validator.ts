@@ -1043,6 +1043,12 @@ function fnJoin(join: any, parts: any){
     if (!Array.isArray(parts)) {
       // TODO Check the key is within the valid functions which can be called from a Fn::Join
       parts = resolveIntrinsicFunction(parts, Object.keys(parts)[0]);
+
+      if (!Array.isArray(parts)) {
+        addError('crit', 'Invalid parameters for Fn::Join', placeInTemplate, "Fn::Join");
+        // Specify this as an invalid string
+        return "INVALID_JOIN";
+      }
     }
 
     // Otherwise go through each parts and ensure they are resolved

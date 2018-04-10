@@ -145,6 +145,16 @@ describe('validator', () => {
 
     });
 
+    describe('Fn::Join', () => {
+      it('should error if it attempts to join anything but a list of values', () => {
+          const input = './testData/invalid/yaml/invalid_join_parts.yaml';
+          let result = validator.validateFile(input);
+          expect(result).to.have.deep.property('templateValid', false);
+          expect(result['errors']['crit']).to.have.lengthOf(1);
+          expect(result['errors']['crit'][0]['message']).to.include('Invalid parameters for Fn::Join');
+      });
+    });
+
     describe('Fn::Select JSON', () => {
         it("should pass validation, with flat list and intrinsic list", () => {
           const input = require('../../testData/valid/json/5_valid_intrinsic_select.json');
