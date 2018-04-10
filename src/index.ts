@@ -5,57 +5,62 @@
  */
 
 import program = require('commander');
+import docsBaseImport = require('./docs');
+import validatorBaseImport = require('./validator');
+
 require('colors');
+const util = require('util');
 let version = require('../package').version;
-let firstArg: string | undefined = undefined
-let secondArg: string = undefined!;
 
 function list(val: string) {
     return val.split(',');
 }
 
-program
-    .version(version)
-    .arguments('<cmd> <file>')
-    .option('-p, --parameters <items>', 'List of params', list)
-    .option('-p, --pseudo <items>', 'List of pseudo overrides', list)
-    // https://github.com/tj/commander.js/issues/108
-    // might get fixed by https://github.com/tj/commander.js/issues/691
-    // as a workaround, we can actually leave this out. It defaults to true and the unparsed parameter will be ignored.
-//  .option('--guess-parameters', 'Guess any parameters that are not explicitely passed in and have no Default. This is the default behaviour.')
-    .option('-G, --no-guess-parameters', 'Fail validation if a parameter with no Default is not passed')
-    .option('-g, --only-guess-parameters <items>', 'Guess the provided parameters, and fail validation if a parameter with no Default is passed', list)
-    .option('-v, --verbose', 'Verbose error messages')
-    .action(function (arg1, arg2) {
-        firstArg = arg1;
-        secondArg = arg2;
-    });
-
-
-program.parse(process.argv);
-
-if (typeof firstArg === 'undefined') {
-    console.error('no command given!');
+function doNoCommand() {
+    console.error('\nno command given!');
     process.exit(1);
 }
 
-import validatorBaseImport = require('./validator');
-import docsBaseImport = require('./docs');
+function doNoArgument() {
+    console.error('\nmissing required argument');
+    process.exit(1);
+}
 
-if(firstArg == "validate"){
+program
+.version(version)
+.action(function() {
+    program.help();
+    doNoCommand();
+})
+.on('--help', function(){
+    doNoCommand();
+});
+
+program
+.command('validate')
+.option('-p, --parameters <items>', 'List of params', list)
+.option('-p, --pseudo <items>', 'List of pseudo overrides', list)
+.option('--guess-parameters', 'Guess any parameters that are not explicitely passed in and have no Default. This is the default behaviour.')
+.option('-G, --no-guess-parameters', 'Fail validation if a parameter with no Default is not passed')
+.option('-g, --only-guess-parameters <items>', 'Guess the provided parameters, and fail validation if a parameter with no Default is passed', list)
+.option('-v, --verbose', 'Verbose error messages')
+.action(function(file, cmd) {
+    // Patch for CommanderJS bug that defaults this to true
+    if (cmd.parent.rawArgs.indexOf('--guess-parameters') != -1) {
+      cmd.guessParameters = true;
+    }
 
     const validator = require('./validator') as typeof validatorBaseImport;
-
-    if(program.parameters){
-        for(let param of program.parameters){
+    if(cmd.parameters){
+        for(let param of cmd.parameters){
             // Set the parameter
             let kv = param.split('=');
             validator.addParameterValue(kv[0], kv[1]);
         }
     }
 
-    if(program.pseudo){
-        for(let pseudo of program.pseudo){
+    if(cmd.pseudo){
+        for(let pseudo of cmd.pseudo){
             // Set the parameter
             let kv = pseudo.split('=');
             validator.addPseudoValue(kv[0], kv[1]);
@@ -63,10 +68,10 @@ if(firstArg == "validate"){
     }
 
     let guessParameters: string[] | undefined;
-    if (program.guessParameters === false) {
+    if (cmd.guessParameters === false) {
         guessParameters = [];
-    } else if (program.onlyGuessParameters) {
-        guessParameters = program.onlyGuessParameters;
+    } else if (cmd.onlyGuessParameters) {
+        guessParameters = cmd.onlyGuessParameters;
     } else {
         guessParameters = undefined;
     }
@@ -77,24 +82,24 @@ if(firstArg == "validate"){
 
     let result = Object();
     try {
-      result = validator.validateFile(secondArg, options);
+        result = validator.validateFile(file, options);
     } catch(err) {
-      let error: string = function(msg: string, errors: any) {
-        for (let error of Object.keys(errors)) {
-          if (RegExp(error).test(msg)) {
-            return errors[error];
-          }
+        let error: string = function(msg: string, errors: any) {
+            for (let error of Object.keys(errors)) {
+                if (RegExp(error).test(msg)) {
+                    return errors[error];
+                }
+            }
+            return errors[''];
+        }(err.message, {
+            'Could not find file .*. Check the input path.': 'No such file.',
+            '': 'Unable to parse template! Use --verbose for more information.'
+        });
+        console.log(error);
+        if (cmd.verbose) {
+            console.error(err);
         }
-        return errors[''];
-      }(err.message, {
-        'Could not find file .*. Check the input path.': 'No such file.',
-        '': 'Unable to parse template! Use --verbose for more information.'
-      });
-      console.log(error);
-      if (program.verbose) {
-        console.error(err);
-      }
-      process.exit(1);
+        process.exit(1);
     }
 
     // Show the errors
@@ -121,13 +126,28 @@ if(firstArg == "validate"){
 
     if(result['templateValid'] === false){
         console.log('Template invalid!'.red.bold);
-        process.exit(1)
+        process.exit(1);
     }else{
         console.log('Template valid!'.green);
-        process.exit(0)
+        process.exit(0);
     }
+})
+.on('--help', function(){
+    doNoArgument();
+});
 
-}else if(firstArg == "docs"){
+program
+.command('docs')
+.action(function(reference) {
     const docs = require('./docs') as typeof docsBaseImport;
-    console.log(docs.getDoc(secondArg))
+    console.log(docs.getDoc(reference));
+})
+.on('--help', function(){
+    doNoArgument();
+});
+
+if (process.argv.length < 4) {
+    process.argv.push('--help');
 }
+
+program.parse(process.argv);
