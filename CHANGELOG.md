@@ -6,6 +6,8 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.6.0] - 2018-04-05
 ### Fixed
 - Merge PR #120, fixing dependency issue with "@types/colors"
 - Merge PR #130, implementing "safe-buffer" polyfill to be compatible with older NodeJS versions
@@ -106,7 +108,8 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Added
 - Add pseudo parameter support
 
-[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.5.1...HEAD
+[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/martysweet/cfn-lint/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/martysweet/cfn-lint/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/martysweet/cfn-lint/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/martysweet/cfn-lint/compare/v1.4.0...v1.4.1
