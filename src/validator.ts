@@ -7,7 +7,9 @@ const mockArnPrefix = "arn:aws:mock:region:123456789012:";
 import {
     awsParameterTypes as parameterTypesSpec,
     awsRefOverrides,
-    awsIntrinsicFunctions
+    awsIntrinsicFunctions,
+    PrimitiveAttribute,
+    ListAttribute
 } from './awsData';
 import docs = require('./docs');
 
@@ -1053,14 +1055,25 @@ function fnJoin(join: any, parts: any){
     return parts.join(join);
 }
 
-export function fnGetAtt(reference: string, attribute: string){
+export function fnGetAtt(reference: string, attributeName: string){
     if(workingInput['Resources'].hasOwnProperty(reference)){
         const resource = workingInput['Resources'][reference];
-        if (resource['Attributes'].hasOwnProperty(attribute)){
-            return resource['Attributes'][attribute];
-        } else if (resource['Type'].indexOf('Custom::') === 0 || resource['Type'] === 'AWS::CloudFormation::CustomResource') {
-            return `mockAttr_${reference}_${attribute}`;
-        } 
+        if (resource['Type'].indexOf('Custom::') === 0) {
+            return `mockAttr_${reference}_${attributeName}`;
+        } else if (resource['Type'] === 'AWS::CloudFormation::CustomResource') {
+            return `mockAttr_${reference}_${attributeName}`;
+        } else {
+            // Lookup attribute
+            const attribute = resourcesSpec.getResourceTypeAttribute(resource['Type'], attributeName)
+            const primitiveAttribute = attribute as PrimitiveAttribute
+            if(!!primitiveAttribute['PrimitiveType']) {
+                return resource['Attributes'][attributeName];
+            }
+            const listAttribute = attribute as ListAttribute
+            if(listAttribute['Type'] == 'List') {
+                return [ resource['Attributes'][attributeName], resource['Attributes'][attributeName] ]
+            }
+        }
     }
     // Return null if not found
     return null;

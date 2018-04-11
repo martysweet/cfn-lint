@@ -442,6 +442,38 @@ describe('validator', () => {
             expect(validator.fnGetAtt('Custom', 'SomeAttribute')).to.equal('mockAttr_Custom_SomeAttribute');
             expect(validator.fnGetAtt('Custom2', 'SomeAttribute')).to.equal('mockAttr_Custom2_SomeAttribute');
         })
+
+        it("should pass validation where Fn::GetAtt returns a list", () => {
+          const input = require('../../testData/valid/json/issue-134-valid-fngetatt-returns-array.json');
+          let result = validator.validateJsonObject(input);
+          expect(result).to.have.deep.property('templateValid', true);
+          expect(result['errors']['crit']).to.have.lengthOf(0);
+          expect(result['errors']['warn']).to.have.lengthOf(0);
+        });
+
+        it("should pass validation where !GetAtt returns a list", () => {
+          const input = 'testData/valid/yaml/issue-134-valid-fngetatt-returns-array.yaml';
+          let result = validator.validateFile(input);
+          expect(result).to.have.deep.property('templateValid', true);
+          expect(result['errors']['crit']).to.have.lengthOf(0);
+          expect(result['errors']['warn']).to.have.lengthOf(0);
+        });
+
+        it("should not pass validation where Fn::GetAtt returns a list", () => {
+          const input = require('../../testData/valid/json/issue-134-invalid-fngetatt-returns-array.json');
+          let result = validator.validateJsonObject(input);
+          expect(result).to.have.deep.property('templateValid', false);
+          expect(result['errors']['crit']).to.have.lengthOf(1);
+          expect(result['errors']['warn']).to.have.lengthOf(0);
+        });
+
+        it("should not pass validation where !GetAtt returns a list", () => {
+          const input = 'testData/valid/yaml/issue-134-invalid-fngetatt-returns-array.yaml';
+          let result = validator.validateFile(input);
+          expect(result).to.have.deep.property('templateValid', false);
+          expect(result['errors']['crit']).to.have.lengthOf(1);
+          expect(result['errors']['warn']).to.have.lengthOf(0);
+        });
     })
 
     describe('conditions', () => {

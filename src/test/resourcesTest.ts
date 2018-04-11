@@ -2,6 +2,10 @@ import chai = require('chai');
 const expect = chai.expect;
 const assert = chai.assert;
 import resourceSpec = require('../resourcesSpec');
+import {
+    PrimitiveAttribute,
+    ListAttribute
+} from "../awsData"
 
 describe('resourceSpec', () =>{
 
@@ -121,6 +125,36 @@ describe('resourceSpec', () =>{
             let result = resourceSpec.getRefOverride("AWS::Lambda::Function");
             expect(result).to.equal(null);
         });
+
+    });
+
+    describe('getResourceTypeAttribute', () => {
+
+        it('should return "String" for AWS::ECS::Service attribute Name', () => {
+            let result = resourceSpec.getResourceTypeAttribute("AWS::ECS::Service","Name");
+            let res = result as PrimitiveAttribute;
+            expect(res.PrimitiveType).to.equal("String");
+        });
+
+        it('should return "List of String" for AWS::Route53::HostedZone attribute NameServers', () => {
+            let result = resourceSpec.getResourceTypeAttribute("AWS::Route53::HostedZone","NameServers");
+            let res = result as ListAttribute;
+            expect(res.Type).to.equal("List");
+            expect(res.PrimitiveItemType).to.equal("String");
+        });
+
+        it('should throw NoSuchResourceTypeAttribute for any attrbute on a type with no attributes', () => {
+            expect(
+                () => resourceSpec.getResourceTypeAttribute("AWS::CloudFormation::WaitConditionHandle", "Anything")
+            ).to.throw(resourceSpec.NoSuchResourceTypeAttribute);
+        });
+
+        it('should throw NoSuchResourceTypeAttribute for an attrbute that does not exist on a type', () => {
+            expect(
+                () => resourceSpec.getResourceTypeAttribute("AWS::ECS::Service", "AttributeThatDoesNotExist")
+            ).to.throw(resourceSpec.NoSuchResourceTypeAttribute);
+        });
+
 
     });
 
