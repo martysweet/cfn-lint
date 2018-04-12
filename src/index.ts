@@ -11,7 +11,17 @@ let firstArg: string | undefined = undefined
 let secondArg: string = undefined!;
 
 function list(val: string) {
-    return val.split(',');
+    // prepare for a negated lookahead
+    val = val.replace(/\\,/g, ',\\');
+
+    // split and remove escapes
+    return val.split(/,(?!\\)/g)
+        .map((x) => {
+            return x.replace(/,\\/g, ',');
+        })
+        .filter((x) => {
+            return !!x;
+        });
 }
 
 program
