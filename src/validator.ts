@@ -208,6 +208,15 @@ function assignParametersOutput(guessParameters?: string[]) {
             })
         }
 
+        if(parameter['Type'] === "List<Number>" && typeof parameterValue === 'string') {
+            parameterValue = parameterValue.split(',').map(x => x.trim());
+            parameterValue.forEach(val => {
+              if (val === ""){
+                addError('crit', `Parameter ${parameterName} contains a List<Number> where the number of commas appears to be equal or greater than the list of items.`, ['Parameters', parameterName], "Parameters");
+              }
+            })
+        }
+
         // Assign an Attribute Ref regardless of any failures above
         workingInput['Parameters'][parameterName]['Attributes'] = {};
         workingInput['Parameters'][parameterName]['Attributes']['Ref'] = parameterValue;

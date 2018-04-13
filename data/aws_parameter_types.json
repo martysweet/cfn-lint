@@ -1,6 +1,7 @@
 {
   "String": "string",
   "Number": "number",
+  "List<Number>": "array",
   "CommaDelimitedList": "array",
   "AWS::EC2::AvailabilityZone::Name": "string",
   "AWS::EC2::Image::Id": "string",
