@@ -458,6 +458,18 @@ describe('validator', () => {
           expect(result['errors']['crit']).to.have.lengthOf(1);
           expect(result['errors']['warn']).to.have.lengthOf(0);
         });
+
+        it("should not pass validation with !GetAtt where attribute does not exist", () => {
+          const input = 'testData/valid/yaml/issue-134-invalid-fngetatt-att-does-not-exist.yaml';
+          let result = validator.validateFile(input);
+          expect(result).to.have.deep.property('templateValid', false);
+          expect(result['errors']['crit']).to.have.lengthOf(2);
+          expect(result['errors']['crit'][0]).to.have.property('message', 'No such attribute VeryLostNameServers on AWS::Route53::HostedZone');
+          expect(result['errors']['crit'][0]).to.have.property('resource', 'Resources > DNSVPCDelegation > Properties > ResourceRecords');
+          expect(result['errors']['crit'][0]).to.have.property('documentation', 'http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-route53-hostedzone.html');
+          expect(result['errors']['crit'][1]).to.have.property('message', "Expecting a list, got 'INVALID_REFERENCE_OR_ATTR_ON_GET_ATT'");
+          expect(result['errors']['warn']).to.have.lengthOf(0);
+        });
     })
 
     describe('conditions', () => {

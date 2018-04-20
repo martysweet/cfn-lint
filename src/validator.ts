@@ -1063,15 +1063,27 @@ export function fnGetAtt(reference: string, attributeName: string){
         } else if (resource['Type'] === 'AWS::CloudFormation::CustomResource') {
             return `mockAttr_${reference}_${attributeName}`;
         } else {
-            // Lookup attribute
-            const attribute = resourcesSpec.getResourceTypeAttribute(resource['Type'], attributeName)
-            const primitiveAttribute = attribute as PrimitiveAttribute
-            if(!!primitiveAttribute['PrimitiveType']) {
-                return resource['Attributes'][attributeName];
-            }
-            const listAttribute = attribute as ListAttribute
-            if(listAttribute['Type'] == 'List') {
-                return [ resource['Attributes'][attributeName], resource['Attributes'][attributeName] ]
+            try {
+                // Lookup attribute
+                const attribute = resourcesSpec.getResourceTypeAttribute(resource['Type'], attributeName)
+                const primitiveAttribute = attribute as PrimitiveAttribute
+                if(!!primitiveAttribute['PrimitiveType']) {
+                    return resource['Attributes'][attributeName];
+                }
+                const listAttribute = attribute as ListAttribute
+                if(listAttribute['Type'] == 'List') {
+                    return [ resource['Attributes'][attributeName], resource['Attributes'][attributeName] ]
+                }
+            } catch (e) {
+                if (e instanceof resourcesSpec.NoSuchResourceTypeAttribute) {
+                    addError('crit',
+                        e.message,
+                        placeInTemplate,
+                        resource['Type']
+                    );
+                } else {
+                    throw e;
+                }
             }
         }
     }
