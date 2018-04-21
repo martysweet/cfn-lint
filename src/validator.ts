@@ -1050,7 +1050,19 @@ function doIntrinsicImportValue(ref: any, key: string){
 }
 
 function fnJoin(join: any, parts: any){
-    // Go through each parts and ensure they are resolved
+    // Resolve instrinsic functions that return the parts array
+    if (!Array.isArray(parts)) {
+      // TODO Check the key is within the valid functions which can be called from a Fn::Join
+      parts = resolveIntrinsicFunction(parts, Object.keys(parts)[0]);
+
+      if (!Array.isArray(parts)) {
+        addError('crit', 'Invalid parameters for Fn::Join', placeInTemplate, "Fn::Join");
+        // Specify this as an invalid string
+        return "INVALID_JOIN";
+      }
+    }
+
+    // Otherwise go through each parts and ensure they are resolved
     for(let p in parts){
         if(parts.hasOwnProperty(p)) {
             if (typeof parts[p] == "object") {
