@@ -1,0 +1,12 @@
+Parameters:
+  SomeParam:
+    Type: List<AWS::Route53::HostedZone::Id>
+    Default: Z23YXV4OVPL04A, Z23YXV4OVPL04B
+Resources:
+  bucket_name:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Fn::Select:
+          - 1
+          - Ref: SomeParam
