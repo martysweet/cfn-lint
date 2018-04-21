@@ -208,6 +208,17 @@ function assignParametersOutput(guessParameters?: string[]) {
             })
         }
 
+        // The List<type> parameter value is inferred as string with comma delimited values and must be converted to array
+        let listParameterTypesSpec = Object.keys(parameterTypesSpec).filter((x) => !!x.match(/List<.*>/));
+        if (!!~listParameterTypesSpec.indexOf(parameter['Type']) && (typeof parameterValue === 'string')) {
+            parameterValue = parameterValue.split(',').map(x => x.trim());
+            parameterValue.forEach(val => {
+              if (val === ""){
+                addError('crit', `Parameter ${parameterName} contains a List<${parameter['Type']}> where the number of commas appears to be equal or greater than the list of items.`, ['Parameters', parameterName], "Parameters");
+              }
+            })
+        }
+
         // Assign an Attribute Ref regardless of any failures above
         workingInput['Parameters'][parameterName]['Attributes'] = {};
         workingInput['Parameters'][parameterName]['Attributes']['Ref'] = parameterValue;

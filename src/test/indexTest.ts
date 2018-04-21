@@ -118,6 +118,24 @@ describe('index', () => {
                 done();
             });
         }).timeout(5000);
+
+        it('parameters of the CommaDelimitedList type should accept lists as values', (done) => {
+            exec('node lib/index.js validate testData/valid/yaml/parameters_type_commadelimitedlist.yaml --parameters SomeParam="test\\,dev\\,prod"', function(error, stdout, stderr) {
+                expect(stdout).to.contain('0 warn');
+                expect(stdout).to.contain('0 crit');
+                expect(stderr).to.be.empty;
+                done();
+            });
+        }).timeout(5000);
+
+        it('parameters of the List<Number> type should accept lists as values', (done) => {
+            exec('node lib/index.js validate testData/valid/yaml/parameters_type_list_number.yaml --parameters SomeParam="1\\,2\\,3"', function(error, stdout, stderr) {
+                expect(stdout).to.contain('0 warn');
+                expect(stdout).to.contain('0 crit');
+                expect(stderr).to.be.empty;
+                done();
+            });
+        }).timeout(5000);
     });
 
 });
