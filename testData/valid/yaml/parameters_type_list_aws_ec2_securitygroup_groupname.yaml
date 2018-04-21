@@ -1,0 +1,12 @@
+Parameters:
+  SomeParam:
+    Type: List<AWS::EC2::SecurityGroup::GroupName>
+    Default: my-sg-abc, my-sg-def
+Resources:
+  bucket_name:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Fn::Select:
+          - 1
+          - Ref: SomeParam

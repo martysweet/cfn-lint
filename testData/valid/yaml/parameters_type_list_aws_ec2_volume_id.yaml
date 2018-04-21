@@ -1,0 +1,12 @@
+Parameters:
+  SomeParam:
+    Type: List<AWS::EC2::Volume::Id>
+    Default: vol-3cdd3f56, vol-4cdd3f56
+Resources:
+  bucket_name:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Fn::Select:
+          - 1
+          - Ref: SomeParam

@@ -145,6 +145,16 @@ describe('validator', () => {
 
     });
 
+    describe('Fn::Join', () => {
+      it('should error if it attempts to join anything but a list of values', () => {
+          const input = './testData/invalid/yaml/invalid_join_parts.yaml';
+          let result = validator.validateFile(input);
+          expect(result).to.have.deep.property('templateValid', false);
+          expect(result['errors']['crit']).to.have.lengthOf(1);
+          expect(result['errors']['crit'][0]['message']).to.include('Invalid parameters for Fn::Join');
+      });
+    });
+
     describe('Fn::Select JSON', () => {
         it("should pass validation, with flat list and intrinsic list", () => {
           const input = require('../../testData/valid/json/5_valid_intrinsic_select.json');
@@ -783,6 +793,87 @@ describe('validator', () => {
             expect(result['errors']['crit']).to.have.lengthOf(0);
             expect(result['errors']['info']).to.have.lengthOf(0);
         })
+
+        it('List<AWS::EC2::AvailabilityZone::Name> should return a list', () => {
+            const input = './testData/valid/yaml/parameters_type_list_aws_ec2_availabilityzone_name.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['info']).to.have.lengthOf(0);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('List<AWS::EC2::Image::Id> should return a list', () => {
+            const input = './testData/valid/yaml/parameters_type_list_aws_ec2_image_id.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['info']).to.have.lengthOf(0);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('List<AWS::EC2::Instance::Id> should return a list', () => {
+            const input = './testData/valid/yaml/parameters_type_list_aws_ec2_instance_id.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['info']).to.have.lengthOf(0);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('List<AWS::EC2::SecurityGroup::GroupName> should return a list', () => {
+            const input = './testData/valid/yaml/parameters_type_list_aws_ec2_securitygroup_groupname.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['info']).to.have.lengthOf(0);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('List<AWS::EC2::SecurityGroup::Id> should return a list', () => {
+            const input = './testData/valid/yaml/parameters_type_list_aws_ec2_securitygroup_id.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['info']).to.have.lengthOf(0);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('List<AWS::EC2::Subnet::Id> should return a list', () => {
+            const input = './testData/valid/yaml/parameters_type_list_aws_ec2_subnet_id.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['info']).to.have.lengthOf(0);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('List<AWS::EC2::Volume::Id> should return a list', () => {
+            const input = './testData/valid/yaml/parameters_type_list_aws_ec2_volume_id.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['info']).to.have.lengthOf(0);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('List<AWS::EC2::VPC::Id> should return a list', () => {
+            const input = './testData/valid/yaml/parameters_type_list_aws_ec2_vpc_id.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['info']).to.have.lengthOf(0);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('List<AWS::Route53::HostedZone::Id> should return a list', () => {
+            const input = './testData/valid/yaml/parameters_type_list_aws_route53_hostedzone_id.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['info']).to.have.lengthOf(0);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
     });
 
     describe('pseudo-parmeters', () => {

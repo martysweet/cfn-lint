@@ -75,6 +75,8 @@ Template invalid!
 
 `--verbose`: Provide verbose output and stack traces when template parsing fails.
 
+** Note ** : Parameter values that contain commas must be escaped using a backslash (e.g. `Param1=[1\,2\,3]`). Depending on your command-line interpreter you may have to use double backslashes or enclose the entire argument in quotes, such is the case with *Bash* and other *Bourne*-based shells (e.g. `--parameters 'Param1=[1\,2\,3]'`).
+
 ### What can cfn-lint do?
 * Read JSON + YAML (Including YAML short form)
 * Detect invalid property names
