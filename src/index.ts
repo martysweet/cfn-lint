@@ -31,12 +31,12 @@ function list(val: string) {
 }
 
 function doNoCommand() {
-    console.error('\n', 'no command given!');
+    console.error('\n', 'No command provided!');
     process.exit(1);
 }
 
 function doNoArgument() {
-    console.error('\n', 'missing required argument');
+    console.error('\n', 'Missing required argument!');
     process.exit(1);
 }
 
