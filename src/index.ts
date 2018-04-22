@@ -10,8 +10,22 @@ let version = require('../package').version;
 let firstArg: string | undefined = undefined
 let secondArg: string = undefined!;
 
+/**
+ * Used for parsing comma separated commandline argument values whilst, taking into account backslash escapes.
+ * Returns an array of strings (e.g. ["Arg1=Val1", "Arg2=Val2"]).
+ */
 function list(val: string) {
-    return val.split(',');
+    // prepare for a negated lookahead
+    val = val.replace(/\\,/g, ',\\');
+
+    // split and remove escapes
+    return val.split(/,(?!\\)/g)
+        .map((x) => {
+            return x.replace(/,\\/g, ',');
+        })
+        .filter((x) => {
+            return !!x;
+        });
 }
 
 program

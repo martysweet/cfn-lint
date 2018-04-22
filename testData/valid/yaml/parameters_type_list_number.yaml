@@ -1,0 +1,11 @@
+Parameters:
+  SomeParam:
+    Type: List<Number>
+Resources:
+  bucket_name:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Fn::Select:
+          - 2
+          - Ref: SomeParam

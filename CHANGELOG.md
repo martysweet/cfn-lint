@@ -6,6 +6,9 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Merge PR #135, fixing parts.join exception when !Join was called on non-array
+- Merge PR #141, allowing lists of values to be specified on the command line
 
 ## [1.6.0] - 2018-04-05
 ### Fixed
