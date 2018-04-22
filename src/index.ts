@@ -52,6 +52,7 @@ program
 
 program
     .command('validate')
+    .usage('<file> [options]')
     .option('-p, --parameters <items>', 'List of params', list)
     .option('-p, --pseudo <items>', 'List of pseudo overrides', list)
     .option('--guess-parameters', 'Guess any parameters that are not explicitely passed in and have no Default. This is the default behaviour.')
@@ -152,6 +153,7 @@ program
 
 program
     .command('docs')
+    .usage('<reference> [options]')
     .action(function(reference) {
         const docs = require('./docs') as typeof docsBaseImport;
         console.log(docs.getDoc(reference));
