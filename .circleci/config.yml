@@ -7,7 +7,7 @@ jobs:
   build:
     working_directory: ~/cfn-lint
     docker:
-      - image: circleci/node:4.8.2
+      - image: circleci/node:6.14.1
     steps:
       - checkout
       - run:
