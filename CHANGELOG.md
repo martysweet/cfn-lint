@@ -10,6 +10,9 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 - Merge PR #135, fixing parts.join exception when !Join was called on non-array
 - Merge PR #141, allowing lists of values to be specified on the command line
 
+### Changed
+- Merge PR #136, updated usage prompt for a better CLI experience
+
 ## [1.6.0] - 2018-04-05
 ### Fixed
 - Merge PR #120, fixing dependency issue with "@types/colors"

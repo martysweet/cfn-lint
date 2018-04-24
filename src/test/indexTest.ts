@@ -13,14 +13,14 @@ describe('index', () => {
 
         it('no parameters', (done) => {
             exec('node lib/index.js', function(error, stdout, stderr) {
-                expect(stderr).to.contain('no command given!');
+                expect(stderr).to.contain('No command provided!');
                 done();
             });
         }).timeout(5000);;
 
         it('missing file parameter', (done) => {
             exec('node lib/index.js validate', function(error, stdout, stderr) {
-                expect(stderr).to.contain('missing required argument');
+                expect(stderr).to.contain('Missing required argument!');
                 done();
             });
         }).timeout(5000);;
