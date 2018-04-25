@@ -452,6 +452,34 @@ describe('validator', () => {
             expect(validator.fnGetAtt('Custom', 'SomeAttribute')).to.equal('mockAttr_Custom_SomeAttribute');
             expect(validator.fnGetAtt('Custom2', 'SomeAttribute')).to.equal('mockAttr_Custom2_SomeAttribute');
         })
+
+        it("should pass validation where !GetAtt returns a list", () => {
+          const input = 'testData/valid/yaml/issue-134-valid-fngetatt-returns-array.yaml';
+          let result = validator.validateFile(input);
+          expect(result).to.have.deep.property('templateValid', true);
+          expect(result['errors']['crit']).to.have.lengthOf(0);
+          expect(result['errors']['warn']).to.have.lengthOf(0);
+        });
+
+        it("should not pass validation where !GetAtt returns a list", () => {
+          const input = 'testData/valid/yaml/issue-134-invalid-fngetatt-returns-array.yaml';
+          let result = validator.validateFile(input);
+          expect(result).to.have.deep.property('templateValid', false);
+          expect(result['errors']['crit']).to.have.lengthOf(1);
+          expect(result['errors']['warn']).to.have.lengthOf(0);
+        });
+
+        it("should not pass validation with !GetAtt where attribute does not exist", () => {
+          const input = 'testData/valid/yaml/issue-134-invalid-fngetatt-att-does-not-exist.yaml';
+          let result = validator.validateFile(input);
+          expect(result).to.have.deep.property('templateValid', false);
+          expect(result['errors']['crit']).to.have.lengthOf(2);
+          expect(result['errors']['crit'][0]).to.have.property('message', 'No such attribute VeryLostNameServers on AWS::Route53::HostedZone');
+          expect(result['errors']['crit'][0]).to.have.property('resource', 'Resources > DNSVPCDelegation > Properties > ResourceRecords');
+          expect(result['errors']['crit'][0]).to.have.property('documentation', 'http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-route53-hostedzone.html');
+          expect(result['errors']['crit'][1]).to.have.property('message', "Expecting a list, got 'INVALID_REFERENCE_OR_ATTR_ON_GET_ATT'");
+          expect(result['errors']['warn']).to.have.lengthOf(0);
+        });
     })
 
     describe('conditions', () => {
@@ -647,7 +675,6 @@ describe('validator', () => {
         it('a valid template with APIG string results in validTemplate = true, 0 crit error', () => {
             const input = 'testData/valid/yaml/issue-81-api-gateway.yaml';
             let result = validator.validateFile(input);
-            console.log(result['errors']['crit']);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
