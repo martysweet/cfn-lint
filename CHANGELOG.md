@@ -13,6 +13,7 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Changed
 - Merge PR #136, updated usage prompt for a better CLI experience
+- Merge PR #146, updated build environment to circleci/node:boron-stretch to support npm v6.0.0
 
 ## [1.6.0] - 2018-04-05
 ### Fixed
