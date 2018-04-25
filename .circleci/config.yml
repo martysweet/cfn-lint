@@ -11,6 +11,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: cleanup-global-node_modules
+          command: 'sudo npm config set prefix /tmp'
+      - run:
           name: update-npm
           command: 'sudo npm install -g npm@latest'
       - restore_cache:
