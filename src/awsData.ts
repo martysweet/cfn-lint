@@ -74,7 +74,7 @@ export interface ResourceType {
 }
 
 export interface PrimitiveAttribute {
-    ItemType: AWSPrimitiveType
+    PrimitiveType: AWSPrimitiveType
 }
 
 export interface ListAttribute {

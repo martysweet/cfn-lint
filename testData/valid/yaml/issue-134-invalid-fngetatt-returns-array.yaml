@@ -1,0 +1,25 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "AWS CloudFormation Template to demonstrate Fn::GetAtt returning an array"
+Resources: 
+  DNSVPCDomain: 
+    Type: "AWS::Route53::HostedZone"
+    Properties: 
+      Name: "staging.DOMAIN.COM"
+      HostedZoneConfig: 
+        Comment: "ENVIRONMENT staging Public DNS"
+      HostedZoneTags: 
+      - Key: Name
+        Value: "ENVIRONMENT-staging-hosted-zone"
+  DNSVPCDelegation: 
+    Type: "AWS::Route53::RecordSet"
+    DependsOn: 
+    - DNSVPCDomain
+    Properties: 
+      Name: !GetAtt DNSVPCDomain.NameServers
+      Comment: "ENVIRONMENT staging Subdomain Delegation"
+      HostedZoneId: "Z3**************"
+      ResourceRecords: 
+      - "ns1.domain.com"
+      - "ns2.domain.com"
+      TTL: 300
+      Type: NS

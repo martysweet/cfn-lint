@@ -9,6 +9,7 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Fixed
 - Merge PR #135, fixing parts.join exception when !Join was called on non-array
 - Merge PR #141, allowing lists of values to be specified on the command line
+- Merge PR #139, allowing Fn::GetAtt to return an array of values
 
 ### Changed
 - Merge PR #136, updated usage prompt for a better CLI experience

@@ -4,7 +4,8 @@ import {
     ResourceType,
     ResourcePropertyType,
     Property,
-    AWSPrimitiveType
+    AWSPrimitiveType,
+    Attribute
 } from './awsData';
 
 import CustomError = require('./util/CustomError');
@@ -37,6 +38,19 @@ export class NoSuchPropertyType extends CustomError {
     }
 }
 
+export class NoSuchResourceTypeAttribute extends CustomError {
+    resourceType: string;
+    attributeName: string;
+    constructor(type: string, attributeName: string) {
+        super(`No such attribute ${attributeName} on ${type}`);
+
+        CustomError.fixErrorInheritance(this, NoSuchResourceTypeAttribute)
+
+        this.resourceType = type;
+        this.attributeName = attributeName;
+    }
+}
+
 export function getResourceType(type: string){
     // If the type starts with Custom::, it's a custom resource.
     if(type.indexOf('Custom::') === 0){
@@ -48,6 +62,18 @@ export function getResourceType(type: string){
         throw new NoSuchResourceType(type);
     }
     return resourceType;
+}
+
+export function getResourceTypeAttribute(type: string, attributeName: string): Attribute {
+    const resourceAttributes = getResourceType(type).Attributes
+    if (!resourceAttributes) {
+        throw new NoSuchResourceTypeAttribute(type, attributeName);
+    }
+    const resourceAttribute = resourceAttributes[attributeName]
+    if (!resourceAttribute) {
+        throw new NoSuchResourceTypeAttribute(type, attributeName);
+    }
+    return resourceAttribute
 }
 
 function getPropertyType(type: string){
