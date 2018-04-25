@@ -6,6 +6,8 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.6.1] - 2018-04-25
 ### Fixed
 - Merge PR #135, fixing parts.join exception when !Join was called on non-array
 - Merge PR #141, allowing lists of values to be specified on the command line
@@ -116,7 +118,8 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Added
 - Add pseudo parameter support
 
-[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.6.1...HEAD
+[1.6.1]: https://github.com/martysweet/cfn-lint/compare/v1.6.0...v1.6.1
 [1.6.0]: https://github.com/martysweet/cfn-lint/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/martysweet/cfn-lint/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/martysweet/cfn-lint/compare/v1.4.1...v1.5.0
