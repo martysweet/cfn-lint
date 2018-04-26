@@ -1085,7 +1085,10 @@ export function fnGetAtt(reference: string, attributeName: string){
             return `mockAttr_${reference}_${attributeName}`;
         } else if (resource['Type'] === 'AWS::CloudFormation::CustomResource') {
             return `mockAttr_${reference}_${attributeName}`;
-        } else {
+        } else if (resource['Type'] === 'AWS::CloudFormation::Stack') {
+            return `mockAttr_${reference}_${attributeName}`;
+        }
+        else {
             try {
                 // Lookup attribute
                 const attribute = resourcesSpec.getResourceTypeAttribute(resource['Type'], attributeName)

@@ -6,6 +6,8 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Merge PR #150, allow AWS::CloudFormation::Stack to return custom attributes when used in Fn::GetAtt
 
 ## [1.6.1] - 2018-04-25
 ### Fixed
