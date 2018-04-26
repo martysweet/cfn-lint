@@ -1,6 +1,8 @@
 import yaml = require('js-yaml');
-const { CLOUDFORMATION_SCHEMA } = require('cloudformation-js-yaml-schema');
 import fs = require('fs');
+import buildYamlSchema from './yamlSchema';
+
+const yamlSchema = buildYamlSchema();
 
 export function openFile(path: string){
 
@@ -30,14 +32,11 @@ function openYaml(path: string){
     // Try and load the Yaml
     let yamlParse = yaml.safeLoad(fs.readFileSync(path, 'utf8'), {
         filename: path,
-        schema: CLOUDFORMATION_SCHEMA,
+        schema: yamlSchema,
         onWarning: (warning) => {
             console.error(warning);
         }
     });
-
-    lastPlaceInTemplate = yamlParse;
-    cleanupYaml(yamlParse);
 
     if(typeof yamlParse == 'object'){
         return yamlParse
@@ -52,56 +51,4 @@ function openJson(path: string){
 
     return JSON.parse(fs.readFileSync(path, 'utf8'));
 
-}
-
-let lastPlaceInTemplate = null;
-let lastKeyInTemplate = null;
-function cleanupYaml(ref: any){
-
-        // Step into next attribute
-        for(let i=0; i < Object.keys(ref).length; i++){
-            let key = Object.keys(ref)[i];
-
-            // Resolve the function
-            if( ref[key] !== null && ref[key].hasOwnProperty('class') && ref[key].hasOwnProperty('data')){
-
-                // We have a Yaml generated object
-
-                // Define the name of the intrinsic function
-                let outputKeyName = "Ref";
-                if(ref[key]["class"] != "Ref"){
-                    outputKeyName = "Fn::" + ref[key]["class"];
-                }
-
-                // Convert the object to expected object type
-                let outputData = null;
-                let data = ref[key]['data'];
-                // Specify the data of the key outputKeyName: {}
-                if(typeof data == 'string'){
-                    // Split . into array if Fn::GetAtt
-                    if(outputKeyName == "Fn::GetAtt"){
-                        outputData = data.split('.');
-                    }else {
-                        outputData = data;
-                    }
-                }else{
-                    // If Data is a yaml resolution object, check it doesn't need resolving
-                    lastPlaceInTemplate = ref[key];
-                    lastKeyInTemplate = 'data';
-                    cleanupYaml(data);
-                    // Set the resolved object
-                    outputData = data;
-                }
-
-                ref[key] = {};
-                ref[key][outputKeyName] = outputData;
-
-            }else if(key != 'Attributes' && typeof ref[key] == "object" && ref[key] !== null){
-                lastPlaceInTemplate = ref;
-                lastKeyInTemplate = key;
-                cleanupYaml(ref[key]);
-            }
-
-
-        }
 }
