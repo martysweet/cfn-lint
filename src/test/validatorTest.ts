@@ -480,6 +480,14 @@ describe('validator', () => {
           expect(result['errors']['crit'][1]).to.have.property('message', "Expecting a list, got 'INVALID_REFERENCE_OR_ATTR_ON_GET_ATT'");
           expect(result['errors']['warn']).to.have.lengthOf(0);
         });
+
+        it("should pass validation where !GetAtt returns some unexpected attribute for AWS::CloudFormation::Stack", () => {
+          const input = 'testData/valid/yaml/issue-149-valid-fngetatt-aws_cloudformation_stack.yaml';
+          let result = validator.validateFile(input);
+          expect(result).to.have.deep.property('templateValid', true);
+          expect(result['errors']['crit']).to.have.lengthOf(0);
+          expect(result['errors']['warn']).to.have.lengthOf(0);
+        });
     })
 
     describe('conditions', () => {

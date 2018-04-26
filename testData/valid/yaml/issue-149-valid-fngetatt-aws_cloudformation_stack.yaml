@@ -1,0 +1,10 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  InfrastructurePipeline:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: "https://s3.amazonaws.com/templates/myTemplate.template?versionId=123ab1cdeKdOW5IH4GAcYbEngcpTJTDW"
+Outputs:
+ InfrastructurePipelineUrl:
+   Description: The continuous deployment pipeline in the AWS Management Console.
+   Value: !GetAtt InfrastructurePipeline.Outputs.PipelineUrl
