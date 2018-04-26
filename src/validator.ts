@@ -552,6 +552,8 @@ function resolveIntrinsicFunction(ref: any, key: string) : string | boolean | st
             return doIntrinsicImportValue(ref, key);
         case 'Fn::Select':
             return doIntrinsicSelect(ref, key);
+        case 'Fn::Split':
+            return doInstrinsicSplit(ref, key);
         default:
             addError("warn", `Unhandled Intrinsic Function ${key}, this needs implementing. Some errors might be missed.`, placeInTemplate, "Functions");
             return null;
@@ -1047,8 +1049,47 @@ function doIntrinsicImportValue(ref: any, key: string){
         addError('warn', `Something went wrong when resolving references for a Fn::ImportValue`, placeInTemplate, 'Fn::ImportValue');
         return 'INVALID_FN_IMPORTVALUE';
     }
+}
 
+export function doInstrinsicSplit(ref: any, key: string): string[] {
+    const args = ref[key];
 
+    if (!Array.isArray(args) || args.length !== 2) {
+        addError('crit', 'Invalid parameter for Fn::Split. It needs an Array of length 2.', placeInTemplate, 'Fn::Split');
+        return ['INVALID_SPLIT'];
+    }
+
+    const delimiter: string = args[0];
+
+    if (typeof delimiter !== 'string') {
+        addError ('crit', `Invalid parameter for Fn::Split. The delimiter, ${util.inspect(delimiter)}, needs to be a string.`, placeInTemplate, 'Fn::Split');
+        return ['INVALID_SPLIT'];
+    }
+
+    const stringOrInstrinsic = args[1];
+    let stringToSplit: string;
+
+    if (typeof stringOrInstrinsic === 'object') {
+        const fnName = Object.keys(stringOrInstrinsic)[0];
+
+        if (awsIntrinsicFunctions['Fn::Split']['supportedFunctions'].indexOf(fnName) == -1) {
+            addError('crit', `Fn::Split does not support function '${fnName}' here`, placeInTemplate, 'Fn::Split');
+            return ['INVALID_SPLIT'];
+        }
+
+        stringToSplit = resolveIntrinsicFunction(stringOrInstrinsic, fnName) as string;
+    } else if (typeof stringOrInstrinsic === 'string') {
+        stringToSplit = stringOrInstrinsic;
+    } else {
+        addError('crit', `Invalid parameters for Fn::Split. The parameter, ${stringOrInstrinsic}, needs to be a string or a supported intrinsic function.`, placeInTemplate, 'Fn::Split');
+        return ['INVALID_SPLIT'];
+    }
+
+    return fnSplit(delimiter, stringToSplit);
+}
+
+function fnSplit(delimiter: string, stringToSplit: string): string[] {
+    return stringToSplit.split(delimiter);
 }
 
 function fnJoin(join: any, parts: any){

@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Resources:
+  WebServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Desc
+      SecurityGroupIngress:
+      - CidrIp: 0.0.0.0/0
+        FromPort: '80'
+        IpProtocol: tcp
+        ToPort: '80'
+
+Outputs:
+  Simple:
+    Value: !Split ['-', 'asdf-fdsa']
+  Nested:
+    Value: !Split ['^', !Join ['_', [asdf^fdsa, asdf^fdsa]]]
+  SelectASplit:
+    Value: !Select
+      - 1,
+      - !Split ['@', 'a@b@c']
