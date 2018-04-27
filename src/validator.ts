@@ -667,24 +667,6 @@ const Ref = Intrinsic('Ref', function (reference: string) {
     return resolvedVal;
 });
 
-function doIntrinsicBase64(ref: any, key: string){
-    // Only base64 encode strings
-    const toEncode = ref[key];
-    let strToEncode: string;
-
-    if (typeof toEncode === 'object') {
-        const resolved = resolveIntrinsicFunction(toEncode, Object.keys(toEncode)[0]);
-        strToEncode = resolved;
-    } else if (typeof toEncode === 'string') {
-        strToEncode = toEncode;
-    } else {
-        throw new IntrinsicError('Parameter of Fn::Base64 needs to be a string or an allowed intrinsic.');
-    }
-
-    // Return base64
-    return Buffer.from(strToEncode).toString('base64');
-}
-
 const Base64 = Intrinsic('Fn::Base64', function (value: string | BoundIntrinsic<string>) {
     const resolved = this.resolve(value);
 
@@ -695,7 +677,7 @@ const Base64 = Intrinsic('Fn::Base64', function (value: string | BoundIntrinsic<
     return Buffer.from(value).toString('base64');
 })
 
-const Join = Intrinsic('Fn::Join', (args: [string, Resolveable<string>[]]) => {
+const Join = Intrinsic('Fn::Join', function (args: [string, Resolveable<string>[]]) {
 
     if (!Array.isArray(args) || args.length !== 2) {
         throw new IntrinsicError('Invalid parameters for Fn::Join');
@@ -704,44 +686,13 @@ const Join = Intrinsic('Fn::Join', (args: [string, Resolveable<string>[]]) => {
     const joiner = args[0];
     const parts = args[1];
 
-    const resolvedParts = parts.map((part) => resolve(part));
+    const resolvedParts = parts.map((part) => this.resolve(part));
 
     return parts.join(joiner);
 
 });
 
-
-function doIntrinsicJoin(ref: any, key: string){
-    // Ensure that all objects in the join array have been resolved to string, otherwise
-    // we need to resolve them.
-    // Expect 2 parameters
-
-    const args = ref[key];
-
-    if (!Array.isArray(args) || args.length !== 2) {
-        throw new IntrinsicError('Invalid parameters for Fn::Join');
-    }
-
-
-    if (typeof joiner !== 'string') {
-        throw new IntrinsicError('Invalid joiner for Fn::Join. You need to pass a string.');
-    }
-
-    if (typeof )
-    let join = ref[key][0];
-    let parts = ref[key][1] || null;
-    if(ref[key].length != 2 || parts == null){
-        addError('crit', , placeInTemplate, "Fn::Join");
-        // Specify this as an invalid string
-        return "INVALID_JOIN";
-    }else{
-        // Join
-        return fnJoin(join, parts);
-    }
-}
-
 const GetAtt = Intrinsic('Fn::GetAtt', function (args: [string, Resolveable<string>]) {
-
     if (!Array.isArray(args) || args.length !== 2) {
         throw new IntrinsicError('Invalid parameters for Fn::GetAtt');
     }
@@ -764,41 +715,6 @@ const GetAtt = Intrinsic('Fn::GetAtt', function (args: [string, Resolveable<stri
 
     return resolved;
 });
-
-function doIntrinsicGetAtt(ref: any, key: string){
-    let toGet = ref[key];
-    if(toGet.length < 2){
-        addError("crit", "Invalid parameters for Fn::GetAtt", placeInTemplate, "Fn::GetAtt");
-        return "INVALID_GET_ATT"
-    }else{
-        if(typeof toGet[0] != "string"){ // TODO Implement unit test for this
-            addError("crit", "Fn::GetAtt does not support functions for the logical resource name", placeInTemplate, "Fn::GetAtt");
-        }
-
-        // If we have more than 2 parameters, merge other parameters
-        if(toGet.length > 2){
-            let root = toGet[0];
-            let parts = toGet.slice(1).join('.');
-            toGet = [root, parts];
-        }
-
-        // The AttributeName could be a Ref, so check if it needs resolving
-        if(typeof toGet[1] != "string"){
-            let keys = Object.keys(toGet[1]);
-            if(keys[0] == "Ref") { // TODO Implement unit test for this
-                toGet[1] = resolveIntrinsicFunction(toGet[1], "Ref");
-            }else{ // TODO Implement unit test for this
-                addError("crit", "Fn::GetAtt only supports Ref within the AttributeName", placeInTemplate, "Fn::GetAtt");
-            }
-        }
-        let attr = fnGetAtt(toGet[0], toGet[1]);
-        if(attr != null){
-            return attr;
-        }else{
-            return "INVALID_REFERENCE_OR_ATTR_ON_GET_ATT";
-        }
-    }
-}
 
 const FindInMap = Intrinsic('Fn::FindInMap', function (args: Resolveable<string>[]) {
 
@@ -823,36 +739,6 @@ const FindInMap = Intrinsic('Fn::FindInMap', function (args: Resolveable<string>
 
 })
 
-function doIntrinsicFindInMap(ref: any, key: string){
-    let toGet = ref[key];
-    if(toGet.length != 3){
-        addError("crit", "Invalid parameters for Fn::FindInMap", placeInTemplate, "Fn::FindInMap");
-        return "INVALID_FN_FIND_IN_MAP"
-    }else {
-
-        for(let x in toGet){
-            if(toGet.hasOwnProperty(x)) {
-                if (typeof toGet[x] != "string") {
-                    toGet[x] = resolveIntrinsicFunction(toGet[x], Object.keys(toGet[x])[0]);
-                }
-            }
-        }
-
-        // Find in map
-        let val = fnFindInMap(toGet[0], toGet[1], toGet[2]);
-        if(val == null){
-            addError("crit",
-                `Could not find value in map ${toGet[0]}|${toGet[1]}|${toGet[2]}. Have you tried specifying input parameters?`,
-                placeInTemplate,
-                "Fn::FindInMap");
-            return "INVALID_MAPPING";
-        }else{
-            return val;
-        }
-
-    }
-}
-
 const GetAZs = Intrinsic('Fn::GetAZs', function (arg: Resolveable<string>) {
     const region = this.resolve(arg);
 
@@ -868,36 +754,6 @@ const GetAZs = Intrinsic('Fn::GetAZs', function (arg: Resolveable<string>) {
     const AZs = ['a', 'b', 'c'].map((s) => `${region}${s}`);
     return AZs;
 })
-
-function doIntrinsicGetAZs(ref: any, key: string){
-    let toGet = ref[key];
-    let region = awsRefOverrides['AWS::Region'];
-    // If the argument is not a string, check it's Ref and resolve
-    if(typeof toGet != "string"){
-        let key = Object.keys(toGet)[0];
-        if(key == "Ref") {
-            if(toGet[key] != 'AWS::Region'){
-                addError("warn", "Fn::GetAZs expects a region, ensure this reference returns a region", placeInTemplate, "Fn::GetAZs");
-            }
-            region = resolveIntrinsicFunction(toGet, "Ref") as string;
-        }else{ // TODO Implement unit test for this
-            addError("crit", "Fn::GetAZs only supports Ref or string as a parameter", placeInTemplate, "Fn::GetAZs");
-        }
-    }else{
-        if(toGet != ""){    // TODO: Implement unit test
-            region = toGet;
-        }
-    }
-
-    // We now have a string, assume it's a real region
-    // Lets create an array with 3 AZs
-    let AZs = [];
-    AZs.push(region + 'a');
-    AZs.push(region + 'b');
-    AZs.push(region + 'c');
-    return AZs;
-
-}
 
 const Select = Intrinsic('Fn::Select', function (arg: [Resolveable<string|number>, Resolveable<any[]>]) {
     if (!Array.isArray(arg) || arg.length !== 2) {
@@ -925,94 +781,6 @@ const Select = Intrinsic('Fn::Select', function (arg: [Resolveable<string|number
 
     return list[index];
 })
-
-function doIntrinsicSelect(ref: any, key: string){
-    let toGet = ref[key];
-    if(!Array.isArray(toGet) || toGet.length < 2) {
-        addError('crit', "Fn::Select only supports an array of two elements", placeInTemplate, "Fn::Select");
-        return 'INVALID_SELECT';
-    }
-    if (toGet[0] === undefined || toGet[0] === null) {
-        addError('crit', "Fn::Select first element cannot be null or undefined", placeInTemplate, "Fn::Select");
-        return 'INVALID_SELECT';
-    }
-    let index: number;
-    if (typeof toGet[0]  == 'object' && !Array.isArray(toGet[0])) {
-        let keys = Object.keys(toGet[0]);
-        if(awsIntrinsicFunctions['Fn::Select::Index']['supportedFunctions'].indexOf(keys[0]) != -1) {
-            let resolvedIndex = resolveIntrinsicFunction(toGet[0], keys[0]);
-            if(typeof resolvedIndex === 'string') {
-                index = parseInt(resolvedIndex);
-            } else if (typeof resolvedIndex === 'number') {
-                index = resolvedIndex;
-            } else {
-                addError('crit', "Fn::Select's first argument did not resolve to a string for parsing or a numeric value.", placeInTemplate, "Fn::Select");
-                return 'INVALID_SELECT';
-            }
-
-        } else {
-            addError('crit', `Fn::Select does not support the ${keys[0]} function in argument 1`);
-            return 'INVALID_SELECT';
-        }
-    } else if (typeof toGet[0] === 'string') {
-          index = parseInt(toGet[0])
-    } else if (typeof toGet[0] === 'number'){
-          index = toGet[0];
-    } else {
-      addError('crit', `Fn:Select's first argument must be a number or resolve to a number, it appears to be a ${typeof(toGet[0])}`, placeInTemplate, "Fn::Select");
-      return 'INVALID_SELECT';
-    }
-
-    if (typeof index === undefined || typeof index !== 'number' || isNaN(index)) {
-        addError('crit', "First element of Fn::Select must be a number, or it must use an intrinsic fuction that returns a number", placeInTemplate, "Fn::Select");
-        return 'INVALID_SELECT';
-    }
-    if (toGet[1] === undefined || toGet[1] === null) {
-        addError('crit', "Fn::Select Second element cannot be null or undefined", placeInTemplate, "Fn::Select");
-        return 'INVALID_SELECT';
-    }
-
-    let list = toGet[1]
-    if (!Array.isArray(list)) {
-        //we may need to resolve it
-        if (typeof list !== 'object') {
-            addError('crit', `Fn::Select requires the second element to resolve to a list, it appears to be a ${typeof list}`, placeInTemplate, "Fn::Select");
-            return 'INVALID_SELECT';
-        } else if(typeof list  == 'object'){
-            let keys = Object.keys(list);
-            if(awsIntrinsicFunctions['Fn::Select::List']['supportedFunctions'].indexOf(keys[0]) != -1) {
-                list = resolveIntrinsicFunction(list, keys[0]);
-            } else {
-                addError('crit', `Fn::Select does not support the ${keys[0]} function in argument 2`);
-                return 'INVALID_SELECT';
-            }
-          if (keys[0] === "Ref" ) {
-              // check if it was a paramter which might be converted to a list
-              const parameterName = toGet[1][keys[0]];
-            if (workingInput['Parameters'][parameterName] !== undefined ) {
-                list = workingInput['Parameters'][parameterName]['Attributes']['Ref'];
-              }
-            }
-        }
-
-
-        if (!Array.isArray(list)) {
-            addError('crit', `Fn::Select requires the second element to be a list, function call did not resolve to a list. It contains value ${list}`, placeInTemplate, "Fn::Select");
-            return 'INVALID_SELECT';
-        }
-    } else if (list.indexOf(null) > -1) {
-        addError('crit', "Fn::Select requires that the list be free of null values", placeInTemplate, "Fn::Select");
-
-    }
-    if (index >= 0 && index < list.length) {
-        return list[index];
-    } else {
-        addError('crit', "First element of Fn::Select exceeds the length of the list.", placeInTemplate, "Fn::Select");
-        return 'INVALID_SELECT';
-    }
-
-
-}
 
 function objectMap<O, T>(o: O, map: (v: O[keyof O]) => T) {
     const ret = {} as {[k: keyof O]: T};
@@ -1059,7 +827,7 @@ function doSubOnArray(this: any, arg: [string, {[k: string]: any}]) {
         throw new IntrinsicError('Fn::Sub expects first argument to be a string');
     }
 
-    const mapping = resolve(arg[1]);
+    const mapping = this.resolve(arg[1]);
     if (typeof mapping !== 'object') {
         throw new IntrinsicError('Fn::Sub expects second argument to be a variable map');
     }
@@ -1068,7 +836,6 @@ function doSubOnArray(this: any, arg: [string, {[k: string]: any}]) {
 
     return fnSub(replacementString, vars);
 }
-
 
 const Sub = Intrinsic('Fn::Sub', function (arg: string | [string, {[k: string]: any}]) {
 
@@ -1081,84 +848,6 @@ const Sub = Intrinsic('Fn::Sub', function (arg: string | [string, {[k: string]: 
     }
 
 })
-
-function doIntrinsicSub(ref: any, key: string){
-    let toGet = ref[key];
-    let replacementStr = null;
-    let definedParams = null;
-    // We have a simple replace
-    if(typeof toGet == 'string'){
-        replacementStr = toGet;
-    }else{
-
-        // We should have an array of parameters
-        if(toGet[0]){
-
-            if(typeof toGet[0] == 'string'){
-                replacementStr = toGet[0];
-            }else{
-                addError('crit', 'Fn::Sub expects first argument to be a string', placeInTemplate, 'Fn::Sub');
-            }
-
-            if(typeof toGet[1] == 'object'){
-                definedParams = toGet[1];
-            }else{
-                addError('crit', 'Fn::Sub expects second argument to be a variable map', placeInTemplate, 'Fn::Sub');
-            }
-
-
-        }else{
-            addError('crit', 'Fn::Sub function malformed, first array element should be present', placeInTemplate, "Fn::Sub");
-        }
-    }
-
-    // Extract the replacement parts
-    let regex = /\${([A-Za-z0-9:.!]+)/gm;
-
-    // Resolve the replacement and replace into string using Ref or GetAtt
-    for(let m of matches){
-        let replacementVal = "";
-
-        if(m.indexOf('!') == 1){
-            // Literal Value
-            replacementVal = m;
-        }else if(m.indexOf('.') != -1){
-            // Check if m is within the key value map
-            if(definedParams !== null && definedParams.hasOwnProperty(m) && typeof definedParams[m] !== 'string'){
-                definedParams[m] = resolveIntrinsicFunction(definedParams[m], Object.keys(m)[0]);
-                replacementVal = definedParams[m];
-            }else{
-                // Use Fn::GetAtt
-                let parts = m.split('.');
-                replacementVal = fnGetAtt(parts[0], parts[1]);
-                if(replacementVal === null){
-                    addError('crit', `Intrinsic Sub does not reference valid resource attribute '${m}'`, placeInTemplate, 'Fn::Sub');
-                }
-            }
-        }else{
-            if(definedParams !== null && definedParams.hasOwnProperty(m)){
-                if(typeof definedParams[m] !== 'string') {
-                    replacementVal = resolveIntrinsicFunction(definedParams[m], Object.keys(m)[0]) as string;
-                }else{
-                    replacementVal = definedParams[m];
-                }
-            }else {
-                // Use Ref
-                replacementVal = getRef(m);
-                if(replacementVal === null){
-                    addError('crit', `Intrinsic Sub does not reference valid resource or mapping '${m}'`, placeInTemplate, 'Fn::Sub');
-                }
-            }
-        }
-
-        // Do a string replace on the string
-        replacementStr = replacementStr.replace("${" + m + "}", replacementVal);
-
-    }
-
-    // Set the resolved value as a string
-    return replacementStr;
-}
 
 const If = Intrinsic('Fn::If', function (arg: [string, Resolveable<any>, Resolveable<any>]) {
     if (!Array.isArray(arg) || arg.length !== 3) {
@@ -1177,56 +866,6 @@ const If = Intrinsic('Fn::If', function (arg: [string, Resolveable<any>, Resolve
     }
 })
 
-function doIntrinsicIf(ref: any, key: string){
-    let toGet = ref[key];
-
-    // Check the value of the condition
-    if(toGet.length == 3){
-
-        // Check toGet[0] is a valid condition
-        toGet[0] = resolveCondition({'Condition': toGet[0]}, 'Condition');
-
-        // Set the value
-        let value = null;
-        if(toGet[0]){
-            value = toGet[1];
-        }else{
-            value = toGet[2];
-        }
-
-        if(value instanceof Array){
-            // Go through each element in the array, resolving if needed.
-            let resolvedValue = [];
-            for(let i=0; i < value.length; i++) {
-                let keys = Object.keys(value[i]);
-                if (awsIntrinsicFunctions['Fn::If']['supportedFunctions'].indexOf(keys[0]) !== -1) {
-                    resolvedValue.push(resolveIntrinsicFunction(value[i], keys[0]));
-                }else{
-                    addError('crit', `Fn::If does not allow ${keys[0]} as a nested function within an array`, placeInTemplate, 'Fn::If');
-                }
-            }
-            // Return the resolved array
-            return resolvedValue;
-        }else if(typeof value === "object") {
-            let keys = Object.keys(value);
-            if (awsIntrinsicFunctions['Fn::If']['supportedFunctions'].indexOf(keys[0]) !== -1) {
-                return resolveIntrinsicFunction(value, keys[0]);
-            }else{
-                addError('crit', `Fn::If does not allow ${keys[0]} as a nested function`, placeInTemplate, 'Fn::If');
-            }
-        }else {
-            return value;
-        }
-
-    }else{
-        addError('crit', ``, placeInTemplate, 'Fn::If');
-    }
-
-    // Set the 1st or 2nd param as according to the condition
-
-    return "INVALID_IF_STATEMENT";
-}
-
 const Equals = Intrinsic('Fn::Equals', function (arg: [Resolveable<any>, Resolveable<any>]) {
     if (!Array.isArray(arg) || arg.length !== 2) {
         throw new IntrinsicError('Fn::Equals expects an array with 2 arguments.');
@@ -1238,42 +877,6 @@ const Equals = Intrinsic('Fn::Equals', function (arg: [Resolveable<any>, Resolve
     return (v1 == v2);
 })
 
-function doIntrinsicEquals(ref: any, key: string) {
-    let toGet = ref[key];
-
-    // Check the value of the condition
-    if (toGet.length == 2) {
-
-        // Resolve first argument
-        if(typeof toGet[0] == 'object'){
-            let keys = Object.keys(toGet[0]);
-            if(awsIntrinsicFunctions['Fn::If']['supportedFunctions'].indexOf(keys[0]) != -1) {
-                toGet[0] = resolveIntrinsicFunction(toGet[0], keys[0]);
-            }else{
-                addError('crit', `Fn::Equals does not support the ${keys[0]} function in argument 1`);
-            }
-        }
-
-        // Resolve second argument
-        if(typeof toGet[1] == 'object'){
-            let keys = Object.keys(toGet[1]);
-            if(awsIntrinsicFunctions['Fn::If']['supportedFunctions'].indexOf(keys[0]) != -1) {
-                toGet[0] = resolveIntrinsicFunction(toGet[1], keys[0]);
-            }else{
-                addError('crit', `Fn::Equals does not support the ${keys[1]} function in argument 2`);
-            }
-        }
-
-        // Compare
-        return (toGet[0] == toGet[1]);
-
-    }else{
-        addError('crit', `Fn::Equals expects 2 arguments, ${toGet.length} given.`, placeInTemplate, 'Fn::Equals');
-    }
-
-    return false;
-}
-
 const Or = Intrinsic('Fn::Or', function (arg: any[]) {
     if (!Array.isArray(arg) || arg.length < 2 || arg.length > 10) {
         throw new IntrinsicError('Fn::Or wants an array of between 2 and 10 arguments');
@@ -1281,38 +884,6 @@ const Or = Intrinsic('Fn::Or', function (arg: any[]) {
 
     return Boolean(arg.find((condition) => this.resolve(condition === true)));
 });
-
-function doIntrinsicOr(ref: any, key: string) {
-    let toGet = ref[key];
-
-    // Check the value of the condition
-    if (toGet.length > 1 && toGet.length < 11) {
-        let argumentIsTrue = false;
-
-        // Resolve each argument
-        for(let arg in toGet){
-            if(toGet.hasOwnProperty(arg)) {
-                if (typeof toGet[arg] == 'object') {
-                    let keys = Object.keys(toGet[arg]);
-                    if(awsIntrinsicFunctions['Fn::Or']['supportedFunctions'].indexOf(keys[0]) != -1) {
-                        toGet[arg] = resolveIntrinsicFunction(toGet[arg], keys[0]);
-                    }else{
-                        addError('crit', `Fn::Or does not support function '${keys[0]}' here`, placeInTemplate, 'Fn::Or');
-                    }
-                }
-                // Set to true if needed
-                if (toGet[arg] === true) {
-                    argumentIsTrue = true;
-                }
-            }
-        }
-
-        return argumentIsTrue;
-
-    }else{
-        addError('crit', `Expecting Fn::Or to have between 2 and 10 arguments`, placeInTemplate, 'Fn::Or');
-    }
-}
 
 const Not = Intrinsic('Fn::Not', function (arg: [Resolveable<boolean>]) {
     if (!Array.isArray(arg) || arg.length !== 1) {
@@ -1328,69 +899,14 @@ const Not = Intrinsic('Fn::Not', function (arg: [Resolveable<boolean>]) {
     return !condition;
 })
 
-function doIntrinsicNot(ref: any, key: string){
-
-    let toGet = ref[key];
-
-    // Check the value of the condition
-    if (toGet.length == 1){
-
-        // Resolve if an object
-        if(typeof toGet[0] == 'object') {
-            let keys = Object.keys(toGet[0]);
-            if (awsIntrinsicFunctions['Fn::Not']['supportedFunctions'].indexOf(keys[0]) != -1) {
-                toGet[0] = resolveIntrinsicFunction(toGet[0], keys[0]);
-            } else {
-                addError('crit', `Fn::Not does not support function '${keys[0]}' here`, placeInTemplate, 'Fn::Or');
-            }
-        }
-
-        // Negate
-        if (toGet[0] === true || toGet[0] === false) {
-            return !toGet[0];
-        } else {
-            addError('crit', `Fn::Not did not resolve to a boolean value, ${toGet[0]} given`, placeInTemplate, 'Fn::Not');
-        }
-
-
-    }else{
-        addError('crit', `Expecting Fn::Not to have exactly 1 argument`, placeInTemplate, 'Fn::Not');
-    }
-
-    return false;
-}
-
 const ImportValue = Intrinsic('Fn::ImportValue', function (arg: Resolveable<string>) {
-    const importName = resolve(arg);
+    const importName = this.resolve(arg);
     if (importName !== 'string') {
         throw new IntrinsicError('Something went wrong when resolving references for a Fn::ImportValue');
     }
 
     return `IMPORTEDVALUE${importName}`;
 });
-
-function doIntrinsicImportValue(ref: any, key: string){
-    let toGet = ref[key];
-
-    // If not string, resolve using the supported functions
-    if(typeof toGet == 'object') {
-        let keys = Object.keys(toGet);
-        if (awsIntrinsicFunctions['Fn::ImportValue']['supportedFunctions'].indexOf(keys[0]) != -1) {
-            toGet = resolveIntrinsicFunction(toGet, keys[0]);
-        } else {
-            addError('crit', `Fn::ImportValue does not support function '${keys[0]}' here`, placeInTemplate, 'Fn::ImportValue');
-            return 'INVALID_FN_IMPORTVALUE';
-        }
-    }
-
-    // Resolve
-    if(typeof toGet == 'string'){
-        return "IMPORTEDVALUE" + toGet; // TODO: Consider making this commandline defined
-    }else{
-        addError('warn', `Something went wrong when resolving references for a Fn::ImportValue`, placeInTemplate, 'Fn::ImportValue');
-        return 'INVALID_FN_IMPORTVALUE';
-    }
-}
 
 const Split = Intrinsic('Fn::Split', function (args: [string, Resolveable<string>]) {
 
@@ -1411,74 +927,6 @@ const Split = Intrinsic('Fn::Split', function (args: [string, Resolveable<string
     return stringToSplit.split(delimiter);
 
 });
-
-export function doInstrinsicSplit(ref: any, key: string): string[] {
-    const args = ref[key];
-
-    if (!Array.isArray(args) || args.length !== 2) {
-        addError('crit', 'Invalid parameter for Fn::Split. It needs an Array of length 2.', placeInTemplate, 'Fn::Split');
-        return ['INVALID_SPLIT'];
-    }
-
-    const delimiter: string = args[0];
-
-    if (typeof delimiter !== 'string') {
-        addError ('crit', `Invalid parameter for Fn::Split. The delimiter, ${util.inspect(delimiter)}, needs to be a string.`, placeInTemplate, 'Fn::Split');
-        return ['INVALID_SPLIT'];
-    }
-
-    const stringOrInstrinsic = args[1];
-    let stringToSplit: string;
-
-    if (typeof stringOrInstrinsic === 'object') {
-        const fnName = Object.keys(stringOrInstrinsic)[0];
-
-        if (awsIntrinsicFunctions['Fn::Split']['supportedFunctions'].indexOf(fnName) == -1) {
-            addError('crit', `Fn::Split does not support function '${fnName}' here`, placeInTemplate, 'Fn::Split');
-            return ['INVALID_SPLIT'];
-        }
-
-        stringToSplit = resolveIntrinsicFunction(stringOrInstrinsic, fnName) as string;
-    } else if (typeof stringOrInstrinsic === 'string') {
-        stringToSplit = stringOrInstrinsic;
-    } else {
-        addError('crit', `Invalid parameters for Fn::Split. The parameter, ${stringOrInstrinsic}, needs to be a string or a supported intrinsic function.`, placeInTemplate, 'Fn::Split');
-        return ['INVALID_SPLIT'];
-    }
-
-    return fnSplit(delimiter, stringToSplit);
-}
-
-function fnSplit(delimiter: string, stringToSplit: string): string[] {
-    return stringToSplit.split(delimiter);
-}
-
-function fnJoin(join: any, parts: any){
-    // Resolve instrinsic functions that return the parts array
-    if (!Array.isArray(parts)) {
-      // TODO Check the key is within the valid functions which can be called from a Fn::Join
-      parts = resolveIntrinsicFunction(parts, Object.keys(parts)[0]);
-
-      if (!Array.isArray(parts)) {
-        addError('crit', 'Invalid parameters for Fn::Join', placeInTemplate, "Fn::Join");
-        // Specify this as an invalid string
-        return "INVALID_JOIN";
-      }
-    }
-
-    // Otherwise go through each parts and ensure they are resolved
-    for(let p in parts){
-        if(parts.hasOwnProperty(p)) {
-            if (typeof parts[p] == "object") {
-                // Something needs resolving
-                // TODO Check the key is within the valid functions which can be called from a Fn::Join
-                parts[p] = resolveIntrinsicFunction(parts[p], Object.keys(parts[p])[0]);
-            }
-        }
-    }
-
-    return parts.join(join);
-}
 
 export function fnGetAtt(reference: string, attributeName: string){
     if(workingInput['Resources'].hasOwnProperty(reference)){
