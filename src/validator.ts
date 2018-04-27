@@ -146,6 +146,9 @@ function validateWorkingInput(passedOptions?: Partial<ValidateOptions>) {
     // Evaluate Conditions
     assignConditionsOutputs();
 
+    // Assign intrinsic resolvers
+    assignIntrinsics();
+
     // Assign outputs to all the resources
     assignResourcesOutputs();
     if(stopValidation) {
@@ -451,7 +454,7 @@ function resolveReferences(){
 
     // Resolve all Ref
     lastPositionInTemplate = workingInput;
-    recursiveDecent(lastPositionInTemplate);
+    recursiveDescent(lastPositionInTemplate);
 
 
     let stop = workingInput;
@@ -462,7 +465,7 @@ let placeInTemplate: (string|number)[] = [];
 let lastPositionInTemplate: any = null;
 let lastPositionInTemplateKey: string | null = null;
 
-function recursiveDecent(ref: any){
+function recursiveDescent(ref: any){
     // Step into next attribute
     for(let i=0; i < Object.keys(ref).length; i++){
         let key = Object.keys(ref)[i];
@@ -479,19 +482,17 @@ function recursiveDecent(ref: any){
 
             if(!(inResourceProperty || inResourceMetadata || inOutputs || inConditions)){
                 addError("crit", `Intrinsic function ${key} is not supported here`, placeInTemplate, key);
-            }else {
+            } else {
                 // Resolve the function
-                let functionOutput = resolveIntrinsicFunction(ref, key);
-                if (functionOutput !== null && lastPositionInTemplateKey !== null) {
-                    // Overwrite the position with the resolved value
-                    lastPositionInTemplate[lastPositionInTemplateKey] = functionOutput;
-                }
+                const boundIntrinsic = buildIntrinsic(ref, key);
+                // Overwrite the position with the resolved value
+                lastPositionInTemplate[lastPositionInTemplateKey!] = boundIntrinsic;
             }
         }else if(key != 'Attributes' && ref[key] instanceof Object){
             placeInTemplate.push(key);
             lastPositionInTemplate = ref;
             lastPositionInTemplateKey = key;
-            recursiveDecent(ref[key]);
+            recursiveDescent(ref[key]);
         }
 
 
@@ -522,65 +523,38 @@ function resolveCondition(ref: any, key: string){
     return condition;
 }
 
-function resolveIntrinsicFunction(ref: any, key: string) : string | boolean | string[] | undefined | null {
-    try {
-        const value = _resolveIntrinsicFunction(ref, key);
-        return value;
-    } catch (e) {
-        if (e instanceof IntrinsicError) {
-            addError('crit', e.message, placeInTemplate, key);
-            return `INVALID_${key}`
+function buildIntrinsic(ref: any, key: string) {
+    const fnName = key;
+    const arg = ref[key];
+
+    if (!(fnName in intrinsics)) {
+        addError("warn", `Unhandled Intrinsic Function ${key}, this needs implementing. Some errors might be missed.`, placeInTemplate, "Functions");
+        return () => 'UNHANDLED_INTRINSIC';
+    }
+
+    return intrinsics[key](arg);
+}
+
+const intrinsics: {[k: string]: Intrinsic<any, any>} = {};
+
+function _resolveValue<T>(value: Resolveable<T>): T | string {
+    if (isBoundIntrinsic(value)) {
+        try {
+            return value();
+        } catch (e) {
+            if (e instanceof IntrinsicError) {
+                addError('crit', e.message, placeInTemplate, value.fnName);
+                return `INVALID_${value.fnName}`;
+            } else {
+                throw e;
+            }
         }
-    }
-}
-
-function _resolveIntrinsicFunction(ref: any, key: string) : string | boolean | string[] | undefined | null{
-    switch(key){
-        case 'Ref':
-            return doIntrinsicRef(ref, key);
-        case 'Condition':
-            return resolveCondition(ref, key);
-        case 'Fn::Join':
-            return doIntrinsicJoin(ref, key);
-        case 'Fn::Base64':
-            return doIntrinsicBase64(ref, key);
-        case 'Fn::GetAtt':
-            return doIntrinsicGetAtt(ref, key);
-        case 'Fn::FindInMap':
-            return doIntrinsicFindInMap(ref, key);
-        case 'Fn::GetAZs':
-            return doIntrinsicGetAZs(ref, key);
-        case 'Fn::Sub':
-            return doIntrinsicSub(ref, key);
-        case 'Fn::If':
-            return doIntrinsicIf(ref, key);
-        case 'Fn::Equals':
-            return doIntrinsicEquals(ref, key);
-        case 'Fn::Or':
-            return doIntrinsicOr(ref, key);
-        case 'Fn::Not':
-            return doIntrinsicNot(ref, key);
-        case 'Fn::ImportValue':
-            return doIntrinsicImportValue(ref, key);
-        case 'Fn::Select':
-            return doIntrinsicSelect(ref, key);
-        case 'Fn::Split':
-            return doInstrinsicSplit(ref, key);
-        default:
-            addError("warn", `Unhandled Intrinsic Function ${key}, this needs implementing. Some errors might be missed.`, placeInTemplate, "Functions");
-            return null;
-    }
-}
-
-function _resolveValue<T>(value: Resolveable<T>) {
-    if (isIntrinsic(value)) {
-        return value();
     } else {
         return value;
     }
 }
 
-function _resolve<T>(value: Resolveable<T>): T {
+function _resolve<T>(value: Resolveable<T>): T | string {
     const resolved = _resolveValue(value);
     if (Array.isArray(resolved)) {
         return resolved.map(_resolve) as any as T;
@@ -597,30 +571,19 @@ class IntrinsicError extends Error {
     }
 }
 
-function doIntrinsicRef(ref: any, key: string){
-
-    const refValue = ref[key];
-
-    // Check if it's of a String type
-    if (typeof refValue !== "string"){
-        throw new IntrinsicError('Intrinsic Function Ref expects a string');
-    }
-
-
-    // Return the resolved value
-    return resolvedVal;
-
-}
-
 type Resolveable<T> = T | BoundIntrinsic<T>;
 
 
-type BoundIntrinsic<T> = () => T;
+interface BoundIntrinsic<T> {
+    (): T;
+    fnName: string
+}
 
-function Intrinsic<A, T> (fnName: string, f: (this: Intrinsic<A, T>, arg: A) => T)  {
-    const boundF = (arg: A) => f.bind(null, arg);
-    const intrinsic: Intrinsic<A, T> = Object.setPrototypeOf(boundF, Intrinsic);
+function Intrinsic<A, T> (fnName: string, f: (this: Intrinsic<A, T>, arg: A) => T): Intrinsic<A, T>  {
+    const builder = (arg: A) => BoundIntrinsic(fnName, f, arg);
+    const intrinsic: Intrinsic<A, T> = Object.setPrototypeOf(builder, Intrinsic.prototype);
     intrinsic.fnName = fnName;
+    intrinsics[fnName] = intrinsic;
     return intrinsic;
 }
 Intrinsic.prototype = Object.create(Function.prototype, {
@@ -631,13 +594,19 @@ Intrinsic.prototype = Object.create(Function.prototype, {
     }
 });
 
+function BoundIntrinsic<A, T>(fnName: string, f: (a: A) => T, arg: A): BoundIntrinsic<T> {
+    const boundF = Object.setPrototypeOf(f.bind(null, arg), BoundIntrinsic.prototype);
+    return Object.assign(boundF, {fnName});
+}
+BoundIntrinsic.prototype = Object.create(Function.prototype);
+
 interface Intrinsic<A, T> {
     (a: A): BoundIntrinsic<T>;
     resolve: <R>(r: Resolveable<R>) => R;
     fnName: string
 }
 
-function isIntrinsic<T>(f: any): f is BoundIntrinsic<T> {
+function isBoundIntrinsic<T>(f: any): f is BoundIntrinsic<T> {
     return (f instanceof Intrinsic);
 }
 
@@ -724,10 +693,8 @@ const FindInMap = Intrinsic('Fn::FindInMap', function (args: Resolveable<string>
 
     const toGet = args.map((arg) => this.resolve(arg));
 
-    for (const r of toGet) {
-        if (typeof r !== 'string') {
-            throw new IntrinsicError('Invalid parameter r for Fn::FindInMap. It needs a string.');
-        }
+    if (toGet.findIndex((r) => (typeof r !== 'string')) > -1) {
+        throw new IntrinsicError('Invalid parameter for Fn::FindInMap. It needs a string.');
     }
 
     const value = fnFindInMap(toGet[0], toGet[1], toGet[2]);
@@ -783,7 +750,7 @@ const Select = Intrinsic('Fn::Select', function (arg: [Resolveable<string|number
 })
 
 function objectMap<O, T>(o: O, map: (v: O[keyof O]) => T) {
-    const ret = {} as {[k: keyof O]: T};
+    const ret = {} as {[k in keyof O]: T};
     for (const k in o) {
         ret[k] = map(o[k]);
     }
