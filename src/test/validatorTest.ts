@@ -407,11 +407,11 @@ describe('validator', () => {
             expect(result['errors']['warn']).to.have.lengthOf(0);
         });
 
-        it('a sub getatt an invalid resource should result in validTemplate = false, 1 crit errors, no warnings', () => {
+        it('a sub getatt an invalid resource should result in validTemplate = false, 2 crit errors, no warnings', () => {
             const input = 'testData/invalid/yaml/invalid_sub_getatt.yaml';
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', false);
-            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit']).to.have.lengthOf(2);
             expect(result['errors']['warn']).to.have.lengthOf(0);
         });
 
