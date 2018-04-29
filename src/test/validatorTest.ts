@@ -488,6 +488,16 @@ describe('validator', () => {
           expect(result['errors']['crit']).to.have.lengthOf(0);
           expect(result['errors']['warn']).to.have.lengthOf(0);
         });
+
+        it("should not pass validation with !GetAtt where the resource does not exist", () => {
+          const input = 'testData/invalid/yaml/issue_51_missing_resource.yaml';
+          let result = validator.validateFile(input);
+          expect(result).to.have.deep.property('templateValid', false);
+          expect(result['errors']['crit']).to.have.lengthOf(1);
+          expect(result['errors']['crit'][0]).to.have.property('message', 'No resource with logical name of Database!');
+          expect(result['errors']['crit'][0]).to.have.property('resource', 'Outputs > DBDNS > Value');
+          expect(result['errors']['warn']).to.have.lengthOf(0);
+        });
     })
 
     describe('conditions', () => {
