@@ -7,6 +7,46 @@ import yaml = require('js-yaml');
 import {awsResources} from '../awsData';
 import util = require('util');
 import { isObject } from 'util';
+import { BoundIntrinsic } from '../intrinsics';
+
+
+chai.use( (_chai, utils) => {
+    const Assertion = _chai.Assertion;
+
+    function formatError(e: validator.ErrorRecord) {
+        return `Resource: ${e.resource}\nMessage: ${e.message}`
+    }
+
+    Assertion.addProperty('templateValid', function(this: any) {
+        let pass = false;
+        if (this._obj && 'templateValid' in this._obj) {
+            const templateValid = this._obj.templateValid;
+            const criticalErrors = this._obj.errors.crit;
+
+            this.assert(
+                templateValid === true,
+                `template wasn\'t valid. It has critical errors: ${criticalErrors.map((e: any) => `\n${formatError(e)}`).join('\n')}`,
+                'template was valid'
+            );
+        } else {
+            this.assert(
+                false,
+                'template wasn\'t valid',
+                'template was valid'
+            );
+        }
+    })
+})
+
+declare global {
+    export namespace Chai {
+        interface Assertion {
+            templateValid: Assertion;
+        }
+    }
+}
+
+
 
 describe('validator', () => {
 
@@ -14,14 +54,72 @@ describe('validator', () => {
         validator.resetValidator();
     });
 
+    describe('isIntrinsic', () => {
+        const isIntrinsic = validator.isIntrinsic;
 
-    describe('validateJsonObject', () => {
+        it('should return false for an empty object', () => {
+            expect(isIntrinsic({}, [])).to.be.false;
+        });
 
+        it('should return false for an object that has some non intrinsic keys', () => {
+            expect(isIntrinsic({'Fn::NotAnIntrinsic': false}, [])).to.be.false;
+        });
+
+        it('should return a BoundIntrinsic for an object that is an intrinsic', () => {
+            const result = isIntrinsic({'Ref': 'reference'}, []);
+            expect(result).to.be.instanceOf(BoundIntrinsic);
+        })
+    })
+
+    describe('_assignIntrinsics', () => {
+        const _assignIntrinsics = validator._assignIntrinsics;
+
+        it('should return a non-intrinsic object unchanged', () => {
+            const arg = {};
+            const result = _assignIntrinsics(arg, []);
+            expect(result).to.equal(arg);
+        });
+
+        it('should return an intrinsic object morphed', () => {
+            const arg = {
+                'Ref': 'reference'
+            };
+            const result = _assignIntrinsics(arg, []);
+            expect(result).to.be.instanceOf(BoundIntrinsic);
+        });
+
+        it('should recurse into objects', () => {
+            const arg = {
+                key: {
+                    'Ref': 'reference'
+                },
+                otherKey: 'nothing to see here'
+            };
+            const result = _assignIntrinsics(arg, []);
+            expect(result.key).to.be.instanceOf(BoundIntrinsic);
+            expect(result.otherKey).to.equal(arg.otherKey);
+        });
+
+        it('should recurse into arrays', () => {
+            const arg = [
+                {
+                    'Ref': 'reference'
+                },
+                'nothing to see here'
+            ];
+            const result = _assignIntrinsics(arg, []);
+            expect(arg[0]).to.be.instanceOf(BoundIntrinsic);
+            expect(arg[1]).to.equal(arg[1]);
+        });
+    })
+
+
+    describe.only('validateJsonObject', () => {
 
         it('a valid (1.json) template should return an object with validTemplate = true, no crit errors', () => {
             const input = require('../../testData/valid/json/1.json');
             let result = validator.validateJsonObject(input);
-            expect(result).to.have.deep.property('templateValid', true);
+            expect(result).to.have.templateValid;
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
 
@@ -29,14 +127,14 @@ describe('validator', () => {
             const input = require('../../testData/valid/json/2.json');
             validator.addParameterValue('InstanceType', 't1.micro');
             let result = validator.validateJsonObject(input);
-            expect(result).to.have.deep.property('templateValid', true);
+            expect(result).to.have.templateValid
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
 
         it('a valid (3.json) template should return an object with validTemplate = true, no crit errors', () => {
             const input = require('../../testData/valid/json/3.json');
             let result = validator.validateJsonObject(input);
-            expect(result).to.have.deep.property('templateValid', true);
+            expect(result).to.have.templateValid
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
 
@@ -44,63 +142,63 @@ describe('validator', () => {
             const input = require('../../testData/valid/json/4.json');
             validator.addParameterValue('InstanceType', 't1.micro');
             let result = validator.validateJsonObject(input);
-            expect(result).to.have.deep.property('templateValid', true);
+            expect(result).to.have.templateValid
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
 
         it('2 invalid resource types should return an object with validTemplate = false, 2 crit errors', () => {
             const input = require('../../testData/invalid/json/1_invalid_resource_type.json');
             let result = validator.validateJsonObject(input);
-            expect(result).to.have.deep.property('templateValid', false);
+            expect(result).to.not.have.templateValid
             expect(result['errors']['crit']).to.have.lengthOf(2);
         });
 
         it('1 missing parameter type should return an object with validTemplate = false, 1 crit errors', () => {
             const input = require('../../testData/invalid/json/1_missing_parameter_type.json');
             let result = validator.validateJsonObject(input);
-            expect(result).to.have.deep.property('templateValid', false);
+            expect(result).to.not.have.templateValid
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
 
         it('1 invalid parameter type should return an object with validTemplate = false, 1 crit errors', () => {
             const input = require('../../testData/invalid/json/1_invalid_parameter_type.json');
             let result = validator.validateJsonObject(input);
-            expect(result).to.have.deep.property('templateValid', false);
+            expect(result).to.not.have.templateValid
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
 
         it('missing section resources should return an object with validTemplate = false, 1 crit errors', () => {
             const input = require('../../testData/invalid/json/no_resources.json');
             let result = validator.validateJsonObject(input);
-            expect(result).to.have.deep.property('templateValid', false);
+            expect(result).to.not.have.templateValid
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
 
         it('empty section resources should return an object with validTemplate = false, 1 crit errors', () => {
             const input = require('../../testData/invalid/json/empty_resources.json');
             let result = validator.validateJsonObject(input);
-            expect(result).to.have.deep.property('templateValid', false);
+            expect(result).to.not.have.templateValid
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
 
         it('1 invalid resource reference should return an object with validTemplate = false, 1 crit errors', () => {
             const input = require('../../testData/invalid/json/1_invalid_resource_reference.json');
             let result = validator.validateJsonObject(input);
-            expect(result).to.have.deep.property('templateValid', false);
+            expect(result).to.not.have.templateValid
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
 
         it('1 invalid parameter reference should return an object with validTemplate = false, 1 crit errors', () => {
             const input = require('../../testData/invalid/json/1_invalid_parameter_reference.json');
             let result = validator.validateJsonObject(input);
-            expect(result).to.have.deep.property('templateValid', false);
+            expect(result).to.not.have.templateValid
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
 
         it('2 invalid Fn::Join\'s should return an object with validTemplate = false, 2 crit errors', () => {
             const input = require('../../testData/invalid/json/2_invalid_intrinsic_join.json');
             let result = validator.validateJsonObject(input);
-            expect(result).to.have.deep.property('templateValid', false);
+            expect(result).to.not.have.templateValid
             expect(result['errors']['crit']).to.have.lengthOf(2);
         });
 
@@ -108,21 +206,21 @@ describe('validator', () => {
             const input = require('../../testData/invalid/json/1_invalid_intrinsic_get_att.json');
             validator.addParameterValue('InstanceType', 't1.micro');
             let result = validator.validateJsonObject(input);
-            expect(result).to.have.deep.property('templateValid', false);
+            expect(result).to.not.have.templateValid
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
 
         it('1 invalid Fn::FindInMap should return an object with validTemplate = false, 1 crit errors', () => {
             const input = require('../../testData/invalid/json/1_invalid_intrinsic_mappings.json');
             let result = validator.validateJsonObject(input);
-            expect(result).to.have.deep.property('templateValid', false);
+            expect(result).to.not.have.templateValid
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
 
         it('1 invalid Ref within Parameters should return an object with validTemplate = false, 1 crit errors', () => {
             const input = require('../../testData/invalid/json/1_intrinsic_function_in_parameters.json');
             let result = validator.validateJsonObject(input);
-            expect(result).to.have.deep.property('templateValid', false);
+            expect(result).to.not.have.templateValid
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
 
@@ -130,7 +228,7 @@ describe('validator', () => {
             const input = require('../../testData/invalid/json/1_invalid_get_azs_parameter.json');
             validator.addParameterValue('InstanceType', 't1.micro');
             let result = validator.validateJsonObject(input);
-            expect(result).to.have.deep.property('templateValid', false);
+            expect(result).to.not.have.templateValid
             expect(result['errors']['crit']).to.have.lengthOf(1);
         });
 
@@ -138,7 +236,7 @@ describe('validator', () => {
             const input = require('../../testData/invalid/json/1_warning_ref_get_azs_parameter.json');
             validator.addParameterValue('InstanceType', 't1.micro');
             let result = validator.validateJsonObject(input);
-            expect(result).to.have.deep.property('templateValid', true);
+            expect(result).to.not.have.templateValid
             expect(result['errors']['warn']).to.have.lengthOf(1);
         });
 
@@ -175,15 +273,15 @@ describe('validator', () => {
           let result = validator.validateJsonObject(input);
           expect(result).to.have.deep.property('templateValid', false);
           expect(result['errors']['crit']).to.have.lengthOf(1);
-          expect(result['errors']['crit'][0]['message'].indexOf('First element of Fn::Select exceeds the length of the list.')).to.be.greaterThan(-1); 
+          expect(result['errors']['crit'][0]['message'].indexOf('First element of Fn::Select exceeds the length of the list.')).to.be.greaterThan(-1);
           expect(result['errors']['warn']).to.have.lengthOf(0);
-        });       
+        });
         it("should error if second element is not a list or a function", () => {
           const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_2.json');
           let result = validator.validateJsonObject(input);
           expect(result).to.have.deep.property('templateValid', false);
           expect(result['errors']['crit']).to.have.lengthOf(1);
-          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select requires the second element to resolve to a list")).to.be.greaterThan(-1); 
+          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select requires the second element to resolve to a list")).to.be.greaterThan(-1);
           expect(result['errors']['warn']).to.have.lengthOf(0);
         });
         it("should error if first element is not a number or does not parse to a number", () => {
@@ -191,7 +289,7 @@ describe('validator', () => {
           let result = validator.validateJsonObject(input);
           expect(result).to.have.deep.property('templateValid', false);
           expect(result['errors']['crit']).to.have.lengthOf(1);
-          expect(result['errors']['crit'][0]['message'].indexOf("First element of Fn::Select must be a number, or it must use an intrinsic fuction that returns a number")).to.be.greaterThan(-1); 
+          expect(result['errors']['crit'][0]['message'].indexOf("First element of Fn::Select must be a number, or it must use an intrinsic fuction that returns a number")).to.be.greaterThan(-1);
           expect(result['errors']['warn']).to.have.lengthOf(0);
         });
         it("should error if first element is not defined or is null", () => {
@@ -199,7 +297,7 @@ describe('validator', () => {
           let result = validator.validateJsonObject(input);
           expect(result).to.have.deep.property('templateValid', false);
           expect(result['errors']['crit']).to.have.lengthOf(1);
-          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select first element cannot be null or undefined")).to.be.greaterThan(-1); 
+          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select first element cannot be null or undefined")).to.be.greaterThan(-1);
           expect(result['errors']['warn']).to.have.lengthOf(0);
         });
         it("should error if only one element as argument list", () => {
@@ -207,7 +305,7 @@ describe('validator', () => {
           let result = validator.validateJsonObject(input);
           expect(result).to.have.deep.property('templateValid', false);
           expect(result['errors']['crit']).to.have.lengthOf(1);
-          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select only supports an array of two elements")).to.be.greaterThan(-1); 
+          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select only supports an array of two elements")).to.be.greaterThan(-1);
           expect(result['errors']['warn']).to.have.lengthOf(0);
         });
         it("should error if second element is null or undefined", () => {
@@ -215,7 +313,7 @@ describe('validator', () => {
           let result = validator.validateJsonObject(input);
           expect(result).to.have.deep.property('templateValid', false);
           expect(result['errors']['crit']).to.have.lengthOf(1);
-          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select Second element cannot be null or undefined")).to.be.greaterThan(-1); 
+          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select Second element cannot be null or undefined")).to.be.greaterThan(-1);
           expect(result['errors']['warn']).to.have.lengthOf(0);
         });
         it("should error if second element does not resolve to a list", () => {
@@ -223,7 +321,7 @@ describe('validator', () => {
           let result = validator.validateJsonObject(input);
           expect(result).to.have.deep.property('templateValid', false);
           expect(result['errors']['crit']).to.have.lengthOf(1);
-          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select requires the second element to be a list, function call did not resolve to a list.")).to.be.greaterThan(-1); 
+          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select requires the second element to be a list, function call did not resolve to a list.")).to.be.greaterThan(-1);
           expect(result['errors']['warn']).to.have.lengthOf(0);
         });
         it("should error if first element does not resolve to a number", () => {
@@ -231,14 +329,14 @@ describe('validator', () => {
           let result = validator.validateJsonObject(input);
           expect(result).to.have.deep.property('templateValid', false);
           expect(result['errors']['crit']).to.have.lengthOf(1);
-          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select's first argument did not resolve to a string for parsing or a numeric value.")).to.be.greaterThan(-1); 
+          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select's first argument did not resolve to a string for parsing or a numeric value.")).to.be.greaterThan(-1);
           expect(result['errors']['warn']).to.have.lengthOf(0);
         });
         it("should error if first element attempts an invalid intrinsic function", () => {
           const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_9.json');
           let result = validator.validateJsonObject(input);
           expect(result).to.have.deep.property('templateValid', false);
-          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select does not support the Fn::Select function in argument 1")).to.be.greaterThan(-1); 
+          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select does not support the Fn::Select function in argument 1")).to.be.greaterThan(-1);
           expect(result['errors']['crit']).to.have.lengthOf(1);
           expect(result['errors']['warn']).to.have.lengthOf(0);
         });
@@ -246,28 +344,28 @@ describe('validator', () => {
           const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_10.json');
           let result = validator.validateJsonObject(input);
           expect(result).to.have.deep.property('templateValid', false);
-          expect(result['errors']['crit'][0]['message'].indexOf("Fn:Select's first argument must be a number or resolve to a number")).to.be.greaterThan(-1); 
+          expect(result['errors']['crit'][0]['message'].indexOf("Fn:Select's first argument must be a number or resolve to a number")).to.be.greaterThan(-1);
           expect(result['errors']['crit']).to.have.lengthOf(1);
           expect(result['errors']['warn']).to.have.lengthOf(0);
         });
-      
+
         it("should error if second element attempts an invalid intrinsic function", () => {
           const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_11.json');
           let result = validator.validateJsonObject(input);
           expect(result).to.have.deep.property('templateValid', false);
-          expect(result['errors']['crit'][0]['message'].indexOf("n::Select does not support the Fn::Select function in argument 2")).to.be.greaterThan(-1); 
+          expect(result['errors']['crit'][0]['message'].indexOf("n::Select does not support the Fn::Select function in argument 2")).to.be.greaterThan(-1);
           expect(result['errors']['crit']).to.have.lengthOf(1);
           expect(result['errors']['warn']).to.have.lengthOf(0);
         });
         it("should error if second element contains a list with null values", () => {
           const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_12.json');
           let result = validator.validateJsonObject(input);
-          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select requires that the list be free of null values")).to.be.greaterThan(-1); 
+          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select requires that the list be free of null values")).to.be.greaterThan(-1);
           expect(result).to.have.deep.property('templateValid', false);
           expect(result['errors']['crit']).to.have.lengthOf(1);
           expect(result['errors']['warn']).to.have.lengthOf(0);
         });
-       
+
     });
 
     describe('Fn::Select YAML', () => {
@@ -278,14 +376,14 @@ describe('validator', () => {
         expect(result['errors']['crit']).to.have.lengthOf(0);
         expect(result['errors']['warn']).to.have.lengthOf(0);
       });
-    
+
        it('should validate in yaml with Comma Separated List Param', () => {
         const input = './testData/valid/yaml/5_valid_intrinsic_select_2.yaml';
         let result = validator.validateFile(input);
         expect(result).to.have.deep.property('templateValid', true);
         expect(result['errors']['crit']).to.have.lengthOf(0);
         expect(result['errors']['warn']).to.have.lengthOf(0);
-       });  
+       });
 
 
       it("should error if index is greater than list size", () => {
@@ -293,9 +391,9 @@ describe('validator', () => {
         let result = validator.validateFile(input);
         expect(result).to.have.deep.property('templateValid', false);
         expect(result['errors']['crit']).to.have.lengthOf(1);
-        expect(result['errors']['crit'][0]['message'].indexOf('First element of Fn::Select exceeds the length of the list.')).to.be.greaterThan(-1); 
+        expect(result['errors']['crit'][0]['message'].indexOf('First element of Fn::Select exceeds the length of the list.')).to.be.greaterThan(-1);
         expect(result['errors']['warn']).to.have.lengthOf(0);
-      });       
+      });
       it("should error if second element is not a list or a function", () => {
         const input = './testData/invalid/yaml/5_invalid_intrinsic_select_2.yaml';
         let result = validator.validateFile(input);
@@ -309,7 +407,7 @@ describe('validator', () => {
         let result = validator.validateFile(input);
         expect(result).to.have.deep.property('templateValid', false);
         expect(result['errors']['crit']).to.have.lengthOf(1);
-        expect(result['errors']['crit'][0]['message'].indexOf("First element of Fn::Select must be a number, or it must use an intrinsic fuction that returns a number")).to.be.greaterThan(-1); 
+        expect(result['errors']['crit'][0]['message'].indexOf("First element of Fn::Select must be a number, or it must use an intrinsic fuction that returns a number")).to.be.greaterThan(-1);
         expect(result['errors']['warn']).to.have.lengthOf(0);
       });
       it("should error if first element is not defined or is null", () => {
@@ -317,7 +415,7 @@ describe('validator', () => {
         let result = validator.validateFile(input);
         expect(result).to.have.deep.property('templateValid', false);
         expect(result['errors']['crit']).to.have.lengthOf(1);
-        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select first element cannot be null or undefined")).to.be.greaterThan(-1); 
+        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select first element cannot be null or undefined")).to.be.greaterThan(-1);
         expect(result['errors']['warn']).to.have.lengthOf(0);
       });
       it("should error if only one element as argument list", () => {
@@ -325,7 +423,7 @@ describe('validator', () => {
         let result = validator.validateFile(input);
         expect(result).to.have.deep.property('templateValid', false);
         expect(result['errors']['crit']).to.have.lengthOf(1);
-        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select only supports an array of two elements")).to.be.greaterThan(-1); 
+        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select only supports an array of two elements")).to.be.greaterThan(-1);
         expect(result['errors']['warn']).to.have.lengthOf(0);
       });
       it("should error if second element is null or undefined", () => {
@@ -333,7 +431,7 @@ describe('validator', () => {
         let result = validator.validateFile(input);
         expect(result).to.have.deep.property('templateValid', false);
         expect(result['errors']['crit']).to.have.lengthOf(1);
-        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select Second element cannot be null or undefined")).to.be.greaterThan(-1); 
+        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select Second element cannot be null or undefined")).to.be.greaterThan(-1);
         expect(result['errors']['warn']).to.have.lengthOf(0);
       });
       it("should error if second element does not resolve to a list", () => {
@@ -341,7 +439,7 @@ describe('validator', () => {
         let result = validator.validateFile(input);
         expect(result).to.have.deep.property('templateValid', false);
         expect(result['errors']['crit']).to.have.lengthOf(1);
-        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select requires the second element to be a list, function call did not resolve to a list.")).to.be.greaterThan(-1); 
+        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select requires the second element to be a list, function call did not resolve to a list.")).to.be.greaterThan(-1);
         expect(result['errors']['warn']).to.have.lengthOf(0);
       });
       it("should error if first element does not resolve to a number", () => {
@@ -349,7 +447,7 @@ describe('validator', () => {
         let result = validator.validateFile(input);
         expect(result).to.have.deep.property('templateValid', false);
         expect(result['errors']['crit']).to.have.lengthOf(1);
-        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select's first argument did not resolve to a string for parsing or a numeric value.")).to.be.greaterThan(-1); 
+        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select's first argument did not resolve to a string for parsing or a numeric value.")).to.be.greaterThan(-1);
         expect(result['errors']['warn']).to.have.lengthOf(0);
       });
       it("should error if first element attempts an invalid intrinsic function", () => {
@@ -357,7 +455,7 @@ describe('validator', () => {
         let result = validator.validateFile(input);
         expect(result).to.have.deep.property('templateValid', false);
         expect(result['errors']['crit']).to.have.lengthOf(1);
-        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select does not support the Fn::Select function in argument 1")).to.be.greaterThan(-1); 
+        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select does not support the Fn::Select function in argument 1")).to.be.greaterThan(-1);
         expect(result['errors']['warn']).to.have.lengthOf(0);
       });
       it("should error if first element is anything other than non-array object, number or string", () => {
@@ -365,16 +463,16 @@ describe('validator', () => {
         let result = validator.validateFile(input);
         expect(result).to.have.deep.property('templateValid', false);
         expect(result['errors']['crit']).to.have.lengthOf(1);
-        expect(result['errors']['crit'][0]['message'].indexOf("Fn:Select's first argument must be a number or resolve to a number")).to.be.greaterThan(-1); 
+        expect(result['errors']['crit'][0]['message'].indexOf("Fn:Select's first argument must be a number or resolve to a number")).to.be.greaterThan(-1);
         expect(result['errors']['warn']).to.have.lengthOf(0);
       });
-    
+
       it("should error if second element attempts an invalid intrinsic function", () => {
         const input = './testData/invalid/yaml/5_invalid_intrinsic_select_11.yaml';
         let result = validator.validateFile(input);
         expect(result).to.have.deep.property('templateValid', false);
         expect(result['errors']['crit']).to.have.lengthOf(1);
-        expect(result['errors']['crit'][0]['message'].indexOf("n::Select does not support the Fn::Select function in argument 2")).to.be.greaterThan(-1); 
+        expect(result['errors']['crit'][0]['message'].indexOf("n::Select does not support the Fn::Select function in argument 2")).to.be.greaterThan(-1);
         expect(result['errors']['warn']).to.have.lengthOf(0);
       });
       it("should error if second element contains a list with null values", () => {
@@ -382,7 +480,7 @@ describe('validator', () => {
         let result = validator.validateFile(input);
         expect(result).to.have.deep.property('templateValid', false);
         expect(result['errors']['crit']).to.have.lengthOf(1);
-        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select requires that the list be free of null values")).to.be.greaterThan(-1); 
+        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select requires that the list be free of null values")).to.be.greaterThan(-1);
         expect(result['errors']['warn']).to.have.lengthOf(0);
       });
 
@@ -527,72 +625,6 @@ describe('validator', () => {
     });
 
     describe('Fn::Split', () => {
-        it('should split a basic string', () => {
-            const input = {
-                'Fn::Split': ['-', 'asdf-fdsa']
-            };
-            const result = validator.doInstrinsicSplit(input, 'Fn::Split');
-            expect(result).to.deep.equal(['asdf', 'fdsa']);
-        });
-
-        it('should split a string that doesn\'t contain the delimiter', () => {
-            const input = {
-                'Fn::Split': ['-', 'asdffdsa']
-            };
-            const result = validator.doInstrinsicSplit(input, 'Fn::Split');
-            expect(result).to.deep.equal(['asdffdsa']);
-        });
-
-        it('should resolve an intrinsic function', () => {
-            const input = {
-                'Fn::Split': ['-', {
-                    'Fn::Select': [1, ['0-0', '1-1', '2-2']]
-                }]
-            };
-            const result = validator.doInstrinsicSplit(input, 'Fn::Split');
-            expect(result).to.deep.equal(['1', '1']);
-        });
-
-        it('should reject a parameter that is an object', () => {
-            const input = {
-                'Fn::Split': {}
-            };
-            const result = validator.doInstrinsicSplit(input, 'Fn::Split');
-            expect(result).to.deep.equal(['INVALID_SPLIT']);
-        });
-
-        it('should reject a parameter that is a string', () => {
-            const input = {
-                'Fn::Split': 'split-me-plz'
-            };
-            const result = validator.doInstrinsicSplit(input, 'Fn::Split');
-            expect(result).to.deep.equal(['INVALID_SPLIT']);
-        });
-
-        it('should reject a parameter that is an empty array', () => {
-            const input = {
-                'Fn::Split': []
-            };
-            const result = validator.doInstrinsicSplit(input, 'Fn::Split');
-            expect(result).to.deep.equal(['INVALID_SPLIT']);
-        });
-
-        it('should reject a parameter that is a single length array', () => {
-            const input = {
-                'Fn::Split': ['delim']
-            };
-            const result = validator.doInstrinsicSplit(input, 'Fn::Split');
-            expect(result).to.deep.equal(['INVALID_SPLIT']);
-        });
-
-        it('should reject a delimiter that isn\'t a string', () => {
-            const input = {
-                'Fn::Split': [{}, 'asd-asd-asd']
-            };
-            const result = validator.doInstrinsicSplit(input, 'Fn::Split');
-            expect(result).to.deep.equal(['INVALID_SPLIT']);
-        });
-
         describe('validator test', () => {
             let result: validator.ErrorObject;
             before(() => {
@@ -1035,7 +1067,10 @@ describe('validator', () => {
         describe('a template with an output referencing a resource and a resource attribute', () => {
             let result: any;
             const input = 'testData/valid/yaml/outputs.yaml';
-            result = validator.validateFile(input);
+
+            before( () => {
+                result = validator.validateFile(input);
+            })
 
             it('should result in a valid template', () => {
                 expect(result).to.have.deep.property('templateValid', true);
@@ -1294,7 +1329,7 @@ describe('validator', () => {
             ];
 
             runTests(validator.isTimestamp, validTimestamps, invalidTimestamps);
-            
+
         })
     });
 });

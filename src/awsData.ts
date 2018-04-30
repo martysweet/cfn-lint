@@ -62,7 +62,7 @@ export type Property = PrimitiveProperty | ComplexProperty | ListProperty | MapP
 export interface ResourcePropertyType {
     Documentation: string,
     Properties: {[propertyName: string]: Property | undefined}
-    
+
     AdditionalProperties: undefined;
 }
 
@@ -101,16 +101,11 @@ export const awsParameterTypes = require('../data/aws_parameter_types.json') as 
 
 type IntrinsicFunctions = {
     [functionName: string]: {
-        supportedFunctions: string[]
+        supportedFunctions?: string[]
     }
 }
 
 export const awsIntrinsicFunctions = require('../data/aws_intrinsic_functions.json') as IntrinsicFunctions;
-
-// avoid "does this exist" checks everywhere
-for (let functionName in awsIntrinsicFunctions) {
-    awsIntrinsicFunctions[functionName].supportedFunctions = awsIntrinsicFunctions[functionName].supportedFunctions || [];
-}
 
 type RefOverrides = {
     "AWS::AccountId": string,
@@ -123,4 +118,5 @@ type RefOverrides = {
 };
 
 export const awsRefOverrides = require('../data/aws_ref_override.json') as RefOverrides;
+
 awsRefOverrides["AWS::NoValue"] = undefined;
