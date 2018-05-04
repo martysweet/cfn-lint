@@ -20,6 +20,8 @@ import CustomError = require('./util/CustomError');
 import sms = require('source-map-support');
 sms.install();
 
+const mergeOptions = require('merge-options');
+
 require('./util/polyfills');
 
 export type ParameterValue = string | string[];
@@ -110,6 +112,66 @@ export function addPseudoValue(parameter: string, value: string){
     }
 };
 
+export function addCustomResourceAttributeValue(resource: string, attribute: string, value: any){
+    let attrType = determineValueType(value);
+    let oldSpec = {};
+    let newSpec = {
+      'Attributes': {
+        [attribute]: {
+          PrimitiveType: attrType,
+          Value: value
+        }
+      }
+    };
+
+    // extend defintion for existing resource type
+    if (RegExp(/::/).test(resource)) {
+      try {
+        oldSpec = resourcesSpec.getResourceType(resource);
+      } catch (e) {}
+      newSpec = mergeOptions(oldSpec, newSpec);
+    }
+
+    resourcesSpec.extendSpecification({
+      'ResourceTypes': {[resource]: newSpec}
+    });
+};
+
+function determineValueType(val: any) {
+  // check descendants of object
+  if (val instanceof Object) {
+    if (Array.isArray(val)) {
+      return 'List';
+    }
+    if (val instanceof Map) {
+      return 'Map';
+    }
+    return 'ComplexObject';
+  }
+
+  // check primitives
+  switch (typeof val) {
+    case 'string':
+      try {
+          JSON.parse(val);
+          return 'Json';
+      } catch (e) {}
+      if (!!Date.parse(val)) {
+          return 'Timestamp';
+      }
+      if (RegExp(/arn:/i).test(val)) {
+          return 'Arn';
+      }
+      return 'String';
+    case 'number':
+      return (val % 1 == 0) ? 'Integer' : 'Double';
+    case 'boolean':
+      return 'Boolean';
+  }
+
+  throw new Error ('Invalid KnownType!');
+}
+
 function addParameterOverride(parameter: string, value: ParameterValue){
     parameterRuntimeOverride[parameter] = value;
 }
@@ -145,6 +207,9 @@ function validateWorkingInput(passedOptions?: Partial<ValidateOptions>) {
 
     // Evaluate Conditions
     assignConditionsOutputs();
+
+    // Apply resource specification overrides
+    assignCustomResources();
 
     // Assign outputs to all the resources
     assignResourcesOutputs();
@@ -367,6 +432,23 @@ function assignConditionsOutputs(){
 
 }
 
+function assignCustomResources() {
+  for(let res in workingInput['Resources']){
+      if(workingInput['Resources'].hasOwnProperty(res)){
+          // Apply resource specification overrides based on logical name
+          try {
+              let type = workingInput['Resources'][res]['Type'];
+              let spec = resourcesSpec.getResourceType(type);
+              let logicalNameSpec = resourcesSpec.getResourceType(res);
+              resourcesSpec.extendSpecification({
+                  'ResourceTypes': {[res]: mergeOptions(spec, logicalNameSpec)}
+              });
+              workingInput['Resources'][res]['Type'] = res;
+          } catch(e) {}
+      }
+  }
+}
+
 function assignResourcesOutputs(){
     if(!workingInput.hasOwnProperty('Resources')){
         addError('crit', 'Resources section is not defined', [], "Resources");
@@ -431,11 +513,34 @@ function assignResourcesOutputs(){
             //  Go through the attributes of the specification, and assign them
             if(spec != null && spec.Attributes){
                 for(let attr in spec.Attributes){
-                    if (attr.indexOf('Arn') != -1) {
-                        workingInput['Resources'][res]['Attributes'][attr] = mockArnPrefix + res;
-                    }else {
-                        workingInput['Resources'][res]['Attributes'][attr] = "mockAttr_" + res;
+                    let value: any = null;
+
+                    // use user-defined attribute value if provided for the specific type
+                    try {
+                        let attrSpec: any = resourcesSpec.getResourceTypeAttribute(resourceType, attr);
+                        if (attrSpec.hasOwnProperty('Value')) {
+                            value = attrSpec['Value'];
+                        }
+                    } catch(e) {}
+
+                    // use user-defined attribute value if provided for the specific logical name
+                    try {
+                        let attrSpec: any = resourcesSpec.getResourceTypeAttribute(res, attr);
+                        if (attrSpec.hasOwnProperty('Value')) {
+                            value = attrSpec['Value'];
+                        }
+                    } catch(e) {}
+
+                    // otherwise use an implicit mock value
+                    if (!value) {
+                      if (attr.indexOf('Arn') != -1) {
+                          value = mockArnPrefix + res;
+                      }else {
+                          value = "mockAttr_" + res;
+                      }
                     }
+
+                    workingInput['Resources'][res]['Attributes'][attr] = value;
                 }
             }
 
@@ -1122,35 +1227,33 @@ function fnJoin(join: any, parts: any){
 export function fnGetAtt(reference: string, attributeName: string){
     if(workingInput['Resources'].hasOwnProperty(reference)){
         const resource = workingInput['Resources'][reference];
-        if (resource['Type'].indexOf('Custom::') === 0) {
-            return `mockAttr_${reference}_${attributeName}`;
-        } else if (resource['Type'] === 'AWS::CloudFormation::CustomResource') {
-            return `mockAttr_${reference}_${attributeName}`;
-        } else if (resource['Type'] === 'AWS::CloudFormation::Stack') {
-            return `mockAttr_${reference}_${attributeName}`;
-        }
-        else {
-            try {
-                // Lookup attribute
-                const attribute = resourcesSpec.getResourceTypeAttribute(resource['Type'], attributeName)
-                const primitiveAttribute = attribute as PrimitiveAttribute
-                if(!!primitiveAttribute['PrimitiveType']) {
-                    return resource['Attributes'][attributeName];
-                }
-                const listAttribute = attribute as ListAttribute
-                if(listAttribute['Type'] == 'List') {
-                    return [ resource['Attributes'][attributeName], resource['Attributes'][attributeName] ]
-                }
-            } catch (e) {
-                if (e instanceof resourcesSpec.NoSuchResourceTypeAttribute) {
-                    addError('crit',
-                        e.message,
-                        placeInTemplate,
-                        resource['Type']
-                    );
-                } else {
-                    throw e;
-                }
+        try {
+            // Lookup attribute
+            const attribute = resourcesSpec.getResourceTypeAttribute(resource['Type'], attributeName)
+            const primitiveAttribute = attribute as PrimitiveAttribute
+            if(!!primitiveAttribute['PrimitiveType']) {
+                return resource['Attributes'][attributeName];
+            }
+            const listAttribute = attribute as ListAttribute
+            if(listAttribute['Type'] == 'List') {
+                return [ resource['Attributes'][attributeName], resource['Attributes'][attributeName] ]
+            }
+        } catch (e) {
+            // Coerce missing custom resource attribute value to string
+            if ((resource['Type'].indexOf('Custom::') === 0) ||
+                (resource['Type'] === 'AWS::CloudFormation::CustomResource') ||
+                (resource['Type'] === 'AWS::CloudFormation::Stack')) {
+                return `mockAttr_${reference}_${attributeName}`;;
+            }
+
+            if (e instanceof resourcesSpec.NoSuchResourceTypeAttribute) {
+                addError('crit',
+                    e.message,
+                    placeInTemplate,
+                    resource['Type']
+                );
+            } else {
+                throw e;
             }
         }
     } else {
@@ -1307,7 +1410,7 @@ function checkResourceProperties() {
 
         // Check the property exists
         try {
-            resourcesSpec.getType(resources[res]['Type']);
+            let spec = resourcesSpec.getType(resources[res]['Type']);
         } catch (e) {
             if (e instanceof resourcesSpec.NoSuchResourceType) {
                 continue;

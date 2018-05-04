@@ -1,0 +1,22 @@
+Resources:
+  Custom:
+    Type: Custom::Dooby
+    Properties:
+      ServiceToken: arn:aws:blahblahblah
+
+  Custom2:
+    Type: AWS::CloudFormation::CustomResource
+    Properties:
+      ServiceToken: arn:aws:blahblahblah
+
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      Tags:
+        - Key: key1
+          Value: !GetAtt Custom.SomeAttribute
+        - Key: key2
+          Value:
+            Fn::Join:
+              - ","
+              - !GetAtt Custom2.SomeAttribute
