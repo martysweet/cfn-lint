@@ -1,0 +1,8 @@
+Resources:
+  Bucket:
+    Type: AWS::S3::Bucket
+
+Outputs:
+  DBDNS:
+    Description: DNS Name of the DB Instance
+    Value: !GetAtt Database.Endpoint.Address

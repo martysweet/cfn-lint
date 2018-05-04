@@ -1112,7 +1112,13 @@ export function fnGetAtt(reference: string, attributeName: string){
                 }
             }
         }
+    } else {
+      addError('crit',
+          `No resource with logical name of ${reference}!`,
+          placeInTemplate,
+          reference);
     }
+
     // Return null if not found
     return null;
 }
