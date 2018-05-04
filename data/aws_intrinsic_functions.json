@@ -13,7 +13,7 @@
   "Fn::Select": {},
   "Fn::Select::Index": {"supportedFunctions": ["Ref", "Fn::FindInMap"]},
   "Fn::Select::List": {"supportedFunctions" : ["Fn::FindInMap", "Fn::GetAtt", "Fn::GetAZs", "Fn::If", "Fn::Split", "Ref"] },
-  "Fn::Split": {},
+  "Fn::Split": {"supportedFunctions": ["Fn::Base64", "Fn::FindInMap", "Fn::GetAtt", "Fn::If", "Fn::Join", "Fn::Select", "Ref"]},
   "Fn::Sub": { "supportedFunctions": ["Fn::Base64", "Fn::FindInMap", "Fn::GetAtt", "Fn::GetAZs", "Fn::If", "Fn::Join", "Fn::Select", "Ref"]},
   "Ref": {}
 }

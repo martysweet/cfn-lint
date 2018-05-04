@@ -536,6 +536,97 @@ describe('validator', () => {
 
     });
 
+    describe('Fn::Split', () => {
+        it('should split a basic string', () => {
+            const input = {
+                'Fn::Split': ['-', 'asdf-fdsa']
+            };
+            const result = validator.doInstrinsicSplit(input, 'Fn::Split');
+            expect(result).to.deep.equal(['asdf', 'fdsa']);
+        });
+
+        it('should split a string that doesn\'t contain the delimiter', () => {
+            const input = {
+                'Fn::Split': ['-', 'asdffdsa']
+            };
+            const result = validator.doInstrinsicSplit(input, 'Fn::Split');
+            expect(result).to.deep.equal(['asdffdsa']);
+        });
+
+        it('should resolve an intrinsic function', () => {
+            const input = {
+                'Fn::Split': ['-', {
+                    'Fn::Select': [1, ['0-0', '1-1', '2-2']]
+                }]
+            };
+            const result = validator.doInstrinsicSplit(input, 'Fn::Split');
+            expect(result).to.deep.equal(['1', '1']);
+        });
+
+        it('should reject a parameter that is an object', () => {
+            const input = {
+                'Fn::Split': {}
+            };
+            const result = validator.doInstrinsicSplit(input, 'Fn::Split');
+            expect(result).to.deep.equal(['INVALID_SPLIT']);
+        });
+
+        it('should reject a parameter that is a string', () => {
+            const input = {
+                'Fn::Split': 'split-me-plz'
+            };
+            const result = validator.doInstrinsicSplit(input, 'Fn::Split');
+            expect(result).to.deep.equal(['INVALID_SPLIT']);
+        });
+
+        it('should reject a parameter that is an empty array', () => {
+            const input = {
+                'Fn::Split': []
+            };
+            const result = validator.doInstrinsicSplit(input, 'Fn::Split');
+            expect(result).to.deep.equal(['INVALID_SPLIT']);
+        });
+
+        it('should reject a parameter that is a single length array', () => {
+            const input = {
+                'Fn::Split': ['delim']
+            };
+            const result = validator.doInstrinsicSplit(input, 'Fn::Split');
+            expect(result).to.deep.equal(['INVALID_SPLIT']);
+        });
+
+        it('should reject a delimiter that isn\'t a string', () => {
+            const input = {
+                'Fn::Split': [{}, 'asd-asd-asd']
+            };
+            const result = validator.doInstrinsicSplit(input, 'Fn::Split');
+            expect(result).to.deep.equal(['INVALID_SPLIT']);
+        });
+
+        describe('validator test', () => {
+            let result: validator.ErrorObject;
+            before(() => {
+                validator.resetValidator();
+                const input = './testData/valid/yaml/split.yaml';
+                result = validator.validateFile(input);
+            });
+            it('should have no errors', () => {
+                console.dir(result['errors']);
+                expect(result).to.have.deep.property('templateValid', true);
+                expect(result['errors']['crit']).to.have.lengthOf(0);
+            });
+            it('should resolve a simple split', () => {
+                expect(result['outputs']['Simple']).to.deep.equal(['asdf', 'fdsa']);
+            });
+            it('should resolve a split of a join', () => {
+                expect(result['outputs']['Nested']).to.deep.equal(['asdf', 'fdsa_asdf', 'fdsa']);
+            });
+            it('should resolve a select of a split', () => {
+                expect(result['outputs']['SelectASplit']).to.deep.equal('b');
+            });
+        });
+    })
+
     describe('templateVersion', () => {
 
         it('1 invalid template version should return an object with validTemplate = false, 1 crit errors', () => {
