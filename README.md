@@ -97,6 +97,7 @@ Template invalid!
 * Fn::And
 * Fn::ImportValue
 * Fn::Select
+* Fn::Split
 * Condition support
 * Ref
 * Go to the documentation from Command Line (see above examples)
@@ -106,11 +107,9 @@ Template invalid!
 ### Feature backlog
 * Verbose parsing errors when reading invalid JSON
 * Fn::ImportValue - to support CLI injection (Like Params currently does)
-* Fn::Split
 * Test coverage for Conditions and Property checking
 * Refactor Property checking to be clearer
 * Circular dependency checking
-* Suggest DependsOn when References to Resources are used
 * Extended validation flag (calls AWS CloudFormation API)
 * Watch file flag to revalidate on file save
 * Download latest resources during build
