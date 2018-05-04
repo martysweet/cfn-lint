@@ -6,6 +6,12 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Merge PR #155, fixing GetAtt not throwing errors on invalid resource
+
+### Changed
+- Merge PR #157, adding licence attribute to package.json
+
 
 ## [1.6.2] - 2018-04-26
 ### Fixed
