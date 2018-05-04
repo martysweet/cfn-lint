@@ -53,5 +53,6 @@
   "main": "./lib/api.js",
   "bin": {
     "cfn-lint": "./lib/index.js"
-  }
+  },
+  "license": "MIT"
 }
