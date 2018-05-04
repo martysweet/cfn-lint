@@ -9,6 +9,10 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Fixed
 - Merge PR #155, fixing GetAtt not throwing errors on invalid resource
 
+### Changed
+- Merge PR #157, adding licence attribute to package.json
+
+
 ## [1.6.2] - 2018-04-26
 ### Fixed
 - Merge PR #150, allow AWS::CloudFormation::Stack to return custom attributes when used in Fn::GetAtt
