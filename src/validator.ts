@@ -125,7 +125,7 @@ export function addCustomResourceAttributeValue(resource: string, attribute: str
     };
 
     // extend defintion for existing resource type
-    if (RegExp(/::/).test(resource)) {
+    if (!!~resource.indexOf('::')) {
       try {
         oldSpec = resourcesSpec.getResourceType(resource);
       } catch (e) {}
