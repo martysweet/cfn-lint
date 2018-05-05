@@ -40,6 +40,9 @@ let parameterRuntimeOverride: {[parameter: string]: ParameterValue | undefined} 
 let importRuntimeOverride: {[parameter: string]: ImportValue | undefined} = {};
 // Todo: Allow override for RefOverrides ex. Regions
 
+let mockRegister: {[parameter: string]: any} = {};
+
+
 export interface ErrorRecord {
     message: string,
     resource: string,
@@ -72,6 +75,10 @@ export function resetValidator(){
     stopValidation = false;
     parameterRuntimeOverride = {};
     importRuntimeOverride = {};
+    mockRegister = {};
+    placeInTemplate = [];
+    lastPositionInTemplate = null
+    lastPositionInTemplateKey = null;
 };
 
 export interface ValidateOptions {
@@ -835,11 +842,11 @@ function inferParameterValue(parameterName: string, parameter: any, okToGuess: b
                 normalizedType = 'string';
             }
 
-            const parameterDefault = parameterDefaultsByType[parameterTypesSpec[parameterType]!]! 
+            const parameterDefault = parameterDefaultsByType[parameterTypesSpec[parameterType]!]!
             if (isList) {
-                return [parameterDefault];
+                return registerMockValue(parameterName, [parameterDefault]);
             } else {
-                return parameterDefault;
+                return registerMockValue(parameterName, parameterDefault);
             }
         }
     }
@@ -1365,7 +1372,7 @@ function doIntrinsicSelect(ref: any, key: string){
         }
     } else if (list.indexOf(null) > -1) {
         addError('crit', "Fn::Select requires that the list be free of null values", placeInTemplate, "Fn::Select");
-    
+
     }
     if (index >= 0 && index < list.length) {
         return list[index];
@@ -1739,7 +1746,19 @@ function fnJoin(join: any, parts: any){
     return parts.join(join);
 }
 
+export function registerMockValue(name: string, value: any) {
+  addError('info', `Assuming value "${value}" for ${name}`, placeInTemplate);
+  if (mockRegister.hasOwnProperty(name)) {
+    if (mockRegister[name] !== value) {
+      addError('warn', `Mock value mismatch for ${name}!`, placeInTemplate);
+    }
+  }
+  mockRegister[name] = value;
+  return value;
+}
+
 export function fnGetAtt(reference: string, attributeName: string){
+
     // determine resource template
     let resource: any;
     if (!!~workingInputTransform.indexOf('AWS::Serverless-2016-10-31') &&
@@ -1753,7 +1772,9 @@ export function fnGetAtt(reference: string, attributeName: string){
           placeInTemplate,
           reference);
     }
+
     // determine attribute value
+    let value = null;
     if (!!resource) {
         const resourceType = `${resource['Type']}<${reference}>`;
         try {
@@ -1761,20 +1782,19 @@ export function fnGetAtt(reference: string, attributeName: string){
             const attribute = resourcesSpec.getResourceTypeAttribute(resourceType, attributeName)
             const primitiveAttribute = attribute as PrimitiveAttribute
             if(!!primitiveAttribute['PrimitiveType']) {
-                return resource['Attributes'][attributeName];
+                value = resource['Attributes'][attributeName];
             }
             const listAttribute = attribute as ListAttribute
             if(listAttribute['Type'] == 'List') {
-                return [ resource['Attributes'][attributeName], resource['Attributes'][attributeName] ]
+                value = [ resource['Attributes'][attributeName], resource['Attributes'][attributeName] ]
             }
         } catch (e) {
             // Coerce missing custom resource attribute value to string
             if ((resourceType.indexOf('Custom::') == 0) ||
                 (resourceType.indexOf('AWS::CloudFormation::CustomResource') == 0) ||
                 (resourceType.indexOf('AWS::CloudFormation::Stack') == 0)) {
-                return `mockAttr_${reference}_${attributeName}`;
-            }
-
+                value = `mockAttr_${reference}_${attributeName}`;
+            } else
             if (e instanceof resourcesSpec.NoSuchResourceTypeAttribute) {
                 addError('crit',
                     e.message,
@@ -1788,7 +1808,7 @@ export function fnGetAtt(reference: string, attributeName: string){
     }
 
     // Return null if not found
-    return null;
+    return registerMockValue(`${reference}.${attributeName}`, value);
 }
 
 function fnFindInMap(map: any, first: string, second: string){
@@ -1892,7 +1912,7 @@ export interface PrimitiveType {
     resourceType: string,
     primitiveType: string
 }
-  
+
 export type ObjectType = ResourceType | NamedProperty | PropertyType | PrimitiveType;
 
 /**
@@ -1912,7 +1932,7 @@ function getTypeName(objectType: ResourceType | NamedProperty | PropertyType ): 
 }
 
 /**
- * 
+ *
  */
 function getItemType(objectType: NamedProperty): PrimitiveType | PropertyType {
     const maybePrimitiveType = resourcesSpec.getPrimitiveItemType(objectType.parentType, objectType.propertyName);
@@ -2047,7 +2067,7 @@ function check(objectType: ObjectType, objectToCheck: any) {
                     verify(isList, objectToCheck);
                     checkList(objectType as NamedProperty, objectToCheck);
                     break;
-                case KnownTypes.Arn:                    
+                case KnownTypes.Arn:
                     verify(isArn, objectToCheck);
                     break;
                 case KnownTypes.String:
@@ -2321,7 +2341,7 @@ function checkComplexObject(objectType: ResourceType | NamedProperty | PropertyT
                 parentType: objectTypeName,
                 propertyName: subPropertyName
             } as NamedProperty;
-        
+
             check(subPropertyObjectType, propertyValue)
 
         } finally {
