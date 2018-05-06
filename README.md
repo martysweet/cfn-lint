@@ -60,19 +60,21 @@ Template invalid!
 ```
 
 ### Flags
-`--parameters <param values>`: Provide a list of comma-separated key=value pairs of parameters to use when validating your template. If a parameter is not specified here, `cfn-lint` will guess a mock value based on the Parameter's Type and AllowedValues. e.g.
-  - `--parameters InstanceType=t2.micro,Memory=512`
 
-`--pseudo <psuedo param values>`: Provide a list of comma-separated key=value pairs of CloudFormation pseudo-parameters to use when validating your template. e.g.
-  - `--pseudo AWS::Region=ap-southeast-2`
+#### Input Parameters
+`--parameters <param values>`: Provide a list of comma-separated key=value pairs of parameters to use when validating your template. If a parameter is not specified here, `cfn-lint` will guess a mock value based on the Parameter's Type and AllowedValues. e.g.`--parameters InstanceType=t2.micro,Memory=512`
 
+#### AWS Pseudo Parameter Override
+`--pseudo <psuedo param values>`: Provide a list of comma-separated key=value pairs of CloudFormation pseudo-parameters to use when validating your template. e.g.`--pseudo AWS::Region=ap-southeast-2`
+
+#### Parameter Guessing
 `--guess-parameters`: Guess any parameters if they don't have any Default value in the template. Parameters will be guessed/mocked based on their `AllowedValues` or `Type`. This is the default behaviour; it's only included as an option for explicitness.
 
 `--no-guess-parameters`: Disable the guessing of parameters if they don't have a Default. If you don't provide them on the CLI in this situation, a critical error will be raised instead of the parameter value being mocked.
 
-`--only-guess-parameters <param names>`: Only guess the provided parameters, and disable the guessing of all others without Defaults. A critical error will be raised for missing parameters, as above. e.g.
- - `--only-guess-parameters InstanceType,Memory`
+`--only-guess-parameters <param names>`: Only guess the provided parameters, and disable the guessing of all others without Defaults. A critical error will be raised for missing parameters, as above. e.g. `--only-guess-parameters InstanceType,Memory`
 
+#### Verbose Output
 `--verbose`: Provide verbose output and stack traces when template parsing fails.
 
 ** Note ** : Parameter values that contain commas must be escaped using a backslash (e.g. `Param1=[1\,2\,3]`). Depending on your command-line interpreter you may have to use double backslashes or enclose the entire argument in quotes, such is the case with *Bash* and other *Bourne*-based shells (e.g. `--parameters 'Param1=[1\,2\,3]'`).
