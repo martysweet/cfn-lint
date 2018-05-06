@@ -275,6 +275,37 @@ Each intrinsic function has a signature of `doIntrinsicXYZ(ref, key)` and is cal
 the resolved value of the function. For example, for Fn::Sub, an input of `"My ${MyInstance}"`
 would return a string similar to `"My i-0a0a0a0a0a`.
 
+## Release Instructions
+
+0. For each PR, edit the `CHANGELOG.md` file, adding a fixed, changed or added message to the Unreleased block.
+1. Create a milestone in Github for all issues and PRs which will be included in the release, for example, `v1.7.0`.
+2. Create a PR for the release (branch `release-VERSION`), moving the contents of the `CHANGELOG.md` to a new version, update the links at the bottom of the file.
+3. Ensure the latest CFN Specification is present ([AWS CloudFormation Resource Specification](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-resource-specification.html)) in the aws_resources_specification.json file, update if required.
+4. Verify changes and merge into `master` with the title `Update CHANGELOG for VERSION (#PRNUM)`.
+5. Go to [Releases](https://github.com/martysweet/cfn-lint/releases) and click "Draft a new release".
+6. Enter the tag of the version and the same for the release title, for example, `v1.7.0`.
+7. Copy the section of the `CHANGELOG.md` file for the release into the describe section.
+8. Click publish release. This will build a publish a package to npm.
+9. The unit tests can generally be trusted, however, a quick test will do no harm and might catch something missed. Next, test the release in a clean environment, ensuring the latest version is pulled.
+
+```
+> docker run -it node /bin/bash
+$ npm install -g cfn-lint
+$ cat <<EOF >working.yaml
+Resources:
+   MyBucket:
+     Type: AWS::S3::Bucket
+EOF
+$ cfn-lint validate working.yaml
+$ cat <<EOF >failure.yaml
+Resources:
+   MyBucket:
+     Type: AWS::S3::Buckets
+EOF
+$ cfn-lint validate failure.yaml
+```
+
+
 ## Contributions
 
 Please check out the [Contributor's Guide](CONTRIBUTING.md) for more information on how to get started.
