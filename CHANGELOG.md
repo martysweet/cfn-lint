@@ -12,6 +12,7 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Changed
 - Merge PR #157, adding licence attribute to package.json
 - Merge PR #148, removing cloudformation-js-yaml-schema in favour of custom handling of intrinsic functions
+- Merge PR #159, improving readability of README.md
 
 ### Added
 - Merge PR #148, adding Fn::split functionality
