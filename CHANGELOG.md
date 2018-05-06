@@ -6,6 +6,8 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.7.0] - 2018-05-06
 ### Fixed
 - Merge PR #155, fixing GetAtt not throwing errors on invalid resource
 
@@ -134,7 +136,8 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Added
 - Add pseudo parameter support
 
-[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.6.2...HEAD
+[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.7.0...HEAD
+[1.7.0]: https://github.com/martysweet/cfn-lint/compare/v1.6.2...v1.7.0
 [1.6.2]: https://github.com/martysweet/cfn-lint/compare/v1.6.1...v1.6.2
 [1.6.1]: https://github.com/martysweet/cfn-lint/compare/v1.6.0...v1.6.1
 [1.6.0]: https://github.com/martysweet/cfn-lint/compare/v1.5.1...v1.6.0
