@@ -74,6 +74,9 @@ Template invalid!
 
 `--only-guess-parameters <param names>`: Only guess the provided parameters, and disable the guessing of all others without Defaults. A critical error will be raised for missing parameters, as above. e.g. `--only-guess-parameters InstanceType,Memory`
 
+#### User-defined Resource Attributes
+`--custom-resource-attributes <attribute values>`: Provide a list of comma-separated key=value pairs of resource attributes using either resource-type notation (e.g. `AWS::CloudFormation::CustomResource.SomeAttribute`) or logical-name notation (e.g. `SomethingPretty.SomeAttribute`) and their expected values, to use when validating your template. If a custom resource attribute is not specified here, `cfn-lint` will guess a mock value. e.g.`--custom-resource-attributes AWS::CloudFormation::CustomResource.SomeAttribute=[1\\,2],Custom::Dooby.SomeAttribute=[1\\,2],SomethingPretty.SomeAttribute=123`
+
 #### Verbose Output
 `--verbose`: Provide verbose output and stack traces when template parsing fails.
 

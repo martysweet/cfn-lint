@@ -8,6 +8,8 @@ import {
     Attribute
 } from './awsData';
 
+const mergeOptions = require('merge-options');
+
 import CustomError = require('./util/CustomError');
 export class NoSuchProperty extends CustomError {
     type: string;
@@ -54,7 +56,11 @@ export class NoSuchResourceTypeAttribute extends CustomError {
 export function getResourceType(type: string){
     // If the type starts with Custom::, it's a custom resource.
     if(type.indexOf('Custom::') === 0){
-        return specification.ResourceTypes['AWS::CloudFormation::CustomResource']!;
+        // return the generic type if there's no such custom type defined
+        if (!specification.ResourceTypes[type]) {
+          type = 'AWS::CloudFormation::CustomResource';
+        }
+        return specification.ResourceTypes[type]!;
     }
     // A normal resource type
     const resourceType = specification.ResourceTypes[type];
@@ -197,4 +203,11 @@ export function getRequiredProperties(type: string){
     }
 
     return requiredProperties;
+}
+
+/**
+ * Allows extending the AWS Resource Specification with custom definitions.
+ */
+export function extendSpecification(spec: any){
+    Object.assign(specification, mergeOptions(specification, spec));
 }

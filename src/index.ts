@@ -4,6 +4,7 @@
  * Module dependencies.
  */
 
+import yaml = require('js-yaml');
 import program = require('commander');
 import docsBaseImport = require('./docs');
 import validatorBaseImport = require('./validator');
@@ -58,6 +59,7 @@ program
     .option('--guess-parameters', 'Guess any parameters that are not explicitely passed in and have no Default. This is the default behaviour.')
     .option('-G, --no-guess-parameters', 'Fail validation if a parameter with no Default is not passed')
     .option('-g, --only-guess-parameters <items>', 'Guess the provided parameters, and fail validation if a parameter with no Default is passed', list)
+    .option('-c, --custom-resource-attributes <items>', 'List of attributes', list)
     .option('-v, --verbose', 'Verbose error messages')
     .action(function(file, cmd) {
         // Patch for CommanderJS bug that defaults this to true
@@ -79,6 +81,18 @@ program
                 // Set the parameter
                 let kv = pseudo.split('=');
                 validator.addPseudoValue(kv[0], kv[1]);
+            }
+        }
+
+        if(cmd.customResourceAttributes){
+            for(let customResourceAttribute of cmd.customResourceAttributes){
+                // Set the parameter
+                let kv = customResourceAttribute.split('=');
+                let key_kv = kv[0].split('.');
+                let resource: string = key_kv[0];
+                let attribute: string = key_kv[1];
+                let value: any = yaml.safeLoad(kv[1]);
+                validator.addCustomResourceAttributeValue(resource, attribute, value);
             }
         }
 
