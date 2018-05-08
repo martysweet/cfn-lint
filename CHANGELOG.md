@@ -6,6 +6,8 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Merge PR #165, fixing GetAtt shorthand not accepting array parameters
 
 ## [1.7.0] - 2018-05-06
 ### Fixed
