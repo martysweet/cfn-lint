@@ -26,7 +26,7 @@ export function buildYamlType(fnName: string, kind: YamlKind) {
     const tag = `!${tagName}`;
 
     const constructFn = (fnName === 'Fn::GetAtt')
-        ? (data: any) => ({'Fn::GetAtt': data.split('.')})
+        ? (data: any) => ({'Fn::GetAtt': !!data.split ? data.split('.') : data})
         : (data: any) => ({[fnName]: data});
 
     return new yaml.Type(tag, {
