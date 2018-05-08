@@ -22,6 +22,12 @@ describe('parser', () =>{
             expect(result).to.not.equal(null);
         });
 
+        it('valid yaml !GetAtt as array should return valid javascript object', () => {
+            let result = parser.openFile("./testData/valid/yaml/issue_164_getatt_shorthand_parsing.yaml");
+            expect(result).to.not.equal(undefined);
+            expect(result).to.not.equal(null);
+        });
+
         it('invalid yaml should throw an Error', () => {
             let fn = function(){ parser.openFile("./testData/invalid/yaml/invalid_yaml.yaml"); };
             expect(fn).to.throw(/Could not determine file type. Check your template is not malformed./);
