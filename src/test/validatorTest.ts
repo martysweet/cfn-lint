@@ -660,14 +660,15 @@ describe('validator', () => {
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
 
-        it('1 unquouted template format version should return an object with validTemplate = true, no crit errors, 1 warn error', () => {
-            const input = 'testData/valid/yaml/valid_unquoted_template_version.yaml';
-            let result = validator.validateFile(input);
-            expect(result).to.have.deep.property('templateValid', true);
-            expect(result['errors']['crit']).to.have.lengthOf(0);
-            expect(result['errors']['warn']).to.have.lengthOf(1);
-            expect(result['errors']['warn'][0]['message']).to.contain('AWSTemplateFormatVersion is recommended to be of type string');
-        });
+        // TODO: is this really needed?
+        // it('1 unquouted template format version should return an object with validTemplate = true, no crit errors, 1 warn error', () => {
+        //     const input = 'testData/valid/yaml/valid_unquoted_template_version.yaml';
+        //     let result = validator.validateFile(input);
+        //     expect(result).to.have.deep.property('templateValid', true);
+        //     expect(result['errors']['crit']).to.have.lengthOf(0);
+        //     expect(result['errors']['warn']).to.have.lengthOf(1);
+        //     expect(result['errors']['warn'][0]['message']).to.contain('AWSTemplateFormatVersion is recommended to be of type string');
+        // });
     });
 
     describe('propertyValidation', () => {
@@ -719,7 +720,7 @@ describe('validator', () => {
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
-            expect(result['errors']['crit'][0]['message']).to.contain('Required property Key missing for type Tag');
+            expect(result['errors']['crit'][0]['message']).to.contain('Required property Key missing for type AWS::EC2::Instance.Tag');
         });
 
         it('1 missing resourceType  property should return an object with validTemplate = false, 1 crit errors', () => {
@@ -1184,6 +1185,7 @@ describe('validator', () => {
 
         it('should be able to determine the type of every property of every propertytype', () => {
             for (let propertyTypeName in awsResources.PropertyTypes) {
+                if (propertyTypeName == 'Tag') { continue; }
                 const propertyType = awsResources.PropertyTypes[propertyTypeName]!;
                 for (let propertyName in propertyType.Properties) {
                     expect(() => validator.getPropertyType({
@@ -1399,5 +1401,122 @@ describe('validator', () => {
             runTests(validator.isTimestamp, validTimestamps, invalidTimestamps);
             
         })
+    });
+
+    describe('SAM-20161031', () => {
+
+        it('a sample AWS template (sam_20161031_alexa_skill.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_alexa_skill.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_all_policy_templates.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_all_policy_templates.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_api_backend.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_api_backend.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_api_swagger_cors.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_api_swagger_cors.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_cloudwatch_logs.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_cloudwatch_logs.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_encryption_proxy.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_encryption_proxy.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_hello_world.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_hello_world.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_implicit_api_settings.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_implicit_api_settings.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_inline_swagger.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_inline_swagger.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_iot_backend.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_iot_backend.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_lambda_edge.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_lambda_edge.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_lambda_safe_deployments.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_lambda_safe_deployments.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_s3_processor.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_s3_processor.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_schedule.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_schedule.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_stream_processor.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_stream_processor.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a template missing a required property should fail validation', () => {
+            const input = 'testData/invalid/yaml/sam_20161031_missing_required_property.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]).to.have.property('message', 'Required property CodeUri missing for type AWS::Serverless::Function');
+            expect(result['errors']['crit'][0]).to.have.property('resource', 'Resources > HelloWorldFunction > Properties');
+        });
     });
 });

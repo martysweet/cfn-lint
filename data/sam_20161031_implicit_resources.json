@@ -1,0 +1,103 @@
+{
+  "AWS::Serverless::Function": {
+    "AWS::Lambda::Function": {
+      "logicalId": "<LogicalID>"
+    },
+    "AWS::IAM::Role": {
+      "logicalId": "<LogicalID>Role"
+    }
+  },
+  "AWS::Serverless::Function#AutoPublishAlias": {
+    "AWS::Lambda::Alias": {
+      "logicalId": "<LogicalID>Alias<AutoPublishAlias>",
+      "refProperty": "Alias"
+    },
+    "AWS::Lambda::Version": {
+      "logicalId": "<LogicalID>Version<CodeID>",
+      "refProperty": "Version"
+    }
+  },
+  "AWS::Serverless::Function#DeploymentPreference": {
+    "AWS::CodeDeploy::Application": {
+      "logicalId": "ServerlessDeploymentApplication"
+    },
+    "AWS::CodeDeploy::DeploymentGroup": {
+      "logicalId": "<LogicalID>DeploymentGroup"
+    },
+    "AWS::IAM::Role": {
+      "logicalId": "CodeDeployServiceRole"
+    }
+  },
+  "AWS::Serverless::Function#Events#ItemID<ApiEvent>": {
+    "AWS::ApiGateway::RestApi": {
+      "logicalId": "ServerlessRestApi"
+    },
+    "AWS::ApiGateway::Stage": {
+      "logicalId": "ServerlessRestApiProdStage"
+    },
+    "AWS::ApiGateway::Deployment": {
+      "logicalId": "ServerlessRestApiDeployment<DefinitionID>"
+    },
+    "AWS::Lambda::Permission": {
+      "logicalId": "<LogicalID><ItemID>PermissionProd"
+    }
+  },
+  "AWS::Serverless::Function#Events#ItemID<S3Event>": {
+    "AWS::Lambda::Permission": {
+      "logicalId": "<LogicalID><ItemID>Permission"
+    }
+  },
+  "AWS::Serverless::Function#Events#ItemID<SNSEvent>": {
+    "AWS::Lambda::Permission": {
+      "logicalId": "<LogicalID><ItemID>Permission"
+    },
+    "AWS::SNS::Subscription": {
+      "logicalId": "<LogicalID><ItemID>"
+    }
+  },
+  "AWS::Serverless::Function#Events#ItemID<KinesisEvent>": {
+    "AWS::Lambda::Permission": {
+      "logicalId": "<LogicalID><ItemID>Permission"
+    },
+    "AWS::Lambda::EventSourceMapping": {
+      "logicalId": "<LogicalID><ItemID>"
+    }
+  },
+  "AWS::Serverless::Function#Events#ItemID<DynamoDbEvent>": {
+    "AWS::Lambda::Permission": {
+      "logicalId": "<LogicalID><ItemID>Permission"
+    },
+    "AWS::Lambda::EventSourceMapping": {
+      "logicalId": "<LogicalID><ItemID>"
+    }
+  },
+  "AWS::Serverless::Function#Events#ItemID<ScheduleEvent>": {
+    "AWS::Lambda::Permission": {
+      "logicalId": "<LogicalID><ItemID>Permission"
+    },
+    "AWS::Events::Rule": {
+      "logicalId": "<LogicalID><ItemID>"
+    }
+  },
+  "AWS::Serverless::Function#Events#ItemID<CloudWatchEventEvent>": {
+    "AWS::Lambda::Permission": {
+      "logicalId": "<LogicalID><ItemID>Permission"
+    },
+    "AWS::Events::Rule": {
+      "logicalId": "<LogicalID><ItemID>"
+    }
+  },
+  "AWS::Serverless::Api": {
+    "AWS::ApiGateway::RestApi": {
+      "logicalId": "<LogicalID>"
+    },
+    "AWS::ApiGateway::Stage": {
+      "logicalId": "<LogicalID><StageName>Stage",
+      "refProperty": "Stage"
+    },
+    "AWS::ApiGateway::Deployment": {
+      "logicalId": "<LogicalID>Deployment<DefinitionID>",
+      "refProperty": "Deployment"
+    }
+  }
+}

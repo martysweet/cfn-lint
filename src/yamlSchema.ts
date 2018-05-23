@@ -11,7 +11,7 @@ export default function buildYamlSchema() {
     for (const fn in intrinsicFunctions) {
         yamlTypes.push(...buildYamlTypes(fn));
     }
-    return yaml.Schema.create(yamlTypes);
+    return yaml.Schema.create(yaml.CORE_SCHEMA, yamlTypes);
 }
 
 export type YamlKind = 'scalar' | 'mapping' | 'sequence';

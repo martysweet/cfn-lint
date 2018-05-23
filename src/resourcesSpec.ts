@@ -1,16 +1,14 @@
 import {
     awsResources as specification,
     awsResourceRefTypes as resourceRefOverride,
-    ResourceType,
-    ResourcePropertyType,
-    Property,
-    AWSPrimitiveType,
-    Attribute
 } from './awsData';
+import * as awsData from './awsData';
+
+import clone = require('clone');
+import CustomError = require('./util/CustomError');
 
 const mergeOptions = require('merge-options');
 
-import CustomError = require('./util/CustomError');
 export class NoSuchProperty extends CustomError {
     type: string;
     propertyName: string;
@@ -53,24 +51,38 @@ export class NoSuchResourceTypeAttribute extends CustomError {
     }
 }
 
-export function getResourceType(type: string){
-    // If the type starts with Custom::, it's a custom resource.
-    if(type.indexOf('Custom::') === 0){
+export function getResourceType(type: string): awsData.ResourceType {
+
+    // destructure parameterized type
+    let subType: any;
+    if (isParameterizedTypeFormat(type)) {
+        subType = getParameterizedTypeArgument(type);
+        type = deparameterizeTypeFormat(type);
+    }
+
+    // If the type starts with Custom::, it's a custom resource otherwise it's a normal resource type
+    if(type.indexOf('Custom::') == 0){
         // return the generic type if there's no such custom type defined
-        if (!specification.ResourceTypes[type]) {
+        if (!hasType(type)) {
           type = 'AWS::CloudFormation::CustomResource';
         }
-        return specification.ResourceTypes[type]!;
     }
-    // A normal resource type
-    const resourceType = specification.ResourceTypes[type];
+
+    // acquire base specification
+    let resourceType = specification.ResourceTypes[type];
     if (!resourceType){
         throw new NoSuchResourceType(type);
     }
-    return resourceType;
+
+    // specialize parameterized type
+    if (!!subType && hasType(subType)) {
+        resourceType = mergeOptions(resourceType, getType(subType));
+    }
+
+    return resourceType as awsData.ResourceType;
 }
 
-export function getResourceTypeAttribute(type: string, attributeName: string): Attribute {
+export function getResourceTypeAttribute(type: string, attributeName: string): awsData.Attribute {
     const resourceAttributes = getResourceType(type).Attributes
     if (!resourceAttributes) {
         throw new NoSuchResourceTypeAttribute(type, attributeName);
@@ -82,36 +94,232 @@ export function getResourceTypeAttribute(type: string, attributeName: string): A
     return resourceAttribute
 }
 
-function getPropertyType(type: string){
-    const propertyType =  specification.PropertyTypes[type];
+function getPropertyType(type: string): awsData.ResourcePropertyType {
+
+    // destructure parameterized type
+    let subType: any;
+    if (isParameterizedTypeFormat(type)) {
+        subType = getParameterizedTypeArgument(type);
+        type = deparameterizeTypeFormat(type);
+    }
+
+    // normalize generic base type name
+    let baseType = getPropertyTypeBaseName(type);
+    if (isParameterizedTypeFormat(baseType)) {
+        type = type.replace(baseType, deparameterizeTypeFormat(baseType));
+    }
+
+    // acquire base specification
+    let propertyType = specification.PropertyTypes[type];
     if (!propertyType) {
         throw new NoSuchPropertyType(type);
     }
-    return propertyType;
+
+    // specialize parameterized type
+    if (!!subType && hasType(subType)) {
+        propertyType = mergeOptions(propertyType, getType(subType));
+    }
+
+    return propertyType as awsData.ResourcePropertyType;
 }
 
 /**
  * Get a Resource or Property type from the specification.
  */
-export function getType(type: string): ResourceType | ResourcePropertyType {
-    if(isPropertyTypeFormat(type)){
+export function getType(type: string): awsData.Type {
+    if (isPropertyTypeFormat(type)) {
         return getPropertyType(type);
-    }else{
+    } else {
         return getResourceType(type);
     }
 }
 
-function getProperty(type: string, propertyName: string) {
+/**
+ * Returns an empty type specification
+ */
+export function makeType(): awsData.Type {
+    return clone(awsData.awsTypeTemplate);
+}
+
+function getParameterizedTypeNameParts(type: any): any {
+    if (isPropertyTypeFormat(type)) {
+      type = getPropertyTypePropertyName(type);
+    }
+    let parts = [];
+    let partsRe = /<.*>$/;
+    if (RegExp(partsRe).test(type)) {
+      parts = type.match(partsRe);
+    }
+    return parts;
+}
+
+/**
+ * Returns if a given type name has type arguments.
+ */
+export function isParameterizedTypeFormat(type: string): boolean {
+    if (getParameterizedTypeNameParts(type).length > 0) {
+      return true;
+    }
+    return false;
+}
+
+/**
+ * Get the argument of a parameterized type.
+ */
+export function getParameterizedTypeArgument(type: string): string {
+    if (!isParameterizedTypeFormat(type)) {
+        throw new Error(`Invalid parameterized type: ${type}`);
+    }
+    return getParameterizedTypeNameParts(type).shift().slice(1, -1) as string;
+}
+
+/**
+ * Get the name of a parameterized type.
+ */
+export function getParameterizedTypeName(type: string): string {
+    let typeArg = getParameterizedTypeArgument(type);
+    return type.replace(`<${typeArg}>`, '');
+}
+
+/**
+ * Converts a generic type name to parameterized format
+ */
+export function parameterizeTypeFormat(type: string, parameter: string, subParameter: boolean = false): string {
+    if (isParameterizedTypeFormat(type)) {
+        if (subParameter) {
+            let typeArg = getParameterizedTypeArgument(type);
+            typeArg = `${typeArg}<${parameter}>`;
+            parameter = typeArg;
+        } else {
+            throw new Error(`Type is already parameterized: ${type}`);
+        }
+    }
+    return `${type}<${parameter}>`;
+}
+
+/**
+ * Converts a parameterized type to generic format
+ */
+export function deparameterizeTypeFormat(type: string): string {
+    if (isParameterizedTypeFormat(type)) {
+        return getParameterizedTypeName(type);
+    }
+    return type;
+}
+
+function getPropertyTypeNameParts(type: any): any {
+    let parts = [];
+    let partsRe = /^([^<>]*(?:<.*>)?)\.([^<>]*(?:<.*>)?)$/;
+    if (RegExp(partsRe).test(type)) {
+      parts = type.match(partsRe).slice(1);
+    }
+    return parts;
+}
+
+/**
+ * Returns the base type name of a property type name
+ */
+export function getPropertyTypeBaseName(type: string): string {
+    if (!isPropertyTypeFormat(type)) {
+        throw new Error(`Invalid property type name: ${type}`);
+    }
+    return getPropertyTypeNameParts(type)[0] as string;
+}
+
+/**
+ * Returns the property name of a property type name
+ */
+export function getPropertyTypePropertyName(type: string): string {
+    if (!isPropertyTypeFormat(type)) {
+        throw new Error(`Invalid property type name: ${type}`);
+    }
+    return getPropertyTypeNameParts(type)[1] as string;
+}
+
+export function stripTypeParameters(input: string): string {
+    let typeParamRe = /(<.*>(?=\.))|(<.*>$)/gm;
+    input = input.replace(typeParamRe, '');
+    return input;
+}
+
+export function isPropertyTypeFormat(type: string): boolean {
+    return (getPropertyTypeNameParts(type).length > 0);
+}
+
+export function isTypeFormat(type: string): boolean {
+    return ((type.indexOf('::') != -1) || isPropertyTypeFormat(type));
+}
+
+export function isResourceTypeFormat(type: string): boolean {
+    return (isTypeFormat(type) && !isPropertyTypeFormat(type));
+}
+
+export function getProperty(type: string, propertyName: string) {
     const spec = getType(type);
-    const property = spec.Properties[propertyName];
+
+    // destructure parameterized property
+    let propertyType: any;
+    if (isParameterizedTypeFormat(propertyName)) {
+      propertyType = getParameterizedTypeArgument(propertyName);
+      propertyName = getParameterizedTypeName(propertyName);
+    }
+
+    // validate property
+    let property = spec.Properties[propertyName];
     if (!property) {
         throw new NoSuchProperty(type, propertyName);
     }
+
+    // specialize parameterized property
+    if (!!propertyType) {
+      property = makeProperty(propertyType) as awsData.Property;
+    }
+
     return property;
 }
 
-function isPropertyTypeFormat(type: string){
-    return (type.indexOf('.') != -1) || type == 'Tag';
+/**
+ * Returns a specification based on a parameterized property type
+ */
+export function makeProperty(propertyType?: string): awsData.PropertyBase | awsData.Property {
+    let property = clone(awsData.awsPropertyTemplate);
+
+    if (!!propertyType) {
+
+      let propertyTypeArgument = '';
+      if (isParameterizedTypeFormat(propertyType)) {
+          propertyTypeArgument = getParameterizedTypeArgument(propertyType);
+      }
+
+      // make primitive type specification
+      if (!!~awsData.awsPrimitiveTypes.indexOf(propertyType)) {
+          (<awsData.PrimitiveProperty>property)['PrimitiveType'] = propertyType as awsData.AWSPrimitiveType;
+
+      // make list type specification
+      } else if(propertyType.indexOf('List<') == 0) {
+          (<awsData.ListProperty>property)['Type'] = 'List';
+          if (!!~awsData.awsPrimitiveTypes.indexOf(propertyTypeArgument)) {
+              (<awsData.ListProperty>property)['PrimitiveItemType'] = propertyTypeArgument as awsData.AWSPrimitiveType;
+          } else {
+              (<awsData.ListProperty>property)['ItemType'] = propertyTypeArgument;
+          }
+
+      // make map type specification
+      } else if(propertyType.indexOf('Map<') == 0) {
+          (<awsData.MapProperty>property)['Type'] = 'Map';
+          if (!!~awsData.awsPrimitiveTypes.indexOf(propertyTypeArgument)) {
+              (<awsData.MapProperty>property)['PrimitiveItemType'] = propertyTypeArgument as awsData.AWSPrimitiveType;
+          } else {
+              (<awsData.MapProperty>property)['ItemType'] = propertyTypeArgument;
+          }
+
+      // make complex type specification
+      } else {
+          (<awsData.ComplexProperty>property)['Type'] = propertyType;
+      }
+    }
+
+    return property;
 }
 
 export function getRefOverride(resourceType: string){
@@ -149,11 +357,19 @@ export function isAdditionalPropertiesEnabled(resourceType: string){
 }
 
 export function isPropertyTypeList(type: string, propertyName: string) {
-    return getProperty(type, propertyName).Type === 'List';
+    const propertyType = getProperty(type, propertyName).Type;
+    if (!!propertyType) {
+        return propertyType.indexOf('List') == 0;
+    }
+    return false;
 }
 
 export function isPropertyTypeMap(type: string, propertyName: string)  {
-    return getProperty(type, propertyName).Type === 'Map';
+    const propertyType = getProperty(type, propertyName).Type;
+    if (!!propertyType) {
+        return propertyType.indexOf('Map') == 0;
+    }
+    return false;
 }
 
 
@@ -173,8 +389,6 @@ export function getItemType(baseType: string, propType: string, key: string) {
 
     if (!property.ItemType) {
         return undefined;
-    } else if (property.ItemType === 'Tag') {
-        return 'Tag'
     } else {
         return baseType + '.' + property.ItemType;
     }
@@ -184,11 +398,11 @@ export function hasPrimitiveItemType(type: string, propertyName: string) {
     return Boolean(getProperty(type, propertyName).PrimitiveItemType);
 }
 
-export function getPrimitiveItemType(type: string, key: string): AWSPrimitiveType | undefined {
+export function getPrimitiveItemType(type: string, key: string): awsData.AWSPrimitiveType | undefined {
     return getProperty(type, key).PrimitiveItemType;
 }
 
-export function getPrimitiveType(type: string, key: string): AWSPrimitiveType | undefined {
+export function getPrimitiveType(type: string, key: string): awsData.AWSPrimitiveType | undefined {
     return getProperty(type, key).PrimitiveType;
 }
 
@@ -210,4 +424,76 @@ export function getRequiredProperties(type: string){
  */
 export function extendSpecification(spec: any){
     Object.assign(specification, mergeOptions(specification, spec));
+}
+
+/**
+ * Allows overriding definitions based on logical name.
+ * Subsequent registrations DO clobber prior ones.
+ * //TODO: perhaps user defined overrides should take precedence?
+ */
+export function registerLogicalNameOverride(name: string, spec: any) {
+
+    // determine type section
+    let typeSection = 'ResourceTypes';
+    if (isPropertyTypeFormat(name)) {
+      typeSection = 'PropertyTypes';
+    }
+
+    // determine prior specification
+    let oldSpec: any = {};
+    try {
+        oldSpec = getType(name);
+    } catch(e) {}
+
+    // override
+    extendSpecification({
+        [typeSection]: {[name]: mergeOptions(oldSpec, spec)}
+    });
+
+}
+
+/**
+ * Allows overriding definitions based on type.
+ * Subsequent registrations DO clobber prior ones.
+ */
+export function registerTypeOverride(name: string, spec: any) {
+
+    // determine type section
+    let typeSection = 'ResourceTypes';
+    if (isPropertyTypeFormat(name)) {
+      typeSection = 'PropertyTypes';
+    }
+
+    // determine prior specification
+    let oldSpec: any = {};
+    try {
+        oldSpec = getType(name);
+    } catch(e) {}
+
+    // override
+    extendSpecification({
+        [typeSection]: {[name]: mergeOptions(oldSpec, spec)}
+    });
+
+}
+
+export function hasType(type: string): boolean {
+  let spec: any = specification.ResourceTypes[type];
+  if (!spec) {
+      spec = specification.PropertyTypes[type];
+  }
+  return !!spec;
+}
+
+export function hasProperty(type: string, propertyName: string): boolean {
+  let spec: any = {};
+  try {
+      spec = getProperty(type, propertyName);
+      return true;
+  } catch(e) {}
+  return false;
+}
+
+export function hasLogicalNameOverride(logicalName: string): boolean {
+    return hasType(logicalName);
 }
