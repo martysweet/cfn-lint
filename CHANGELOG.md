@@ -6,6 +6,8 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Merge PR #162, add release instructions to README.md
 
 ## [1.7.1] - 2018-05-08
 ### Fixed
