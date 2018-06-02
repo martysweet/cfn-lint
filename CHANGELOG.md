@@ -8,6 +8,7 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 ### Changed
 - Merge PR #162, add release instructions to README.md
+- Merge PR #168, updating CloudFormation specification (downloaded 02-Jun-2018) - version: 2.4.0
 
 ## [1.7.1] - 2018-05-08
 ### Fixed
