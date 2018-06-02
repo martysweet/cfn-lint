@@ -6,9 +6,11 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.7.2] - 2018-06-02
 ### Changed
 - Merge PR #162, add release instructions to README.md
-- Merge PR #168, updating CloudFormation specification (downloaded 02-Jun-2018) - version: 2.4.0
+- Merge PR #168, updating CloudFormation specification (downloaded 01-Jun-2018) - version: 2.4.0
 
 ## [1.7.1] - 2018-05-08
 ### Fixed
@@ -143,7 +145,8 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Added
 - Add pseudo parameter support
 
-[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.7.1...HEAD
+[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.7.2...HEAD
+[1.7.2]: https://github.com/martysweet/cfn-lint/compare/v1.7.1...v1.7.2
 [1.7.1]: https://github.com/martysweet/cfn-lint/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/martysweet/cfn-lint/compare/v1.6.2...v1.7.0
 [1.6.2]: https://github.com/martysweet/cfn-lint/compare/v1.6.1...v1.6.2
