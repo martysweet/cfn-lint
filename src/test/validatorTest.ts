@@ -1024,6 +1024,61 @@ describe('validator', () => {
         });
     });
 
+    describe('custom-resource-attributes', () => {
+
+        it('should validate using custom resource attribute values for generic and custom types', () => {
+            const input = 'testData/valid/yaml/valid_custom_resource_attributes.yaml';
+            validator.addCustomResourceAttributeValue('Custom::Dooby', 'SomeAttribute', 'test');
+            validator.addCustomResourceAttributeValue('AWS::CloudFormation::CustomResource', 'SomeAttribute', [1, 2, 3]);
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
+        });
+
+        it('should validate using custom resource attribute values for logical-names', () => {
+            const input = 'testData/valid/yaml/valid_custom_resource_attributes.yaml';
+            validator.addCustomResourceAttributeValue('Custom', 'SomeAttribute', 'test');
+            validator.addCustomResourceAttributeValue('Custom2', 'SomeAttribute', [1, 2, 3]);
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
+        });
+
+        it('should validate using custom resource attribute values for generic-type and logical-name', () => {
+            const input = 'testData/valid/yaml/valid_custom_resource_attributes.yaml';
+            validator.addCustomResourceAttributeValue('Custom', 'SomeAttribute', 'test');
+            validator.addCustomResourceAttributeValue('AWS::CloudFormation::CustomResource', 'SomeAttribute', [1, 2, 3]);
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
+        });
+
+        it('should validate using custom resource attribute values for custom-type and logical-name', () => {
+            const input = 'testData/valid/yaml/valid_custom_resource_attributes.yaml';
+            validator.addCustomResourceAttributeValue('Custom::Dooby', 'SomeAttribute', 'test');
+            validator.addCustomResourceAttributeValue('Custom2', 'SomeAttribute', [1, 2, 3]);
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
+        });
+
+        it('should validate when a logical-name overrides a resource-type custom attribute value', () => {
+            const input = 'testData/valid/yaml/valid_custom_resource_attributes.yaml';
+            validator.addCustomResourceAttributeValue('Custom::Dooby', 'SomeAttribute', [1, 2, 3]);
+            validator.addCustomResourceAttributeValue('AWS::CloudFormation::CustomResource', 'SomeAttribute', [1, 2, 3]);
+            validator.addCustomResourceAttributeValue('Custom', 'SomeAttribute', 'test');
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
+        });
+
+    });
+
     describe('output-references', () => {
 
         it('an output referencing an invalid resource should result in validTemplate = false, 1 crit errors, no warnings', () => {
