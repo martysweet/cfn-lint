@@ -534,6 +534,13 @@ describe('validator', () => {
             expect(result['errors']['crit'][0]['message']).to.contain('Condition should consist of an intrinsic function of type');
         });
 
+        it('1 valid condition value type should return an object with validTemplate = true, 0 crit errors', () => {
+            const input = './testData/valid/yaml/issue_106_conditional_if.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
     });
 
     describe('Fn::Split', () => {
