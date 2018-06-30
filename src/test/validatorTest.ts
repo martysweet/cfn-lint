@@ -894,6 +894,13 @@ describe('validator', () => {
             expect(result['errors']['crit']).to.have.lengthOf(1);
             expect(result['errors']['crit'][0]).to.have.property('message', 'Expecting a list, got null');
         });
+
+        it('Fn::Split should support function "Fn::ImportValue"', () => {
+            const input = 'testData/valid/yaml/issue-170.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
     });
 
     describe('parameters-validation', () => {
@@ -1024,6 +1031,14 @@ describe('validator', () => {
             const input = 'testData/valid/yaml/pseudo-parameters.yaml';
             validator.addPseudoValue("AWS::AccountId", "000000000000");
             validator.addPseudoValue("AWS::Region", "us-east-1");
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
+        });
+
+        it('using the pseudo parameter AWS::URLSuffix should result in validTemplate = true, no crit errors, no warnings', () => {
+            const input = 'testData/valid/yaml/issue-173-url-suffix-pseudo-parameter.yaml';
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
