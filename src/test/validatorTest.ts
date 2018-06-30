@@ -887,6 +887,13 @@ describe('validator', () => {
             expect(result['errors']['crit']).to.have.lengthOf(1);
             expect(result['errors']['crit'][0]).to.have.property('message', 'Expecting a list, got null');
         });
+
+        it('Fn::Split should support function "Fn::ImportValue"', () => {
+            const input = 'testData/valid/yaml/issue-170.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
     });
 
     describe('parameters-validation', () => {
