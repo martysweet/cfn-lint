@@ -1,0 +1,10 @@
+Parameters:
+  SomeParameterValue:
+    Type: String
+
+Resources:
+  MyBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        !Select [0, !Split [',', !ImportValue SomeParameterValue]]
