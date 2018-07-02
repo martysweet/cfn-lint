@@ -4,5 +4,6 @@
   "AWS::Region": "eu-west-1",
   "AWS::StackId": "AWSREFSTACKID",
   "AWS::StackName": "AWSREFSTACKNAME",
-  "AWS::URLSuffix": "amazonaws.com"
+  "AWS::URLSuffix": "amazonaws.com",
+  "AWS::Partition": "aws"
 }
