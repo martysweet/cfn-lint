@@ -568,6 +568,12 @@ let lastPositionInTemplate: any = null;
 let lastPositionInTemplateKey: string | null = null;
 
 function recursiveDecent(ref: any){
+
+    // Save the current variables to allow for nested decents
+    let placeInTemplateX = placeInTemplate;
+    let lastPositionInTemplateX = lastPositionInTemplate;
+    let lastPositionInTemplateKeyX = lastPositionInTemplateKey;
+
     // Step into next attribute
     for(let i=0; i < Object.keys(ref).length; i++){
         let key = Object.keys(ref)[i];
@@ -602,6 +608,11 @@ function recursiveDecent(ref: any){
 
     }
     placeInTemplate.pop();
+
+    // Restore the variables to support nested resolving
+    placeInTemplate = placeInTemplateX;
+    lastPositionInTemplate = lastPositionInTemplateX;
+    lastPositionInTemplateKey = lastPositionInTemplateKeyX;
 }
 
 function resolveCondition(ref: any, key: string){
@@ -1018,7 +1029,9 @@ function doIntrinsicIf(ref: any, key: string){
             if (awsIntrinsicFunctions['Fn::If']['supportedFunctions'].indexOf(keys[0]) !== -1) {
                 return resolveIntrinsicFunction(value, keys[0]);
             }else{
-                addError('crit', `Fn::If does not allow ${keys[0]} as a nested function`, placeInTemplate, 'Fn::If');
+                // TODO: Do we need to make sure this isn't an attempt at an invalid supportedFunction?
+                recursiveDecent(value);
+                return value
             }
         }else {
             return value;
@@ -1783,7 +1796,9 @@ function checkList(objectType: NamedProperty, listToCheck: any[]) {
     const itemType = getItemType(objectType);
     for (const [index, item] of listToCheck.entries()) {
         placeInTemplate.push(index);
-        check(itemType, item);
+        if(!util.isUndefined(item)){
+            check(itemType, item);
+        }
         placeInTemplate.pop();
     }
 }

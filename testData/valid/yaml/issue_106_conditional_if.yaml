@@ -1,0 +1,231 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This is a test template.  DO NOT USE!
+Parameters:
+  AmiId:
+    Description: ID of the AMI to launch
+    Type: String
+    AllowedPattern: "^ami-[0-9a-z]{8}$|^ami-[0-9a-z]{17}$"
+    Default: ami-1c8ee466
+  AmiDistro:
+    Description: Linux distro of the AMI
+    Type: String
+    Default: CentOS
+    AllowedValues:
+    - AmazonLinux
+    - CentOS
+    - RedHat
+  AppVolumeDevice:
+    Description: Decision on whether to mount an extra EBS volume. Leave as default
+      ("false") to launch without an extra application volume
+    Type: String
+    Default: 'false'
+    AllowedValues:
+    - 'true'
+    - 'false'
+  AppVolumeType:
+    Description: Type of EBS volume to create. Ignored if "AppVolumeDevice" is false
+    Type: String
+    Default: gp2
+    AllowedValues:
+    - gp2
+    - io1
+    - sc1
+    - st1
+    - standard
+  AppVolumeSize:
+    Description: Size in GB of the EBS volume to create. Ignored if "AppVolumeDevice"
+      is false
+    Type: Number
+    Default: '1'
+    MinValue: '1'
+    MaxValue: '16384'
+    ConstraintDescription: Must be between 1GB and 16384GB.
+  InstanceType:
+    Description: Amazon EC2 instance type
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+    - t2.micro
+    - t2.small
+    - t2.medium
+    - t2.large
+    - t2.xlarge
+    - c4.large
+    - c4.xlarge
+    - m4.large
+    - m4.xlarge
+    - c5.large
+    - c5.xlarge
+    - m5.large
+    - m5.xlarge
+Conditions:
+  CreateAppVolume:
+    Fn::Equals:
+    - Ref: AppVolumeDevice
+    - 'true'
+  CreateAppVolume2:
+      Fn::Equals:
+      - Ref: AppVolumeDevice
+      - 'false'
+Mappings:
+  Distro2RootDevice:
+    AmazonLinux:
+      DeviceName: xvda
+    RedHat:
+      DeviceName: sda1
+    CentOS:
+      DeviceName: sda1
+  InstanceTypeCapabilities:
+    t2.micro:
+      ExternDeviceName: "/dev/xvdf"
+      InternDeviceName: "/dev/xvdf"
+    t2.small:
+      ExternDeviceName: "/dev/xvdf"
+      InternDeviceName: "/dev/xvdf"
+    t2.medium:
+      ExternDeviceName: "/dev/xvdf"
+      InternDeviceName: "/dev/xvdf"
+    t2.large:
+      ExternDeviceName: "/dev/xvdf"
+      InternDeviceName: "/dev/xvdf"
+    t2.xlarge:
+      ExternDeviceName: "/dev/xvdf"
+      InternDeviceName: "/dev/xvdf"
+    c4.large:
+      ExternDeviceName: "/dev/xvdf"
+      InternDeviceName: "/dev/xvdf"
+    c4.xlarge:
+      ExternDeviceName: "/dev/xvdf"
+      InternDeviceName: "/dev/xvdf"
+    m4.large:
+      ExternDeviceName: "/dev/xvdf"
+      InternDeviceName: "/dev/xvdf"
+    m4.xlarge:
+      ExternDeviceName: "/dev/xvdf"
+      InternDeviceName: "/dev/xvdf"
+    c5.large:
+      ExternDeviceName: "/dev/xvdf"
+      InternDeviceName: "/dev/nvme1n1"
+    c5.xlarge:
+      ExternDeviceName: "/dev/xvdf"
+      InternDeviceName: "/dev/nvme1n1"
+    m5.large:
+      ExternDeviceName: "/dev/xvdf"
+      InternDeviceName: "/dev/nvme1n1"
+    m5.xlarge:
+      ExternDeviceName: "/dev/xvdf"
+      InternDeviceName: "/dev/nvme1n1"
+Resources:
+  WatchmakerInstance:
+    Type: AWS::EC2::Instance
+    CreationPolicy:
+      ResourceSignal:
+        Count: '1'
+        Timeout: PT30M
+    Properties:
+      ImageId:
+        Ref: AmiId
+      InstanceType:
+        Ref: InstanceType
+      BlockDeviceMappings:
+      - DeviceName:
+          Fn::Join:
+          - ''
+          - - "/dev/"
+            - Fn::FindInMap:
+              - Distro2RootDevice
+              - Ref: AmiDistro
+              - DeviceName
+        Ebs:
+          VolumeType: gp2
+          DeleteOnTermination: 'true'
+      - Fn::If:
+        - CreateAppVolume
+        - DeviceName:
+            Fn::FindInMap:
+            - InstanceTypeCapabilities
+            - Ref: InstanceType
+            - ExternDeviceName
+          Ebs:
+            VolumeSize:
+              Ref: AppVolumeSize
+            VolumeType:
+              Ref: AppVolumeType
+            DeleteOnTermination: 'true'
+        - Ref: AWS::NoValue
+      UserData:
+        Ref: AWS::NoValue
+  WatchmakerInstanceWithVolume:
+    Type: AWS::EC2::Instance
+    CreationPolicy:
+      ResourceSignal:
+        Count: '1'
+        Timeout: PT30M
+    Properties:
+      ImageId:
+        Ref: AmiId
+      InstanceType:
+        Ref: InstanceType
+      BlockDeviceMappings:
+      - DeviceName:
+          Fn::Join:
+          - ''
+          - - "/dev/"
+            - Fn::FindInMap:
+              - Distro2RootDevice
+              - Ref: AmiDistro
+              - DeviceName
+        Ebs:
+          VolumeType: gp2
+          DeleteOnTermination: 'true'
+      - Fn::If:
+        - CreateAppVolume2
+        - DeviceName:
+            Fn::FindInMap:
+            - InstanceTypeCapabilities
+            - Ref: InstanceType
+            - ExternDeviceName
+          Ebs:
+            VolumeSize:
+              Ref: AppVolumeSize
+            VolumeType:
+              Ref: AppVolumeType
+            DeleteOnTermination: 'true'
+        - Ref: AWS::NoValue
+      UserData:
+        Ref: AWS::NoValue
+Outputs:
+  WatchmakerInstanceId:
+    Value:
+      Ref: WatchmakerInstance
+    Description: Instance ID
+
+
+#
+#Parameters:
+#  HTTPSListener:
+#    Description: HTTPS Listener
+#    Default: False
+#    Type: String
+#    AllowedValues:
+#      - True
+#      - False
+#
+#Conditions:
+#  ArnCondition: !Equals [ True, True ]
+#  CreateHTTPSListener: !Equals [ !Ref HTTPSListener, False ]
+#
+#Resources:
+#  ListenerHTTPS:
+#      Type: AWS::ElasticLoadBalancingV2::Listener
+#      Condition: CreateHTTPSListener
+#      Properties:
+#        DefaultActions:
+#        - Type: forward
+#          TargetGroupArn: "arn:aws:abc"
+#        LoadBalancerArn: "arn:aws:load-balancer"
+#        Port: '443'
+#        Protocol: HTTPS
+#        Certificates:
+#        - CertificateArn: !If [ArnCondition, "arn:aws:cert:a", "arn:aws:ssl:a"]
