@@ -6,8 +6,14 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.7.4] - 2018-07-18
+### Fixed
 - Merge PR #177, fix nested resources within an if condition not being resolved. Fix resolution of AWS::NoValue.
 - Merge PR #179, fixing support for AWS::Partition pseudo parameter
+
+### Changed
+- Update CloudFormation specification (downloaded 18-Jul-2018) - version: 2.5.0
 
 ## [1.7.3] - 2018-06-30
 ### Fixed
@@ -152,7 +158,8 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Added
 - Add pseudo parameter support
 
-[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.7.3...HEAD
+[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.7.4...HEAD
+[1.7.4]: https://github.com/martysweet/cfn-lint/compare/v1.7.3...v1.7.4
 [1.7.3]: https://github.com/martysweet/cfn-lint/compare/v1.7.2...v1.7.3
 [1.7.2]: https://github.com/martysweet/cfn-lint/compare/v1.7.1...v1.7.2
 [1.7.1]: https://github.com/martysweet/cfn-lint/compare/v1.7.0...v1.7.1
