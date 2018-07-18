@@ -155,7 +155,8 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Added
 - Add pseudo parameter support
 
-[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.7.3...HEAD
+[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.7.4...HEAD
+[1.7.4]: https://github.com/martysweet/cfn-lint/compare/v1.7.3...v1.7.4
 [1.7.3]: https://github.com/martysweet/cfn-lint/compare/v1.7.2...v1.7.3
 [1.7.2]: https://github.com/martysweet/cfn-lint/compare/v1.7.1...v1.7.2
 [1.7.1]: https://github.com/martysweet/cfn-lint/compare/v1.7.0...v1.7.1
