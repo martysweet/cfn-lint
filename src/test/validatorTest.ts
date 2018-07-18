@@ -1037,6 +1037,14 @@ describe('validator', () => {
             expect(result['errors']['crit']).to.have.lengthOf(0);
             expect(result['errors']['warn']).to.have.lengthOf(0);
         });
+
+        it('using the pseudo parameter AWS::Partition should result in validTemplate = true, no crit errors, no warnings', () => {
+            const input = 'testData/valid/yaml/issue-178-aws-partition.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
+        });
     });
 
     describe('custom-resource-attributes', () => {
