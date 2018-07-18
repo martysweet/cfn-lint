@@ -12,6 +12,9 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 - Merge PR #177, fix nested resources within an if condition not being resolved. Fix resolution of AWS::NoValue.
 - Merge PR #179, fixing support for AWS::Partition pseudo parameter
 
+### Changed
+- Update CloudFormation specification (downloaded 18-Jul-2018) - version: 2.5.0
+
 ## [1.7.3] - 2018-06-30
 ### Fixed
 - Merge PR #174, fixing validation support for AWS::URLSuffix
