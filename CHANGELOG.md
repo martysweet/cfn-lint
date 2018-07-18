@@ -6,6 +6,7 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Merge PR #177, fix nested resources within an if condition not being resolved. Fix resolution of AWS::NoValue.
 
 ## [1.7.3] - 2018-06-30
 ### Fixed
