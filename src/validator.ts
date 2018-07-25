@@ -25,7 +25,9 @@ const mergeOptions = require('merge-options');
 require('./util/polyfills');
 
 export type ParameterValue = string | string[];
+export type ImportValue = ParameterValue;
 let parameterRuntimeOverride: {[parameter: string]: ParameterValue | undefined} = {};
+let importRuntimeOverride: {[parameter: string]: ImportValue | undefined} = {};
 // Todo: Allow override for RefOverrides ex. Regions
 
 export interface ErrorRecord {
@@ -59,6 +61,7 @@ export function resetValidator(){
     errorObject = {"templateValid": true, "errors": {"info": [], "warn": [], "crit": []}, outputs: {}, exports: {}};
     stopValidation = false;
     parameterRuntimeOverride = {};
+    importRuntimeOverride = {};
 };
 
 export interface ValidateOptions {
@@ -88,6 +91,10 @@ export function validateJsonObject(obj: any, options?: Partial<ValidateOptions>)
 export function addParameterValue(parameter: string, value: ParameterValue){
     addParameterOverride(parameter, value);
 };
+
+export function addImportValue(parameter: string, value: ImportValue){
+    addImportOverride(parameter, value);
+}
 
 export function addPseudoValue(parameter: string, value: string){
     // Silently drop requests to change AWS::NoValue
@@ -174,6 +181,10 @@ function determineValueType(val: any) {
 
 function addParameterOverride(parameter: string, value: ParameterValue){
     parameterRuntimeOverride[parameter] = value;
+}
+
+function addImportOverride(parameter: string, value: ImportValue){
+    importRuntimeOverride[parameter] = value;
 }
 
 function validateWorkingInput(passedOptions?: Partial<ValidateOptions>) {
@@ -1149,6 +1160,10 @@ function doIntrinsicImportValue(ref: any, key: string){
 
     // Resolve
     if(typeof toGet == 'string'){
+        const importValue = importRuntimeOverride[toGet];
+        if(importValue !== undefined) {
+            return importValue;
+        }
         return "IMPORTEDVALUE" + toGet; // TODO: Consider making this commandline defined
     }else{
         addError('warn', `Something went wrong when resolving references for a Fn::ImportValue`, placeInTemplate, 'Fn::ImportValue');
@@ -1298,6 +1313,12 @@ function getRef(reference: string){
 
     // We have not found a ref
     return null;
+}
+
+function getImportValue(reference: string) {
+    if(workingInput['Imports'] && workingInput['Imports'].hasOwnProperty(reference)) {
+        return workingInput['Imports'][reference];
+    }
 }
 
 function collectOutputs() {
