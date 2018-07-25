@@ -3,5 +3,7 @@
   "AWS::NotificationARNs": ["arn:aws:sns:us-east-1:123456789012:MyTopic"],
   "AWS::Region": "eu-west-1",
   "AWS::StackId": "AWSREFSTACKID",
-  "AWS::StackName": "AWSREFSTACKNAME"
+  "AWS::StackName": "AWSREFSTACKNAME",
+  "AWS::URLSuffix": "amazonaws.com",
+  "AWS::Partition": "aws"
 }

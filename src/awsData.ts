@@ -119,6 +119,8 @@ type RefOverrides = {
     "AWS::Region": string,
     "AWS::StackId": string,
     "AWS::StackName": string,
+    "AWS::URLSuffix": string,
+    "AWS::Partition": string,
     [refOverride: string]: any
 };
 

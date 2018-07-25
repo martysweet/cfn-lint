@@ -1,0 +1,26 @@
+---
+Resources:
+  GatewayMethodGet:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: GET
+      RequestParameters:
+        method.request.path.sample: true
+      ResourceId: abc123
+      RestApiId: abc123
+      ApiKeyRequired: true
+      AuthorizationType: NONE
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+          - ''
+          - - 'arn:'
+            - Ref: AWS::Partition
+            - ":apigateway:"
+            - Ref: AWS::Region
+            - ":lambda:path/2015-03-31/functions/"
+            - someFunctionName
+            - "/invocations"
+      MethodResponses: []
