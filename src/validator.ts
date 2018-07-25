@@ -1177,7 +1177,7 @@ function doIntrinsicImportValue(ref: any, key: string){
         if(importValue !== undefined) {
             return importValue;
         }
-        return "IMPORTEDVALUE" + toGet; // TODO: Consider making this commandline defined
+        return "IMPORTEDVALUE" + toGet;
     }else{
         addError('warn', `Something went wrong when resolving references for a Fn::ImportValue`, placeInTemplate, 'Fn::ImportValue');
         return 'INVALID_FN_IMPORTVALUE';
