@@ -64,6 +64,13 @@ describe('index', () => {
             })
         }).timeout(5000);
 
+        it('validate numeric importValue flag', (done) => {
+            exec('node lib/index.js validate testData/valid/yaml/valid_import_value_type.yaml --import-values ImportedValueOutputPort=20', function(error, stdout, stderr) {
+                expect(stdout).to.contain('0 crit');
+                done();
+            })
+        }).timeout(5000);
+
         it('validate pseudo flag', (done) => {
 
             exec('node lib/index.js validate testData/valid/yaml/pseudo-parameters.yaml ' +
