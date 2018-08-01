@@ -59,7 +59,7 @@ program
     .option('--guess-parameters', 'Guess any parameters that are not explicitely passed in and have no Default. This is the default behaviour.')
     .option('-G, --no-guess-parameters', 'Fail validation if a parameter with no Default is not passed')
     .option('-g, --only-guess-parameters <items>', 'Guess the provided parameters, and fail validation if a parameter with no Default is passed', list)
-    .option('-i, --importValues <items>', 'List of import values', list)
+    .option('-i, --import-values <items>', 'List of import values', list)
     .option('-c, --custom-resource-attributes <items>', 'List of attributes', list)
     .option('-v, --verbose', 'Verbose error messages')
     .action(function(file, cmd) {
