@@ -67,6 +67,9 @@ Template invalid!
 #### AWS Pseudo Parameter Override
 `--pseudo <psuedo param values>`: Provide a list of comma-separated key=value pairs of CloudFormation pseudo-parameters to use when validating your template. e.g.`--pseudo AWS::Region=ap-southeast-2`
 
+#### Import Values
+`--import-values <param values>`:  Provide a list of comma-separated key=value pairs of CloudFormation import values to use when validating your template. e.g.`--import-values MyDeployedVPC=vpc-1a2b3c4d`
+
 #### Parameter Guessing
 `--guess-parameters`: Guess any parameters if they don't have any Default value in the template. Parameters will be guessed/mocked based on their `AllowedValues` or `Type`. This is the default behaviour; it's only included as an option for explicitness.
 
@@ -103,6 +106,7 @@ Template invalid!
 * Fn::ImportValue
 * Fn::Select
 * Fn::Split
+* Fn::ImportValue
 * Condition support
 * Ref
 * Go to the documentation from Command Line (see above examples)
@@ -111,7 +115,6 @@ Template invalid!
 
 ### Feature backlog
 * Verbose parsing errors when reading invalid JSON
-* Fn::ImportValue - to support CLI injection (Like Params currently does)
 * Test coverage for Conditions and Property checking
 * Refactor Property checking to be clearer
 * Circular dependency checking
