@@ -6,6 +6,8 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.8.0] - 2018-08-02
 ### Added
 - Merge PR #185, implement CLI argument support for import values
 
@@ -160,7 +162,8 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Added
 - Add pseudo parameter support
 
-[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.7.4...HEAD
+[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.8.0...HEAD
+[1.8.0]: https://github.com/martysweet/cfn-lint/compare/v1.7.4...v1.8.0
 [1.7.4]: https://github.com/martysweet/cfn-lint/compare/v1.7.3...v1.7.4
 [1.7.3]: https://github.com/martysweet/cfn-lint/compare/v1.7.2...v1.7.3
 [1.7.2]: https://github.com/martysweet/cfn-lint/compare/v1.7.1...v1.7.2
