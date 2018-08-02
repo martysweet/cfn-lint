@@ -442,6 +442,14 @@ describe('validator', () => {
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
 
+        it('an Fn::ImportValue with a correct override should return an object with validTemplate = true, 0 crit errors', () => {
+            const input = './testData/valid/yaml/valid_import_value_type.yaml';
+            validator.addImportValue('ImportedValueOutputPort', '20')
+            let result = validator.validateFile(input);
+
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        })
     });
 
     describe('Fn::GetAtt', () => {

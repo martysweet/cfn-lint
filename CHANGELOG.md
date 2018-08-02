@@ -6,6 +6,8 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Merge PR #185, implement CLI argument support for import values
 
 ## [1.7.4] - 2018-07-18
 ### Fixed
