@@ -1178,9 +1178,7 @@ function doIntrinsicImportValue(ref: any, key: string){
             return importValue;
         }
 
-        //
-        // If an import wasn't provided, construct a default value, so that we don't get errors
-        //
+        // If an import wasn't provided, construct a default value for backwards compatibility
         return "IMPORTEDVALUE" + toGet;
     }else{
         addError('warn', `Something went wrong when resolving references for a Fn::ImportValue`, placeInTemplate, 'Fn::ImportValue');
