@@ -6,6 +6,9 @@ const exec = childProcess.exec;
 
 const proxyquire = require('proxyquire-2').noPreserveCache();
 
+let realProcessARGV: any = null;
+let realProcessExit: any = null;
+
 let logToConsole = true;
 let _log = console.log;
 console.log = function() {
@@ -23,8 +26,7 @@ console.error = function() {
 describe('index', () => {
 
 
-    describe('CLI', () => {
-
+    describe('CLI - functional tests', () => {
 
         it('no parameters', (done) => {
             exec('node lib/index.js', function(error, stdout, stderr) {
@@ -39,7 +41,6 @@ describe('index', () => {
                 done();
             });
         }).timeout(5000);;
-
 
         it('validate simple yaml', (done) => {
 
@@ -80,7 +81,6 @@ describe('index', () => {
             });
         }).timeout(5000);
 
-
         it('validate pseudo + parameter flag', (done) => {
 
             exec('node lib/index.js validate testData/valid/yaml/pseudo-w-parameter.yaml ' +
@@ -98,7 +98,6 @@ describe('index', () => {
                 done();
             });
         }).timeout(5000);
-
 
         it('guess-parameters should explicitely opt in to parameter mocking', (done) => {
             exec('node lib/index.js validate testData/valid/yaml/no-guess-parameters.yaml --guess-parameters', function(error, stdout, stderr) {
@@ -166,78 +165,90 @@ describe('index', () => {
             });
         }).timeout(5000);
 
-        it('custom resource attribute parameter should accept an arbitrary attribute value using resource-type notation', (done) => {
-            process.exit = () => { return undefined as never; };
-            process.argv = ['', '', 'validate', 'testData/valid/yaml/smoke.yaml', '--custom-resource-attributes', 'AWS::CloudFormation::CustomResource.SomeAttribute=[1\\,2]'];
-            logToConsole = false;
-            proxyquire('../index', {
-              './validator': {
-                  addCustomResourceAttributeValue: (x: any, y: any, z: any) => {
-                      logToConsole = true;
-                      expect(x).to.equal('AWS::CloudFormation::CustomResource');
-                      expect(y).to.equal('SomeAttribute');
-                      expect(z).to.deep.equal([1, 2]);
-                      done();
-                      logToConsole = false;
-                  },
-                  validateFile: () => { return {errors: {info: [], warn: [], crit: []}}},
-                  '@global': true
-              }
-            });
-            logToConsole = true;
-        }).timeout(5000);
+    });
 
-        it('custom resource attribute parameter should accept an arbitrary attribute value using logical-name notation', (done) => {
-            process.exit = () => { return undefined as never; };
-            process.argv = ['', '', 'validate', 'testData/valid/yaml/smoke.yaml', '--custom-resource-attributes', 'SomethingBeautiful.SomeAttribute=test'];
-            logToConsole = false;
-            proxyquire('../index', {
-              './validator': {
-                  addCustomResourceAttributeValue: (x: any, y: any, z: any) => {
-                      logToConsole = true;
-                      expect(x).to.equal('SomethingBeautiful');
-                      expect(y).to.equal('SomeAttribute');
-                      expect(z).to.equal('test');
-                      done();
-                      logToConsole = false;
-                  },
-                  validateFile: () => { return {errors: {info: [], warn: [], crit: []}}},
-                  '@global': true
-              }
-            });
-            logToConsole = true;
-        }).timeout(5000);
 
-        it('custom resource attribute parameter should accept an arbitrary attribute value using mixed notation', (done) => {
-            process.exit = () => { return undefined as never; };
-            process.argv = ['', '', 'validate', 'testData/valid/yaml/smoke.yaml', '--custom-resource-attributes', 'AWS::CloudFormation::CustomResource.SomeAttribute=hello,SomethingBeautiful.SomeAttribute=test,Custom::Dooby.SomeAttribute=blabla'];
-            logToConsole = false;
-            let expectedValues = [
-              ['AWS::CloudFormation::CustomResource', 'SomeAttribute', 'hello'],
-              ['SomethingBeautiful', 'SomeAttribute', 'test'],
-              ['Custom::Dooby', 'SomeAttribute', 'blabla'],
-            ];
-            proxyquire('../index', {
-              './validator': {
-                  addCustomResourceAttributeValue: (x: any, y: any, z: any) => {
-                      logToConsole = true;
-                      let expected = expectedValues.shift();
-                      if (!!expected) {
-                        expect(x).to.equal(expected[0]);
-                        expect(y).to.equal(expected[1]);
-                        expect(z).to.equal(expected[2]);
-                      }
-                      if (expectedValues.length == 0) {
-                        done();
-                      }
-                      logToConsole = false;
-                  },
-                  validateFile: () => { return {errors: {info: [], warn: [], crit: []}}},
-                  '@global': true
-              }
-            });
-            logToConsole = true;
-        }).timeout(5000);
+    describe('CLI - unit tests', () => {
+
+      beforeEach(() => {
+        realProcessARGV = process.argv;
+        realProcessExit = process.exit;
+        logToConsole = false;
+      });
+
+      afterEach(() => {
+        process.argv = realProcessARGV;
+        process.exit = realProcessExit;
+        logToConsole = true;
+      });
+
+      it('custom resource attribute parameter should accept an arbitrary attribute value using resource-type notation', (done) => {
+          process.exit = () => { return undefined as never; };
+          process.argv = ['', '', 'validate', 'testData/valid/yaml/smoke.yaml', '--custom-resource-attributes', 'AWS::CloudFormation::CustomResource.SomeAttribute=[1\\,2]'];
+          proxyquire('../index', {
+            './validator': {
+                addCustomResourceAttributeValue: (x: any, y: any, z: any) => {
+                    logToConsole = true;
+                    expect(x).to.equal('AWS::CloudFormation::CustomResource');
+                    expect(y).to.equal('SomeAttribute');
+                    expect(z).to.deep.equal([1, 2]);
+                    done();
+                    logToConsole = false;
+                },
+                validateFile: () => { return {errors: {info: [], warn: [], crit: []}}},
+                '@global': true
+            }
+          });
+      }).timeout(5000);
+
+      it('custom resource attribute parameter should accept an arbitrary attribute value using logical-name notation', (done) => {
+          process.exit = () => { return undefined as never; };
+          process.argv = ['', '', 'validate', 'testData/valid/yaml/smoke.yaml', '--custom-resource-attributes', 'SomethingBeautiful.SomeAttribute=test'];
+          proxyquire('../index', {
+            './validator': {
+                addCustomResourceAttributeValue: (x: any, y: any, z: any) => {
+                    logToConsole = true;
+                    expect(x).to.equal('SomethingBeautiful');
+                    expect(y).to.equal('SomeAttribute');
+                    expect(z).to.equal('test');
+                    done();
+                    logToConsole = false;
+                },
+                validateFile: () => { return {errors: {info: [], warn: [], crit: []}}},
+                '@global': true
+            }
+          });
+      }).timeout(5000);
+
+      it('custom resource attribute parameter should accept an arbitrary attribute value using mixed notation', (done) => {
+          process.exit = () => { return undefined as never; };
+          process.argv = ['', '', 'validate', 'testData/valid/yaml/smoke.yaml', '--custom-resource-attributes', 'AWS::CloudFormation::CustomResource.SomeAttribute=hello,SomethingBeautiful.SomeAttribute=test,Custom::Dooby.SomeAttribute=blabla'];
+          let expectedValues = [
+            ['AWS::CloudFormation::CustomResource', 'SomeAttribute', 'hello'],
+            ['SomethingBeautiful', 'SomeAttribute', 'test'],
+            ['Custom::Dooby', 'SomeAttribute', 'blabla'],
+          ];
+          proxyquire('../index', {
+            './validator': {
+                addCustomResourceAttributeValue: (x: any, y: any, z: any) => {
+                    logToConsole = true;
+                    let expected = expectedValues.shift();
+                    if (!!expected) {
+                      expect(x).to.equal(expected[0]);
+                      expect(y).to.equal(expected[1]);
+                      expect(z).to.equal(expected[2]);
+                    }
+                    if (expectedValues.length == 0) {
+                      done();
+                    }
+                    logToConsole = false;
+                },
+                validateFile: () => { return {errors: {info: [], warn: [], crit: []}}},
+                '@global': true
+            }
+          });
+      }).timeout(5000);
+
     });
 
 });
