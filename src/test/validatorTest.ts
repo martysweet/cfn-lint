@@ -22,7 +22,7 @@ describe('validator', () => {
             const input = require('../../testData/valid/json/1.json');
             let result = validator.validateJsonObject(input);
             expect(result).to.have.deep.property('templateValid', true);
-            expect(result['errors']['crit']).to.have.lengthOf(0);
+            expect(result['errors']['crit']).to.have.lengthOf(7);
         });
 
         it('a valid (2.json) template should return an object with validTemplate = true, no crit errors', () => {
