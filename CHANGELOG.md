@@ -6,6 +6,8 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Update CloudFormation specification (downloaded 05-Sep-2018) - version: 2.6.0
 
 ## [1.8.0] - 2018-08-02
 ### Added
