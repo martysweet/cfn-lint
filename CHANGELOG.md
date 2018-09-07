@@ -9,6 +9,9 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Changed
 - Update CloudFormation specification (downloaded 05-Sep-2018) - version: 2.6.0
 
+### Fixed
+- Merge PR #192, fixing incorrect exit codes from the test suite during CI/CD
+
 ## [1.8.0] - 2018-08-02
 ### Added
 - Merge PR #185, implement CLI argument support for import values
