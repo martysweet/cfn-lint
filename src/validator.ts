@@ -130,7 +130,7 @@ export function addPseudoValue(parameter: string, value: string){
 };
 
 export function addCustomResourceAttributeValue(resource: string, attribute: string, value: any){
-    let attrType = inferValueType(value);
+    let attrType = inferValueType(value, []);
 
     let newSpec = {
       'Attributes': {
@@ -246,79 +246,111 @@ function applySpecificationOverrides() {
     resourcesSpec.extendSpecification({'PropertyTypes': tagPropertyTypes});
 }
 
-function inferPrimitiveValueType(value: any) {
-    switch (typeof value) {
-        case 'string':
-            if (!!Date.parse(value)) {
-                return 'Timestamp';
-            }
-            return 'String';
-        case 'number':
-            return (value % 1 == 0) ? 'Integer' : 'Double';
-        case 'boolean':
-            return 'Boolean';
+function inferPrimitiveValueType(v: any) {
+
+    if (isInteger(v)) {
+      return 'Integer';
     }
+    if (isDouble(v)) {
+      return 'Double';
+    }
+    if (isBoolean(v)) {
+      return 'Boolean';
+    }
+    if (isJson(v)) {
+      return 'Json';
+    }
+    if (isTimestamp(v)) {
+      return 'Timestamp';
+    }
+    if (isString(v)) {
+      return 'String';
+    }
+
     return null;
 }
 
-function inferComplexObjectType(object: any, candidateTypes?: string[]) {
+function inferStructureValueType(v: any, candidateTypes: string[]) {
     let type: string | null = null;
-    if (object.hasOwnProperty('Type')) {
-      let objectType = object['Type'];
-      for (let candidateType of candidateTypes!) {
-        if (!!~candidateType.indexOf(objectType)) {
-          type = candidateType;
-        }
-      }
-    } else {
-      let objectKeys = Object.keys(object);
-      let lastMatchCount = 0;
-      for (let candidateType of candidateTypes!) {
-          let candidate = resourcesSpec.getType(candidateType);
-          let candidateKeys = Object.keys(candidate['Properties']);
-          let matchCount = arrayIntersection(objectKeys, candidateKeys).length;
-          if (matchCount > lastMatchCount) {
-            type = candidateType;
-            lastMatchCount = matchCount;
+    if (isObject(v)) {
+        if (v.hasOwnProperty('Type')) {
+          let objectType = v['Type'];
+          for (let candidateType of candidateTypes!) {
+            if (!!~candidateType.indexOf(objectType)) {
+              type = candidateType;
+            }
           }
-      }
+        } else {
+          let objectKeys = [];
+          if (v.hasOwnProperty('Properties')) {
+            objectKeys = Object.keys(v['Properties']);
+          } else {
+            objectKeys = Object.keys(v);
+          }
+          let lastMatchCount = 0;
+          for (let candidateType of candidateTypes!) {
+              let candidate = resourcesSpec.getType(candidateType);
+              let candidateKeys = Object.keys(candidate['Properties']);
+              let matchCount = arrayIntersection(objectKeys, candidateKeys).length;
+              if (matchCount > lastMatchCount) {
+                type = candidateType;
+                lastMatchCount = matchCount;
+              }
+          }
+        }
     }
     return type;
 }
 
-function inferComplexValueType(value: any, candidateTypes?: string[]): string | null {
-    let item: any;
+function inferAggregateValueType(v: any, candidateItemTypes: string[]): string | null {
+    let item: any = null;
     let type: string | null = null;
     let itemType: string | null = null;
 
-    if (Array.isArray(value)) {
+    if (isList(v)) {
         type = 'List';
-        item = value.pop();
-    } else if (typeof value == 'object') {
-        type = inferComplexObjectType(value, candidateTypes);
-        if (!type) {
-          type = 'Map';
-          item = value[Object.keys(value).pop()!];
-        }
+        item = v.pop();
+    }
+    else if (isObject(v)) {
+        type = 'Map';
+        item = v[Object.keys(v).pop()!];
     }
 
     if (!!item) {
-      itemType = inferPrimitiveValueType(item);
-      if (!itemType) {
-        itemType = 'Json';
-        // TODO: should we allow nested complex types?
-        // itemType = inferComplexValueType(item, candidateTypes);
+      itemType = inferValueType(item, candidateItemTypes);
+      // aggregate type nesting is not currently supported
+      if (!!itemType && resourcesSpec.isComplexType(itemType)) {
+          return 'Json';
       }
     }
 
-    return itemType ? `${type}<${itemType}>` : type;
+    return (!!type && !!itemType) ? `${type}<${itemType}>` : null;
 }
 
-function inferValueType(value: any, candidateTypes?: string[]) {
-    let type: string | null = null;
-    type = inferPrimitiveValueType(value);
+function inferValueType(v: any, candidateTypes: string[]) {
+     candidateTypes = candidateTypes.filter((x) => !resourcesSpec.isPrimitiveType(x));
+     let candidateStructureTypes: string[] = candidateTypes.filter((x) => {
+        if (resourcesSpec.isParameterizedTypeFormat(x) &&
+            resourcesSpec.isComplexType(resourcesSpec.getParameterizedTypeName(x))) {
+            return false;
+        }
+        return true;
+    });
+    let candidateAggregateTypes: string[] = candidateTypes.filter((x) => {
+       if (resourcesSpec.isParameterizedTypeFormat(x) &&
+           resourcesSpec.isComplexType(resourcesSpec.getParameterizedTypeName(x))) {
+           return true;
+       }
+       return false;
+    });
+    candidateAggregateTypes = candidateAggregateTypes.map((x) => resourcesSpec.getParameterizedTypeArgument(x));
+
+    let type: string | null = inferStructureValueType(v, candidateStructureTypes);
     if (!type) {
-      type = inferComplexValueType(value, candidateTypes);
+        type = inferAggregateValueType(v, candidateAggregateTypes);
+        if (!type) {
+            type = inferPrimitiveValueType(v);
+        }
     }
     return type;
 }
@@ -327,14 +359,8 @@ function formatCandidateTypes(baseType: string, candidateTypes: string[]) {
     // remove generic name part
     candidateTypes = candidateTypes.map((x) => resourcesSpec.getParameterizedTypeArgument(x));
 
-    // remove any primitive types
-    candidateTypes = candidateTypes.filter((x) => !~awsData.awsPrimitiveTypes.indexOf(x));
-
-    // remove any complex types
-    candidateTypes = candidateTypes.filter((x) => !~awsData.awsComplexTypes.indexOf(resourcesSpec.deparameterizeTypeFormat(x)));
-
-    // format candidate types as property types
-    candidateTypes = candidateTypes.map((x) => `${baseType}.${x}`);
+    // format property types
+    candidateTypes = candidateTypes.map((x) => resourcesSpec.rebaseTypeFormat(baseType, x));
 
     return candidateTypes;
 }
@@ -2142,7 +2168,8 @@ function localizeType(type: string) {
     typePlaceInTemplate = typePlaceInTemplate.join('#');
     // don't localize primitive, complex or already localized types
     let localType = type;
-    if (!~awsData.awsPrimitiveTypes.indexOf(type) &&
+    if (!resourcesSpec.isPrimitiveType(type) &&
+        !resourcesSpec.isComplexType(type) &&
         !resourcesSpec.isParameterizedTypeFormat(type)) {
         localType = `${type}<${typePlaceInTemplate}>`;
     }
@@ -2214,3 +2241,13 @@ function checkMap(objectType: NamedProperty, mapToCheck: {[k: string]: any}) {
         placeInTemplate.pop();
     }
 }
+
+
+// EXPOSE INTERNAL FUNCTIONS FOR TESTING PURPOSES
+export const __TESTING__: any = {
+  'resourcesSpec': resourcesSpec,
+  'inferPrimitiveValueType': inferPrimitiveValueType,
+  'inferStructureValueType': inferStructureValueType,
+  'inferAggregateValueType': inferAggregateValueType,
+  'inferValueType': inferValueType
+};

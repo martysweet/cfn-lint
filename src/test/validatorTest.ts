@@ -4,11 +4,17 @@ const assert = chai.assert;
 import validator = require('../validator');
 import yaml = require('js-yaml');
 
+import {samResources20161031} from '../samData';
 import {awsResources} from '../awsData';
 import util = require('util');
 import { isObject } from 'util';
 
 describe('validator', () => {
+
+    before(() => {
+      // ensure CF specification includes SAM
+      validator.__TESTING__.resourcesSpec.extendSpecification(samResources20161031);
+    });
 
     beforeEach(() => {
         validator.resetValidator();
@@ -1401,6 +1407,177 @@ describe('validator', () => {
             runTests(validator.isTimestamp, validTimestamps, invalidTimestamps);
             
         })
+    });
+
+    describe('type inference unit tests', () => {
+
+        describe('inferPrimitiveValueType', () => {
+
+          it('should be able to infer an Integer value - typeof number', () => {
+              let input = 101;
+              let result = validator.__TESTING__.inferPrimitiveValueType(input);
+              expect(result).to.equal('Integer');
+          });
+
+          it('should be able to infer an Integer value - typeof string', () => {
+              let input = '101';
+              let result = validator.__TESTING__.inferPrimitiveValueType(input);
+              expect(result).to.equal('Integer');
+          });
+
+          it('should be able to infer a Double value - typeof number', () => {
+              let input = 101.01;
+              let result = validator.__TESTING__.inferPrimitiveValueType(input);
+              expect(result).to.equal('Double');
+          });
+
+          it('should be able to infer a Double value - typeof string', () => {
+              let input = '101.01';
+              let result = validator.__TESTING__.inferPrimitiveValueType(input);
+              expect(result).to.equal('Double');
+          });
+
+          it('should be able to infer a Boolean value - typeof boolean', () => {
+              let input = false;
+              let result = validator.__TESTING__.inferPrimitiveValueType(input);
+              expect(result).to.equal('Boolean');
+          });
+
+          it('should be able to infer a Boolean value - typeof string', () => {
+              let input = 'false';
+              let result = validator.__TESTING__.inferPrimitiveValueType(input);
+              expect(result).to.equal('Boolean');
+          });
+
+          it('should be able to infer a Json value - typeof object', () => {
+              let input = {};
+              let result = validator.__TESTING__.inferPrimitiveValueType(input);
+              expect(result).to.equal('Json');
+          });
+
+          it('should be able to infer a Json value - typeof string', () => {
+              let input = '{}';
+              let result = validator.__TESTING__.inferPrimitiveValueType(input);
+              expect(result).to.equal('Json');
+          });
+
+          it('should be able to infer a String value', () => {
+              let input = 'somethingBeautiful';
+              let result = validator.__TESTING__.inferPrimitiveValueType(input);
+              expect(result).to.equal('String');
+          });
+
+          it('should be able to infer a Timestamp value', () => {
+              let input = '2012-12-30T20:12:22.222222-08:00';
+              let result = validator.__TESTING__.inferPrimitiveValueType(input);
+              expect(result).to.equal('Timestamp');
+          });
+
+        });
+
+        describe('inferStructureValueType', () => {
+
+          it('should be able to infer a structure value type via Type exact-match', () => {
+              let input = {
+                'Type': 'AWS::Serverless::Function',
+                'Properties': {}
+              };
+              let candidateTypes = ['AWS::Serverless::SimpleTable', 'AWS::Serverless::Function', 'AWS::Serverless::Api'];
+              let result = validator.__TESTING__.inferStructureValueType(input, candidateTypes);
+              expect(result).to.equal('AWS::Serverless::Function');
+          });
+
+          it('should be able to infer a structure value type via Type partial-match', () => {
+              let input = {
+                'Type': 'Api',
+                'Properties': {}
+              };
+              let candidateTypes = ['AWS::Serverless::Function.S3Event', 'AWS::Serverless::Function.ApiEvent', 'AWS::Serverless::Function.ScheduleEvent'];
+              let result = validator.__TESTING__.inferStructureValueType(input, candidateTypes);
+              expect(result).to.equal('AWS::Serverless::Function.ApiEvent');
+          });
+
+          it('should be able to infer a structure value type via property-similiarity matching', () => {
+              let input = {
+                'Properties': {
+                  'Variables': {},
+                }
+              };
+              let candidateTypes = ['AWS::Serverless::Function.S3Event', 'AWS::Serverless::Function.AlexaSkillEvent', 'AWS::Serverless::Function.ScheduleEvent'];
+              let result = validator.__TESTING__.inferStructureValueType(input, candidateTypes);
+              expect(result).to.equal('AWS::Serverless::Function.AlexaSkillEvent');
+          });
+
+          it('should not be able to infer a non-structure value type', () => {
+              let input = {};
+              let candidateTypes = ['AWS::Serverless::Function.S3Event', 'AWS::Serverless::Function.AlexaSkillEvent', 'AWS::Serverless::Function.ScheduleEvent'];
+              let result = validator.__TESTING__.inferStructureValueType(input, candidateTypes);
+              expect(result).to.equal(null);
+          });
+
+        });
+
+        describe('inferAggregateValueType', () => {
+
+          it('should be able to infer a List of Strings aggregate value type', () => {
+              let input = [
+                'somethingBeautiful', 'somethingAwesome', 'somethingCool'
+              ];
+              let candidateTypes: string[] = [];
+              let result = validator.__TESTING__.inferAggregateValueType(input, candidateTypes);
+              expect(result).to.equal('List<String>');
+          });
+
+          it('should be able to infer a Map of Strings aggregate value type', () => {
+              let input = {
+                1: 'somethingBeautiful',
+                2: 'somethingAwesome',
+                3: 'somethingCool'
+              };
+              let candidateTypes: string[] = [];
+              let result = validator.__TESTING__.inferAggregateValueType(input, candidateTypes);
+              expect(result).to.equal('Map<String>');
+          });
+
+          it('should not be able to infer a non-aggregate value type', () => {
+              let input = {};
+              let candidateTypes: string[] = [];
+              let result = validator.__TESTING__.inferAggregateValueType(input, candidateTypes);
+              expect(result).to.equal(null);
+          });
+
+        });
+
+        describe('inferValueType', () => {
+
+          it('should be able to infer a structure value type', () => {
+              let input = {
+                'Type': 'AWS::Serverless::Function',
+                'Properties': {}
+              };
+              let candidateTypes = ['AWS::Serverless::SimpleTable', 'AWS::Serverless::Function', 'AWS::Serverless::Api'];
+              let result = validator.__TESTING__.inferValueType(input, candidateTypes);
+              expect(result).to.equal('AWS::Serverless::Function');
+          });
+
+          it('should be able to infer an aggregate value type', () => {
+              let input = [
+                'somethingBeautiful', 'somethingAwesome', 'somethingCool'
+              ];
+              let candidateTypes: string[] = [];
+              let result = validator.__TESTING__.inferValueType(input, candidateTypes);
+              expect(result).to.equal('List<String>');
+          });
+
+          it('should be able to infer a primitive value type', () => {
+              let input = 'somethingBeautiful';
+              let candidateTypes: string[] = [];
+              let result = validator.__TESTING__.inferValueType(input, candidateTypes);
+              expect(result).to.equal('String');
+          });
+
+        });
+
     });
 
     describe('SAM-20161031', () => {
