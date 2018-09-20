@@ -1695,5 +1695,13 @@ describe('validator', () => {
             expect(result['errors']['crit'][0]).to.have.property('message', 'Required property CodeUri missing for type AWS::Serverless::Function');
             expect(result['errors']['crit'][0]).to.have.property('resource', 'Resources > HelloWorldFunction > Properties');
         });
+
+        it('a template containing an aggregate-type that has items with different types (sam_20161031_heterogenous_aggregation.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_heterogenous_aggregation.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
     });
 });

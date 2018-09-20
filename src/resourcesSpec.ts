@@ -115,7 +115,6 @@ function getPropertyType(type: string): awsData.ResourcePropertyType {
     let basePropertyType = `${baseTypeName}.${propertyTypeName}`;
     let spec = specification.PropertyTypes[basePropertyType];
     if (!spec) {
-        debugger;
         throw new NoSuchPropertyType(basePropertyType);
     }
 
@@ -522,6 +521,9 @@ export function registerTypeOverride(name: string, spec: any) {
 }
 
 export function hasType(type: string): boolean {
+  if (isParameterizedTypeFormat(type)) {
+      type = getParameterizedTypeName(type);
+  }
   let spec: any = specification.ResourceTypes[type];
   if (!spec) {
       spec = specification.PropertyTypes[type];
@@ -536,8 +538,4 @@ export function hasProperty(type: string, propertyName: string): boolean {
       return true;
   } catch(e) {}
   return false;
-}
-
-export function hasLogicalNameOverride(logicalName: string): boolean {
-    return hasType(logicalName);
 }

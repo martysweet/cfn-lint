@@ -365,11 +365,12 @@ function formatCandidateTypes(baseType: string, candidateTypes: string[]) {
     return candidateTypes;
 }
 
-function applySAMSpecificationPropertyOverrides(baseType: string, baseName: string, type: string, name: string,
+function applySAMPropertyOverrides(baseType: string, baseName: string, type: string, name: string,
                                                 spec: awsData.Property, template: any) {
+    // early exit for unsupported template or base type
+    if (!~workingInputTransform.indexOf('AWS::Serverless-2016-10-31') || !~baseType.indexOf('AWS::Serverless')) { return; }
 
-    // early exit for unsupported template
-    if (!~workingInputTransform.indexOf('AWS::Serverless-2016-10-31')) { return; }
+    let localizedType = baseType == type ? type : `${baseType}.${type}<${name}>`;
 
     // specialize property based on inferred Type
     let specType: any = spec['Type'];
@@ -387,8 +388,8 @@ function applySAMSpecificationPropertyOverrides(baseType: string, baseName: stri
             inferredCandidateType = inferredCandidateType.replace(`${baseType}.`, '');
 
             // determine spec based on a parameterized type matching the inferred candidate type
-            if (resourcesSpec.hasProperty(type, `${name}<${inferredCandidateType}>`)) {
-                let candidateSpec = resourcesSpec.getProperty(type, `${name}<${inferredCandidateType}>`);
+            if (resourcesSpec.hasProperty(localizedType, `${name}<${inferredCandidateType}>`)) {
+                let candidateSpec = resourcesSpec.getProperty(localizedType, `${name}<${inferredCandidateType}>`);
 
                 // override property spec
                 for (let property of Object.keys(spec)) {
@@ -404,8 +405,8 @@ function applySAMSpecificationPropertyOverrides(baseType: string, baseName: stri
 }
 
 function doSAMTransform(baseType:string, type: string, name: string, template: any, parentTemplate: any) {
-    // early exit for unsupported template
-    if (!~workingInputTransform.indexOf('AWS::Serverless-2016-10-31')) { return; }
+    // early exit for unsupported template or base type
+    if (!~workingInputTransform.indexOf('AWS::Serverless-2016-10-31') || !~baseType.indexOf('AWS::Serverless')) { return; }
 
     // destructure name
     let nameParts = name.split('#');
@@ -419,7 +420,7 @@ function doSAMTransform(baseType:string, type: string, name: string, template: a
         transformKey = `${transformKey}#${propertyName}`;
     }
     if (!!itemID) {
-        let itemType = resourcesSpec.getPropertyTypePropertyName(type);
+        let itemType = type;
         transformKey = `${transformKey}#ItemID<${itemType}>`;
     }
 
@@ -560,26 +561,28 @@ function doSAMTransform(baseType:string, type: string, name: string, template: a
 
 function applyTemplatePropertyOverrides(baseType: string, baseName:string, type: string, name: string, spec: awsData.Property,
                                         template: any, parentTemplate: any) {
-    applySAMSpecificationPropertyOverrides(baseType, baseName, type, name, spec, template);
+    applySAMPropertyOverrides(baseType, baseName, type, name, spec, template);
     doSAMTransform(baseType, type, `${baseName}#${name}`, template, parentTemplate);
 }
 
 function applyTemplateTypeOverrides(baseType: string, type: string, name: string, template: any, parentTemplate: any) {
+
+    // process type overrides
+    doSAMTransform(baseType, type, name, template, parentTemplate);
+
     // early exit for invalid type
-    if (!resourcesSpec.hasType(type)) {
+    let localizedType = baseType == type ? type : `${baseType}.${type}<${name}>`;
+    if (!resourcesSpec.hasType(localizedType)) {
       return;
     }
 
     // initialize specification override
-    let originalSpec = resourcesSpec.getType(type);
+    let originalSpec = resourcesSpec.getType(localizedType);
     let overrideSpec = clone(originalSpec);
-
-    // process type transforms
-    doSAMTransform(baseType, type, name, template, parentTemplate);
 
     // determine properties section
     let templateProperties = template;
-    if (!resourcesSpec.isPropertyTypeFormat(type)) {
+    if (baseType == type) {
         templateProperties = template['Properties'];
     }
 
@@ -600,13 +603,13 @@ function applyTemplateTypeOverrides(baseType: string, type: string, name: string
 
                 // descend into nested types
                 if (specProperty.hasOwnProperty('ItemType')) {
-                    let subType = `${baseType}.${specProperty['ItemType']}`;
+                    let subType = specProperty['ItemType'] as string;
                     for (let subKey of Object.keys(templateProperty)) {
                         let subTemplate = templateProperty[subKey];
                         applyTemplateTypeOverrides(baseType, subType, `${name}#${propertyName}#${subKey}`, subTemplate, template);
                     }
                 } else if (specProperty.hasOwnProperty('Type')) {
-                    let subType = `${baseType}.${specProperty['Type']}`;
+                    let subType = specProperty['Type'] as string;
                     applyTemplateTypeOverrides(baseType, subType, `${name}#${propertyName}`, templateProperty, template);
                 }
             }
@@ -2216,10 +2219,10 @@ function checkComplexObject(objectType: ResourceType | NamedProperty | PropertyT
 }
 
 function checkList(objectType: NamedProperty, listToCheck: any[]) {
-    let itemType = getItemType(objectType);
     for (const [index, item] of listToCheck.entries()) {
         placeInTemplate.push(index);
         if(!util.isUndefined(item)){
+            let itemType = getItemType(objectType);
             if (itemType.type == 'PROPERTY_TYPE') {
                 itemType.propertyType = localizeType(itemType.propertyType);
             }
@@ -2230,10 +2233,10 @@ function checkList(objectType: NamedProperty, listToCheck: any[]) {
 }
 
 function checkMap(objectType: NamedProperty, mapToCheck: {[k: string]: any}) {
-    let itemType = getItemType(objectType);
     for (let key in mapToCheck) {
         placeInTemplate.push(key);
         const item = mapToCheck[key];
+        let itemType = getItemType(objectType);
         if (itemType.type == 'PROPERTY_TYPE') {
             itemType.propertyType = localizeType(itemType.propertyType);
         }
