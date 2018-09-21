@@ -1727,5 +1727,12 @@ describe('validator', () => {
             expect(result['errors']['crit'][0]).to.have.property('message', 'Invalid or unsupported SAM Globals property name: Aberrant');
             expect(result['errors']['crit'][0]).to.have.property('resource', 'Globals > SimpleTable');
         });
+
+        it('a valid real-world SAM template (sam_20161031_realworld_1.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_realworld_1.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
     });
 });
