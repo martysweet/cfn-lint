@@ -112,6 +112,7 @@ Template invalid!
 * Go to the documentation from Command Line (see above examples)
 * Detecting invalid property types
 * Detect missing required properties
+* SAM template validation (experimental support)
 
 ### Feature backlog
 * Verbose parsing errors when reading invalid JSON
