@@ -1703,5 +1703,29 @@ describe('validator', () => {
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
 
+        it('a template containing a valid SAM Globals section should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_globals.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a template containing an invalid SAM Globals resource type should fail validation', () => {
+            const input = 'testData/invalid/yaml/sam_20161031_invalid_global_type.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]).to.have.property('message', 'Invalid SAM Globals resource type: NotSoSimpleTable.');
+            expect(result['errors']['crit'][0]).to.have.property('resource', 'Globals');
+        });
+
+        it('a template containing an invalid SAM Globals property name should fail validation', () => {
+            const input = 'testData/invalid/yaml/sam_20161031_invalid_global_property.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]).to.have.property('message', 'Invalid or unsupported SAM Globals property name: Aberrant');
+            expect(result['errors']['crit'][0]).to.have.property('resource', 'Globals > SimpleTable');
+        });
     });
 });

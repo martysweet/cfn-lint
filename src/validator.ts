@@ -195,6 +195,9 @@ function validateWorkingInput(passedOptions?: Partial<ValidateOptions>) {
     // Apply specification overrides
     applySpecificationOverrides();
 
+    // Process SAM Globals section
+    processSAMGlobals();
+
     // Apply template overrides
     applyTemplateOverrides();
 
@@ -244,6 +247,103 @@ function applySpecificationOverrides() {
     }
 
     resourcesSpec.extendSpecification({'PropertyTypes': tagPropertyTypes});
+}
+
+/*
+ * Validation and processing of the Globals section in SAM templates
+ * Based on https//github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+ */
+function processSAMGlobals() {
+    if (!~workingInputTransform.indexOf('AWS::Serverless-2016-10-31')) { return; }
+    // process input
+    if (workingInput.hasOwnProperty('Globals')) {
+        let workingInputGlobals = workingInput['Globals'];
+        if (!!workingInputGlobals && (typeof workingInputGlobals == 'object')) {
+            for (let resourceType of Object.keys(workingInputGlobals)) {
+                let resourceTemplate = workingInputGlobals[resourceType];
+                if (!!resourceTemplate) {
+                    let targetType: string | undefined;
+                    let allowedProperties: string[] = [];
+                    switch(resourceType) {
+                        case 'Function':
+                            targetType = 'AWS::Serverless::Function';
+                            allowedProperties = [
+                                'Handler',
+                                'Runtime',
+                                'CodeUri',
+                                'DeadLetterQueue',
+                                'Description',
+                                'MemorySize',
+                                'Timeout',
+                                'VpcConfig',
+                                'Environment',
+                                'Tags',
+                                'Tracing',
+                                'KmsKeyArn',
+                                'AutoPublishAlias',
+                                'DeploymentPreference'
+                            ];
+                            break;
+                        case 'Api':
+                            targetType = 'AWS::Serverless::Api';
+                            allowedProperties = [
+                                'Name',
+                                'DefinitionUri',
+                                'CacheClusterEnabled',
+                                'CacheClusterSize',
+                                'Variables',
+                                'EndpointConfiguration',
+                                'MethodSettings',
+                                'BinaryMediaTypes',
+                                'Cors'
+                            ];
+                            break;
+                        case 'SimpleTable':
+                            targetType = 'AWS::Serverless::SimpleTable';
+                            allowedProperties = [
+                              'SSESpecification'
+                            ];
+                            break;
+                    }
+                    if (!!targetType) {
+                        let resourceProperties: any = Object.keys(resourceTemplate);
+                        let inheritableProperties: any = {};
+
+                        // validate and extract properties that are inheritable by the given type
+                        for (let resourceProperty of resourceProperties) {
+                            if (!!~allowedProperties.indexOf(resourceProperty)) {
+                                inheritableProperties[resourceProperty] = resourceTemplate[resourceProperty];
+                            } else {
+                                addError('crit', `Invalid or unsupported SAM Globals property name: ${resourceProperty}`,
+                                         ['Globals', resourceType], 'Globals');
+                            }
+                        }
+
+                        // override inheritable properties of matching resource type in template
+                        let templateOverride = {
+                          'Properties': inheritableProperties
+                        };
+                        if (workingInput.hasOwnProperty('Resources')) {
+                            let workingInputResources = workingInput['Resources'];
+                            if (!!workingInputResources && (typeof workingInputResources == 'object')) {
+                                for (let workingInputResource of Object.keys(workingInputResources)) {
+                                    let WIRTemplate = workingInputResources[workingInputResource];
+                                    if (!!WIRTemplate && (typeof WIRTemplate == 'object')) {
+                                        if (WIRTemplate.hasOwnProperty('Type') &&
+                                            WIRTemplate['Type'] == targetType) {
+                                              Object.assign(WIRTemplate, mergeOptions(templateOverride, WIRTemplate));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        addError('crit', `Invalid SAM Globals resource type: ${resourceType}.`, ['Globals'], 'Globals');
+                    }
+                }
+            }
+        }
+    }
 }
 
 function inferPrimitiveValueType(v: any) {
@@ -497,16 +597,25 @@ function doSAMTransform(baseType:string, type: string, name: string, template: a
                     let definition: any = null;
 
                     if (!!localProperties && localProperties.hasOwnProperty('DefinitionUri')) {
-                      definition = {};
-                      if (localProperties['DefinitionUri'].hasOwnProperty('Bucket')) {
-                        definition['Bucket'] = localProperties['DefinitionUri']['Bucket'];
+
+                      // S3 object type
+                      if (!!localProperties['DefinitionUri'] && (typeof localProperties['DefinitionUri'] == 'object')) {
+                          definition = {};
+                          if (localProperties['DefinitionUri'].hasOwnProperty('Bucket')) {
+                            definition['Bucket'] = localProperties['DefinitionUri']['Bucket'];
+                          }
+                          if (localProperties['DefinitionUri'].hasOwnProperty('Key')) {
+                            definition['Key'] = localProperties['DefinitionUri']['Key'];
+                          }
+                          if (localProperties['DefinitionUri'].hasOwnProperty('Version')) {
+                            definition['Version'] = localProperties['DefinitionUri']['Version'];
+                          }
+
+                      // S3 protocol string
+                      } else {
+                          definition = localProperties['DefinitionUri'];
                       }
-                      if (localProperties['DefinitionUri'].hasOwnProperty('Key')) {
-                        definition['Key'] = localProperties['DefinitionUri']['Key'];
-                      }
-                      if (localProperties['DefinitionUri'].hasOwnProperty('Version')) {
-                        definition['Version'] = localProperties['DefinitionUri']['Version'];
-                      }
+
                     } else if (!!localProperties && localProperties.hasOwnProperty('DefinitionBody')) {
                       definition = localProperties['DefinitionBody'];
                     } else {

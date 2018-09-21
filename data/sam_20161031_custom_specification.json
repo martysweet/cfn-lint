@@ -209,9 +209,8 @@
         "MethodSettings": {
           "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-apigateway-deployment-stagedescription.html#cfn-apigateway-deployment-stagedescription-methodsettings",
           "DuplicatesAllowed": false,
-          "ItemType": "MethodSetting",
           "Required": false,
-          "Type": "List",
+          "Type": "MethodSetting",
           "UpdateType": "Mutable"
         }
       }
