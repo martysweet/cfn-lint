@@ -1580,7 +1580,9 @@ describe('validator', () => {
 
     });
 
-    describe('SAM-20161031', () => {
+    describe('SAM-20161031', function() {
+
+        this.timeout(5000);
 
         it('a sample AWS template (sam_20161031_alexa_skill.yaml) should validate successfully', () => {
             const input = 'testData/valid/yaml/sam_20161031_alexa_skill.yaml';
