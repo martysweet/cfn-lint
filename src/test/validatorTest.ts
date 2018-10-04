@@ -666,15 +666,6 @@ describe('validator', () => {
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
 
-        // TODO: is this really needed?
-        // it('1 unquouted template format version should return an object with validTemplate = true, no crit errors, 1 warn error', () => {
-        //     const input = 'testData/valid/yaml/valid_unquoted_template_version.yaml';
-        //     let result = validator.validateFile(input);
-        //     expect(result).to.have.deep.property('templateValid', true);
-        //     expect(result['errors']['crit']).to.have.lengthOf(0);
-        //     expect(result['errors']['warn']).to.have.lengthOf(1);
-        //     expect(result['errors']['warn'][0]['message']).to.contain('AWSTemplateFormatVersion is recommended to be of type string');
-        // });
     });
 
     describe('propertyValidation', () => {

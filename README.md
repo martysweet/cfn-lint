@@ -283,18 +283,48 @@ Each intrinsic function has a signature of `doIntrinsicXYZ(ref, key)` and is cal
 the resolved value of the function. For example, for Fn::Sub, an input of `"My ${MyInstance}"`
 would return a string similar to `"My i-0a0a0a0a0a`.
 
+### Parameterized types
+
+Type parameterization is a technique primarily used in `cfn-lint` for supporting *SAM* validation as well as user-defined resource attributes, by allowing a certain resource type or property type to have it's specification enhanced/overridden by another registered type, dynamically.
+
+Prime examples for a parameterized resource type, property type and even a mixture of both would respectively be: `AWS::S3::Bucket<somethingCool>`, `AWS::S3::Bucket.BucketEncryption<somethingAwesome>` and `AWS::S3::Bucket<somethingCool>.BucketEncryption<somethingAwesome>`; where `somethingCool` and `somethingAwesome` can be any registered resource (e.g. `AWS::CodeBuild::Project`) or property type (e.g. `AWS::CodeBuild::Project.Artifacts`).
+
+In regards to user-defined resource attributes that are applicable to a given resource based on its' logical ID, the parameter's value would be the logical ID (e.g. `AWS::S3::Bucket<somethingCool>`, where `somethingCool` is the logical ID that's present in the specific template), which has been previously registered as a type with it's respective specification.
+
+Apart from the above mentioned, parameterization is also used for specifying the item type of an aggregate type (i.e. `List` or `Map`) and usually occurs within the `Type` attribute of property specifications when a property may take multiple forms such as in *SAM* templates.
+
+### SAM validation process
+
+Due to the fact that *SAM* templates support various types or even a mixture of types for a given template property value and that `cfn-lint`'s validation algorithm is designed for the *CFN* specification that does not, therefore, in order to attain compatibility between the different formats, a property type inference procedure was implemented, namely `applySAMPropertyOverrides`, that scans the template, attempts to determine the actual type of a given *SAM* property based on it's value type or shape in template, if applicable and if successful it then registers a logical name override for the resource in question with the disambiguated specification.
+
+In addition, *SAM* templates also require a transformation process, entailing new resources to be generated according to the node-tree matching patterns defined in the `data/sam_20161031_output_resources.json` file and placed in a distinct section, namely `SAMOutput`, by the `doSAMTransform` procedure so that they can later be utilized within intrinsics.
+
+`cfn-lint` supports SAM template validation by extending the current *CFN* specification with additional *SAM* specific resources that are defined in the `data/sam_20161031_cfn.json` file (i.e. `applySpecificationOverrides`), optionally enhancing the definitions of specific entries that reside under the `Resources` section of a to-be-validated template with definitions extracted from the `Globals` section of the aforementioned template (i.e. `processSAMGlobals`) and finally, before the actual template resource validation takes place, the template is recursively scanned and specific resources are generated under the `SAMOutput` section (i.e. `doSAMTransform`), in a two phase approach, one that occurs before values are assigned to parameters and resource properties/attributes as well as intrinsic resolution and another one after the aforementioned so that the inference process can disambiguate between an arbitrary number of *SAM* types that define a specific template resource property.
+
+Known limitations:
+
+- Primitive types `Integer`, `Long` and `Double` are indistinguishable;
+- Primitive types `String` and `Timestamp` are indistinguishable;
+- [SAM policy templates](https://github.com/awslabs/serverless-application-model/blob/develop/docs/policy_templates.rst#policy-templates) are not implemented;
+
+
 ## Release Instructions
 
 0. For each PR, edit the `CHANGELOG.md` file, adding a fixed, changed or added message to the Unreleased block.
 1. Create a milestone in Github for all issues and PRs which will be included in the release, for example, `v1.7.0`.
 2. Create a PR for the release (branch `release-VERSION`), moving the contents of the `CHANGELOG.md` to a new version, update the links at the bottom of the file.
-3. Ensure the latest CFN Specification is present ([AWS CloudFormation Resource Specification](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-resource-specification.html)) in the aws_resources_specification.json file, update if required.
-4. Verify changes and merge into `master` with the title `Update CHANGELOG for VERSION (#PRNUM)`.
-5. Go to [Releases](https://github.com/martysweet/cfn-lint/releases) and click "Draft a new release".
-6. Enter the tag of the version and the same for the release title, for example, `v1.7.0`.
-7. Copy the section of the `CHANGELOG.md` file for the release into the describe section.
-8. Click publish release. This will build a publish a package to npm.
-9. The unit tests can generally be trusted, however, a quick test will do no harm and might catch something missed. Next, test the release in a clean environment, ensuring the latest version is pulled.
+3. Ensure the latest CFN Specification is present ([AWS CloudFormation Resource Specification](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-resource-specification.html)) in the `data/aws_resources_specification.json` file, update if required.
+4. Ensure the latest SAM Specification is present ([SAM Schema](https://github.com/awslabs/serverless-application-model/blob/develop/samtranslator/validator/sam_schema/schema.json)) in the `data/sam_20161031_schema.json` file, update if required.
+5. Update the CFN compatible SAM specification file, namely `data/sam_20161031_cfn.json`, by executing:
+```
+cd lib; node sam2CFN.js
+```
+6. Verify changes and merge into `master` with the title `Update CHANGELOG for VERSION (#PRNUM)`.
+7. Go to [Releases](https://github.com/martysweet/cfn-lint/releases) and click "Draft a new release".
+8. Enter the tag of the version and the same for the release title, for example, `v1.7.0`.
+9. Copy the section of the `CHANGELOG.md` file for the release into the describe section.
+10. Click publish release. This will build a publish a package to npm.
+11. The unit tests can generally be trusted, however, a quick test will do no harm and might catch something missed. Next, test the release in a clean environment, ensuring the latest version is pulled.
 
 ```
 > docker run -it node /bin/bash

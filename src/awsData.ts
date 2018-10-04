@@ -71,8 +71,7 @@ export const awsPropertyTemplate: PropertyBase = {
 export interface ResourcePropertyType {
     Documentation: string,
     Properties: {[propertyName: string]: Property | undefined}
-    
-    AdditionalProperties: undefined;
+    AdditionalProperties?: undefined;
 }
 
 export interface ResourceType {
@@ -84,9 +83,14 @@ export interface ResourceType {
 
 export type Type = ResourceType | ResourcePropertyType;
 
-export const awsTypeTemplate: Type = {
+export const awsResourceTypeTemplate: ResourceType = {
   Documentation: '',
   AdditionalProperties: false,
+  Properties: {}
+};
+
+export const awsResourcePropertyTypeTemplate: ResourcePropertyType = {
+  Documentation: '',
   Properties: {}
 };
 

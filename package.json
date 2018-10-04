@@ -14,7 +14,6 @@
     "url": "https://github.com/martysweet/cfn-lint/issues"
   },
   "dependencies": {
-    "@types/clone": "^0.1.30",
     "array-intersection": "^0.1.2",
     "clone": "^2.1.1",
     "colors": "^1.2.1",
@@ -30,6 +29,7 @@
   },
   "devDependencies": {
     "@types/chai": "^4.0.4",
+    "@types/clone": "^0.1.30",
     "@types/colors": "~1.1.3",
     "@types/commander": "^2.11.0",
     "@types/js-yaml": "^3.9.1",

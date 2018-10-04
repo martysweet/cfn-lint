@@ -267,42 +267,15 @@ function processSAMGlobals() {
                     switch(resourceType) {
                         case 'Function':
                             targetType = 'AWS::Serverless::Function';
-                            allowedProperties = [
-                                'Handler',
-                                'Runtime',
-                                'CodeUri',
-                                'DeadLetterQueue',
-                                'Description',
-                                'MemorySize',
-                                'Timeout',
-                                'VpcConfig',
-                                'Environment',
-                                'Tags',
-                                'Tracing',
-                                'KmsKeyArn',
-                                'AutoPublishAlias',
-                                'DeploymentPreference'
-                            ];
+                            allowedProperties = samData.samGlobals20161031.AllowedProperties[resourceType];
                             break;
                         case 'Api':
                             targetType = 'AWS::Serverless::Api';
-                            allowedProperties = [
-                                'Name',
-                                'DefinitionUri',
-                                'CacheClusterEnabled',
-                                'CacheClusterSize',
-                                'Variables',
-                                'EndpointConfiguration',
-                                'MethodSettings',
-                                'BinaryMediaTypes',
-                                'Cors'
-                            ];
+                            allowedProperties = samData.samGlobals20161031.AllowedProperties[resourceType];
                             break;
                         case 'SimpleTable':
                             targetType = 'AWS::Serverless::SimpleTable';
-                            allowedProperties = [
-                              'SSESpecification'
-                            ];
+                            allowedProperties = samData.samGlobals20161031.AllowedProperties[resourceType];
                             break;
                     }
                     if (!!targetType) {

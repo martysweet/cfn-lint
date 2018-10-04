@@ -51,13 +51,17 @@ export class NoSuchResourceTypeAttribute extends CustomError {
     }
 }
 
+/*
+ * Returns the specification of a resource type
+ * @param type An optionally parameterized resource type (e.g. `AWS::S3::Bucket<somethingCool>`)
+ */
 export function getResourceType(type: string): awsData.ResourceType {
 
     // destructure resource name
     let typeName = type, typeArgument = '';
     if (isParameterizedTypeFormat(type)) {
-        typeName = getParameterizedTypeName(type);
-        typeArgument = getParameterizedTypeArgument(type);
+        typeName = getParameterizedTypeName(type);  //e.g. `AWS::S3::Bucket`
+        typeArgument = getParameterizedTypeArgument(type);  //e.g. `somethingCool`
     }
 
     // If the type starts with Custom::, it's a custom resource otherwise it's a normal resource type
@@ -94,21 +98,25 @@ export function getResourceTypeAttribute(type: string, attributeName: string): a
     return resourceAttribute
 }
 
+/*
+ * Returns the specification of a property types
+ * @param type An optionally parameterized property type (e.g. `AWS::S3::Bucket<somethingCool>.BucketEncryption<somethingAwesome>`)
+ */
 function getPropertyType(type: string): awsData.ResourcePropertyType {
 
     // destructure property name
     let baseType, baseTypeName = '', baseTypeArgument = '';
-    baseType = baseTypeName = getPropertyTypeBaseName(type);
+    baseType = baseTypeName = getPropertyTypeBaseName(type);  //e.g. `AWS::S3::Bucket<somethingCool>`
     if (isParameterizedTypeFormat(baseType)) {
-        baseTypeName = getParameterizedTypeName(baseType);
-        baseTypeArgument = getParameterizedTypeArgument(baseType);
+        baseTypeName = getParameterizedTypeName(baseType);  //e.g. `AWS::S3::Bucket`
+        baseTypeArgument = getParameterizedTypeArgument(baseType);  //e.g. `somethingCool`
     }
 
     let propertyType, propertyTypeName = '', propertyTypeArgument = '';
-    propertyType = propertyTypeName = getPropertyTypePropertyName(type);
+    propertyType = propertyTypeName = getPropertyTypePropertyName(type);  //e.g. `BucketEncryption<somethingAwesome>`
     if (isParameterizedTypeFormat(propertyType)) {
-        propertyTypeName = getParameterizedTypeName(propertyType);
-        propertyTypeArgument = getParameterizedTypeArgument(propertyType);
+        propertyTypeName = getParameterizedTypeName(propertyType);  //e.g. `BucketEncryption`
+        propertyTypeArgument = getParameterizedTypeArgument(propertyType);  //e.g. `somethingAwesome`
     }
 
     // acquire base property type specification
@@ -138,10 +146,17 @@ export function getType(type: string): awsData.Type {
 }
 
 /**
- * Returns an empty type specification
+ * Returns an empty resource type specification
  */
-export function makeType(): awsData.Type {
-    return clone(awsData.awsTypeTemplate);
+export function makeResourceTypeSpec(): awsData.ResourceType {
+    return clone(awsData.awsResourceTypeTemplate);
+}
+
+/**
+ * Returns an empty property type specification
+ */
+export function makePropertyTypeSpec(): awsData.ResourcePropertyType {
+    return clone(awsData.awsResourcePropertyTypeTemplate);
 }
 
 function getParameterizedTypeNameParts(type: any): any {
@@ -471,7 +486,7 @@ export function extendSpecification(spec: any){
 
 /**
  * Allows overriding definitions based on logical name.
- * Subsequent registrations DO clobber prior ones.
+ * Subsequent registrations DO overwrite prior ones.
  * //TODO: perhaps user defined overrides should take precedence?
  */
 export function registerLogicalNameOverride(name: string, spec: any) {
@@ -497,7 +512,7 @@ export function registerLogicalNameOverride(name: string, spec: any) {
 
 /**
  * Allows overriding definitions based on type.
- * Subsequent registrations DO clobber prior ones.
+ * Subsequent registrations DO overwrite prior ones.
  */
 export function registerTypeOverride(name: string, spec: any) {
 

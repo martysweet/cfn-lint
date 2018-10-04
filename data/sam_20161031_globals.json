@@ -1,0 +1,34 @@
+{
+  "AllowedProperties": {
+    "Function": [
+      "Handler",
+      "Runtime",
+      "CodeUri",
+      "DeadLetterQueue",
+      "Description",
+      "MemorySize",
+      "Timeout",
+      "VpcConfig",
+      "Environment",
+      "Tags",
+      "Tracing",
+      "KmsKeyArn",
+      "AutoPublishAlias",
+      "DeploymentPreference"
+    ],
+    "Api": [
+      "Name",
+      "DefinitionUri",
+      "CacheClusterEnabled",
+      "CacheClusterSize",
+      "Variables",
+      "EndpointConfiguration",
+      "MethodSettings",
+      "BinaryMediaTypes",
+      "Cors"
+    ],
+    "SimpleTable": [
+      "SSESpecification"
+    ]
+  }
+}
