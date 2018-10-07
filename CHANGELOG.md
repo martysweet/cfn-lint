@@ -11,6 +11,9 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Added
 - Merge PR #167, adding support for SAM template validation
 
+### Changed
+- Update CloudFormation specification (downloaded 07-Oct-2018) - version: 2.8.0
+
 ### Fixed
 - Fix CHANGELOG broken link for v1.8.1
 

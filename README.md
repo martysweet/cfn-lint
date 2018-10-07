@@ -317,7 +317,7 @@ Known limitations:
 4. Ensure the latest SAM Specification is present ([SAM Schema](https://github.com/awslabs/serverless-application-model/blob/develop/samtranslator/validator/sam_schema/schema.json)) in the `data/sam_20161031_schema.json` file, update if required.
 5. Update the CFN compatible SAM specification file, namely `data/sam_20161031_cfn.json`, by executing:
 ```
-cd lib; node sam2CFN.js
+cd lib && node sam2CFN.js && cd ..
 ```
 6. Verify changes and merge into `master` with the title `Update CHANGELOG for VERSION (#PRNUM)`.
 7. Go to [Releases](https://github.com/martysweet/cfn-lint/releases) and click "Draft a new release".
