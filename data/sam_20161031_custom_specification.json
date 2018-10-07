@@ -1,0 +1,241 @@
+{
+  "PropertyTypes": {
+    "AWS::Serverless::Function.EventSource": {
+      "Properties": {
+        "Properties": {
+          "Required": false
+        }
+      }
+    },
+    "AWS::Serverless::Function.Hooks": {
+      "Documentation": "https://github.com/awslabs/serverless-application-model/blob/develop/docs/safe_lambda_deployments.rst#pretraffic--posttraffic-hooks",
+      "Properties": {
+        "PreTraffic": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "PostTraffic": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::Serverless::Function.DeploymentPreference": {
+      "Documentation": "https://github.com/awslabs/serverless-application-model/blob/develop/versions/2016-10-31.md#deploymentpreference-object",
+      "Properties": {
+        "Enabled": {
+          "Required": false,
+          "PrimitiveType": "Boolean",
+          "UpdateType": "Mutable"
+        },
+        "Type": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "Alarms": {
+          "Required": false,
+          "Type": "List",
+          "PrimitiveItemType": "String",
+          "UpdateType": "Mutable"
+        },
+        "Hooks": {
+          "Required": false,
+          "Type": "Hooks",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::Serverless::Api.CorsConfiguration": {
+      "Documentation": "https://github.com/awslabs/serverless-application-model/blob/develop/versions/2016-10-31.md#cors-configuration",
+      "Properties": {
+        "AllowedHeaders": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "AllowedMethods": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "AllowedOrigin": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "MaxAge": {
+          "PrimitiveType": "Integer",
+          "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::Serverless::Api.MethodSetting": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-apitgateway-stage-methodsetting.html",
+      "Properties": {
+        "CacheDataEncrypted": {
+          "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-apitgateway-stage-methodsetting.html#cfn-apigateway-stage-methodsetting-cachedataencrypted",
+          "PrimitiveType": "Boolean",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "CacheTtlInSeconds": {
+          "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-apitgateway-stage-methodsetting.html#cfn-apigateway-stage-methodsetting-cachettlinseconds",
+          "PrimitiveType": "Integer",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "CachingEnabled": {
+          "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-apitgateway-stage-methodsetting.html#cfn-apigateway-stage-methodsetting-cachingenabled",
+          "PrimitiveType": "Boolean",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "DataTraceEnabled": {
+          "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-apitgateway-stage-methodsetting.html#cfn-apigateway-stage-methodsetting-datatraceenabled",
+          "PrimitiveType": "Boolean",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "HttpMethod": {
+          "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-apitgateway-stage-methodsetting.html#cfn-apigateway-stage-methodsetting-httpmethod",
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "LoggingLevel": {
+          "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-apitgateway-stage-methodsetting.html#cfn-apigateway-stage-methodsetting-logginglevel",
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "MetricsEnabled": {
+          "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-apitgateway-stage-methodsetting.html#cfn-apigateway-stage-methodsetting-metricsenabled",
+          "PrimitiveType": "Boolean",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "ResourcePath": {
+          "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-apitgateway-stage-methodsetting.html#cfn-apigateway-stage-methodsetting-resourcepath",
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "ThrottlingBurstLimit": {
+          "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-apitgateway-stage-methodsetting.html#cfn-apigateway-stage-methodsetting-throttlingburstlimit",
+          "PrimitiveType": "Integer",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "ThrottlingRateLimit": {
+          "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-apitgateway-stage-methodsetting.html#cfn-apigateway-stage-methodsetting-throttlingratelimit",
+          "PrimitiveType": "Double",
+          "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::Serverless::SimpleTable.SSESpecification": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-dynamodb-table-ssespecification.html",
+      "Properties": {
+        "SSEEnabled": {
+          "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-dynamodb-table-ssespecification.html#cfn-dynamodb-table-ssespecification-sseenabled",
+          "PrimitiveType": "Boolean",
+          "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    }
+  },
+  "ResourceTypes": {
+    "AWS::Serverless::Function": {
+      "Documentation": "https://github.com/awslabs/serverless-application-model/blob/develop/versions/2016-10-31.md#awsserverlessfunction",
+      "Properties": {
+        "Policies": {
+          "Documentation": "",
+          "Required": false,
+          "UpdateType": "Mutable",
+          "Type": [
+            "#Policies<String>",
+            "#Policies<Json>",
+            "#Policies<IAMPolicyDocument>",
+            "#Policies<List<IAMPolicyDocument>>"
+          ]
+        },
+        "AutoPublishAlias": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "DeploymentPreference": {
+          "Required": false,
+          "Type": "DeploymentPreference",
+          "UpdateType": "Mutable"
+        },
+        "InlineCode": {
+          "Required": false,
+          "UpdateType": "Mutable",
+          "Type": ["#InlineCode<String>", "#InlineCode<Json>"]
+        },
+        "ReservedConcurrentExecutions": {
+          "Required": false,
+          "PrimitiveType": "Integer",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::Serverless::Api": {
+      "Documentation": "https://github.com/awslabs/serverless-application-model/blob/develop/versions/2016-10-31.md#awsserverlessapi",
+      "Properties": {
+        "BinaryMediaTypes": {
+          "Required": false,
+          "Type": "List",
+          "PrimitiveItemType": "String",
+          "UpdateType": "Mutable"
+        },
+        "Cors": {
+          "Required": false,
+          "Type": ["#Cors<String>", "#Cors<CorsConfiguration>"],
+          "UpdateType": "Mutable"
+        },
+        "EndpointConfiguration": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "MethodSettings": {
+          "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-apigateway-deployment-stagedescription.html#cfn-apigateway-deployment-stagedescription-methodsettings",
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "MethodSetting",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::Serverless::SimpleTable": {
+      "Documentation": "https://github.com/awslabs/serverless-application-model/blob/develop/versions/2016-10-31.md#awsserverlesssimpletable",
+      "Properties": {
+        "Tags": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "Map",
+          "ItemType": "String",
+          "UpdateType": "Mutable"
+        },
+        "TableName": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "SSESpecification": {
+          "Required": false,
+          "Type": "SSESpecification",
+          "UpdateType": "Mutable"
+        }
+      }
+    }
+  }
+}

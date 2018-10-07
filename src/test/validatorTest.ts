@@ -4,11 +4,17 @@ const assert = chai.assert;
 import validator = require('../validator');
 import yaml = require('js-yaml');
 
+import {samResources20161031} from '../samData';
 import {awsResources} from '../awsData';
 import util = require('util');
 import { isObject } from 'util';
 
 describe('validator', () => {
+
+    before(() => {
+      // ensure CF specification includes SAM
+      validator.__TESTING__.resourcesSpec.extendSpecification(samResources20161031);
+    });
 
     beforeEach(() => {
         validator.resetValidator();
@@ -660,14 +666,6 @@ describe('validator', () => {
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
 
-        it('1 unquouted template format version should return an object with validTemplate = true, no crit errors, 1 warn error', () => {
-            const input = 'testData/valid/yaml/valid_unquoted_template_version.yaml';
-            let result = validator.validateFile(input);
-            expect(result).to.have.deep.property('templateValid', true);
-            expect(result['errors']['crit']).to.have.lengthOf(0);
-            expect(result['errors']['warn']).to.have.lengthOf(1);
-            expect(result['errors']['warn'][0]['message']).to.contain('AWSTemplateFormatVersion is recommended to be of type string');
-        });
     });
 
     describe('propertyValidation', () => {
@@ -719,7 +717,7 @@ describe('validator', () => {
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
-            expect(result['errors']['crit'][0]['message']).to.contain('Required property Key missing for type Tag');
+            expect(result['errors']['crit'][0]['message']).to.contain('Required property Key missing for type AWS::EC2::Instance.Tag');
         });
 
         it('1 missing resourceType  property should return an object with validTemplate = false, 1 crit errors', () => {
@@ -1184,6 +1182,7 @@ describe('validator', () => {
 
         it('should be able to determine the type of every property of every propertytype', () => {
             for (let propertyTypeName in awsResources.PropertyTypes) {
+                if (propertyTypeName == 'Tag') { continue; }
                 const propertyType = awsResources.PropertyTypes[propertyTypeName]!;
                 for (let propertyName in propertyType.Properties) {
                     expect(() => validator.getPropertyType({
@@ -1399,5 +1398,334 @@ describe('validator', () => {
             runTests(validator.isTimestamp, validTimestamps, invalidTimestamps);
             
         })
+    });
+
+    describe('type inference unit tests', () => {
+
+        describe('inferPrimitiveValueType', () => {
+
+          it('should be able to infer an Integer value - typeof number', () => {
+              let input = 101;
+              let result = validator.__TESTING__.inferPrimitiveValueType(input);
+              expect(result).to.equal('Integer');
+          });
+
+          it('should be able to infer an Integer value - typeof string', () => {
+              let input = '101';
+              let result = validator.__TESTING__.inferPrimitiveValueType(input);
+              expect(result).to.equal('Integer');
+          });
+
+          it('should be able to infer a Double value - typeof number', () => {
+              let input = 101.01;
+              let result = validator.__TESTING__.inferPrimitiveValueType(input);
+              expect(result).to.equal('Double');
+          });
+
+          it('should be able to infer a Double value - typeof string', () => {
+              let input = '101.01';
+              let result = validator.__TESTING__.inferPrimitiveValueType(input);
+              expect(result).to.equal('Double');
+          });
+
+          it('should be able to infer a Boolean value - typeof boolean', () => {
+              let input = false;
+              let result = validator.__TESTING__.inferPrimitiveValueType(input);
+              expect(result).to.equal('Boolean');
+          });
+
+          it('should be able to infer a Boolean value - typeof string', () => {
+              let input = 'false';
+              let result = validator.__TESTING__.inferPrimitiveValueType(input);
+              expect(result).to.equal('Boolean');
+          });
+
+          it('should be able to infer a Json value - typeof object', () => {
+              let input = {};
+              let result = validator.__TESTING__.inferPrimitiveValueType(input);
+              expect(result).to.equal('Json');
+          });
+
+          it('should be able to infer a Json value - typeof string', () => {
+              let input = '{}';
+              let result = validator.__TESTING__.inferPrimitiveValueType(input);
+              expect(result).to.equal('Json');
+          });
+
+          it('should be able to infer a String value', () => {
+              let input = 'somethingBeautiful';
+              let result = validator.__TESTING__.inferPrimitiveValueType(input);
+              expect(result).to.equal('String');
+          });
+
+          it('should be able to infer a Timestamp value', () => {
+              let input = '2012-12-30T20:12:22.222222-08:00';
+              let result = validator.__TESTING__.inferPrimitiveValueType(input);
+              expect(result).to.equal('Timestamp');
+          });
+
+        });
+
+        describe('inferStructureValueType', () => {
+
+          it('should be able to infer a structure value type via Type exact-match', () => {
+              let input = {
+                'Type': 'AWS::Serverless::Function',
+                'Properties': {}
+              };
+              let candidateTypes = ['AWS::Serverless::SimpleTable', 'AWS::Serverless::Function', 'AWS::Serverless::Api'];
+              let result = validator.__TESTING__.inferStructureValueType(input, candidateTypes);
+              expect(result).to.equal('AWS::Serverless::Function');
+          });
+
+          it('should be able to infer a structure value type via Type partial-match', () => {
+              let input = {
+                'Type': 'Api',
+                'Properties': {}
+              };
+              let candidateTypes = ['AWS::Serverless::Function.S3Event', 'AWS::Serverless::Function.ApiEvent', 'AWS::Serverless::Function.ScheduleEvent'];
+              let result = validator.__TESTING__.inferStructureValueType(input, candidateTypes);
+              expect(result).to.equal('AWS::Serverless::Function.ApiEvent');
+          });
+
+          it('should be able to infer a structure value type via property-similiarity matching', () => {
+              let input = {
+                'Properties': {
+                  'Variables': {},
+                }
+              };
+              let candidateTypes = ['AWS::Serverless::Function.S3Event', 'AWS::Serverless::Function.AlexaSkillEvent', 'AWS::Serverless::Function.ScheduleEvent'];
+              let result = validator.__TESTING__.inferStructureValueType(input, candidateTypes);
+              expect(result).to.equal('AWS::Serverless::Function.AlexaSkillEvent');
+          });
+
+          it('should not be able to infer a non-structure value type', () => {
+              let input = {};
+              let candidateTypes = ['AWS::Serverless::Function.S3Event', 'AWS::Serverless::Function.AlexaSkillEvent', 'AWS::Serverless::Function.ScheduleEvent'];
+              let result = validator.__TESTING__.inferStructureValueType(input, candidateTypes);
+              expect(result).to.equal(null);
+          });
+
+        });
+
+        describe('inferAggregateValueType', () => {
+
+          it('should be able to infer a List of Strings aggregate value type', () => {
+              let input = [
+                'somethingBeautiful', 'somethingAwesome', 'somethingCool'
+              ];
+              let candidateTypes: string[] = [];
+              let result = validator.__TESTING__.inferAggregateValueType(input, candidateTypes);
+              expect(result).to.equal('List<String>');
+          });
+
+          it('should be able to infer a Map of Strings aggregate value type', () => {
+              let input = {
+                1: 'somethingBeautiful',
+                2: 'somethingAwesome',
+                3: 'somethingCool'
+              };
+              let candidateTypes: string[] = [];
+              let result = validator.__TESTING__.inferAggregateValueType(input, candidateTypes);
+              expect(result).to.equal('Map<String>');
+          });
+
+          it('should not be able to infer a non-aggregate value type', () => {
+              let input = {};
+              let candidateTypes: string[] = [];
+              let result = validator.__TESTING__.inferAggregateValueType(input, candidateTypes);
+              expect(result).to.equal(null);
+          });
+
+        });
+
+        describe('inferValueType', () => {
+
+          it('should be able to infer a structure value type', () => {
+              let input = {
+                'Type': 'AWS::Serverless::Function',
+                'Properties': {}
+              };
+              let candidateTypes = ['AWS::Serverless::SimpleTable', 'AWS::Serverless::Function', 'AWS::Serverless::Api'];
+              let result = validator.__TESTING__.inferValueType(input, candidateTypes);
+              expect(result).to.equal('AWS::Serverless::Function');
+          });
+
+          it('should be able to infer an aggregate value type', () => {
+              let input = [
+                'somethingBeautiful', 'somethingAwesome', 'somethingCool'
+              ];
+              let candidateTypes: string[] = [];
+              let result = validator.__TESTING__.inferValueType(input, candidateTypes);
+              expect(result).to.equal('List<String>');
+          });
+
+          it('should be able to infer a primitive value type', () => {
+              let input = 'somethingBeautiful';
+              let candidateTypes: string[] = [];
+              let result = validator.__TESTING__.inferValueType(input, candidateTypes);
+              expect(result).to.equal('String');
+          });
+
+        });
+
+    });
+
+    describe('SAM-20161031', function() {
+
+        this.timeout(5000);
+
+        it('a sample AWS template (sam_20161031_alexa_skill.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_alexa_skill.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_all_policy_templates.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_all_policy_templates.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_api_backend.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_api_backend.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_api_swagger_cors.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_api_swagger_cors.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_cloudwatch_logs.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_cloudwatch_logs.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_encryption_proxy.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_encryption_proxy.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_hello_world.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_hello_world.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_implicit_api_settings.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_implicit_api_settings.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_inline_swagger.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_inline_swagger.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_iot_backend.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_iot_backend.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_lambda_edge.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_lambda_edge.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_lambda_safe_deployments.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_lambda_safe_deployments.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_s3_processor.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_s3_processor.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_schedule.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_schedule.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a sample AWS template (sam_20161031_stream_processor.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_stream_processor.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a template missing a required property should fail validation', () => {
+            const input = 'testData/invalid/yaml/sam_20161031_missing_required_property.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]).to.have.property('message', 'Required property CodeUri missing for type AWS::Serverless::Function');
+            expect(result['errors']['crit'][0]).to.have.property('resource', 'Resources > HelloWorldFunction > Properties');
+        });
+
+        it('a template containing an aggregate-type that has items with different types (sam_20161031_heterogenous_aggregation.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_heterogenous_aggregation.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a template containing a valid SAM Globals section should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_globals.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+        it('a template containing an invalid SAM Globals resource type should fail validation', () => {
+            const input = 'testData/invalid/yaml/sam_20161031_invalid_global_type.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]).to.have.property('message', 'Invalid SAM Globals resource type: NotSoSimpleTable.');
+            expect(result['errors']['crit'][0]).to.have.property('resource', 'Globals');
+        });
+
+        it('a template containing an invalid SAM Globals property name should fail validation', () => {
+            const input = 'testData/invalid/yaml/sam_20161031_invalid_global_property.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit'][0]).to.have.property('message', 'Invalid or unsupported SAM Globals property name: Aberrant');
+            expect(result['errors']['crit'][0]).to.have.property('resource', 'Globals > SimpleTable');
+        });
+
+        it('a valid real-world SAM template (sam_20161031_realworld_1.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_realworld_1.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
     });
 });

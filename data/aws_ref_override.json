@@ -1,6 +1,7 @@
 {
   "AWS::AccountId": "123456789012",
   "AWS::NotificationARNs": ["arn:aws:sns:us-east-1:123456789012:MyTopic"],
+  "AWS::Partition": "aws",
   "AWS::Region": "eu-west-1",
   "AWS::StackId": "AWSREFSTACKID",
   "AWS::StackName": "AWSREFSTACKNAME",

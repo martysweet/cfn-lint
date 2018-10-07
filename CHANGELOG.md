@@ -6,6 +6,8 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Merge PR #167, adding support for SAM template validation
 
 ## [1.8.1] - 2018-09-07
 ### Changed

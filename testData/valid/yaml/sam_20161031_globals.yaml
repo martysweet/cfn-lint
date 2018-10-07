@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion : '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: A hello world application.
+
+Globals:
+
+  Function:
+    Handler: index.handler
+    Runtime: nodejs6.10
+    CodeUri: src/
+    DeadLetterQueue:
+      Type: SNS
+      TargetArn: arn:aws:sns:us-east-1:84969EXAMPLE:DeadLetterQueue
+    Description: somethingCool
+    MemorySize: 512
+    Timeout: 10
+    VpcConfig:
+      SecurityGroupIds:
+        - SGID0
+      SubnetIds:
+        - SID0
+    Environment:
+      Variables:
+        VAR0: 0
+    Tags:
+      TAG0: tag0
+    Tracing: PassThrough
+    KmsKeyArn: arn:aws:sns:us-east-1:84969EXAMPLE:KmsKeyArn
+    AutoPublishAlias: live
+    DeploymentPreference:
+      Type: Linear10PercentEvery10Minutes
+
+  Api:
+    Name: ServerlessRestApi
+    DefinitionUri: s3://s3-eu-west-1.amazonaws.com/s3test.example.com
+    CacheClusterEnabled: True
+    CacheClusterSize: 1024M
+    Variables:
+      VAR1: 1
+    EndpointConfiguration: EDGE
+    MethodSettings:
+      CacheDataEncrypted: True
+    BinaryMediaTypes:
+      - image~1gif
+      - image~1png
+    Cors: example.com
+
+  SimpleTable:
+    SSESpecification:
+      SSEEnabled: True
+
+
+Resources:
+
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      VpcConfig:
+        SecurityGroupIds:
+          - SGID1
+        SubnetIds:
+          - SID1
+      Tags:
+        TAG1: tag1
+      Environment:
+        Variables:
+          VAR2: shouldBe2
+
+  HelloWorldAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      EndpointConfiguration: REGIONAL
+      BinaryMediaTypes:
+        - image~1exe
+      Variables:
+        VAR2: 2
+        VAR3: 3
+
+  HelloWorldTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: example-table

@@ -1,4 +1,5 @@
 let workingInput: any = null;
+let workingInputTransform: string[] = [];
 let stopValidation = false;
 import resourcesSpec = require('./resourcesSpec');
 import logger = require('./logger');
@@ -9,8 +10,11 @@ import {
     awsRefOverrides,
     awsIntrinsicFunctions,
     PrimitiveAttribute,
-    ListAttribute
+    ListAttribute,
+    AWSResourcesSpecification,
 } from './awsData';
+import * as awsData from './awsData';
+import * as samData from './samData';
 import docs = require('./docs');
 
 import util = require('util');
@@ -20,7 +24,13 @@ import CustomError = require('./util/CustomError');
 import sms = require('source-map-support');
 sms.install();
 
+const clone = require('clone');
+
 const mergeOptions = require('merge-options');
+
+const arrayIntersection = require('array-intersection');
+
+const shajs = require('sha.js');
 
 require('./util/polyfills');
 
@@ -120,8 +130,8 @@ export function addPseudoValue(parameter: string, value: string){
 };
 
 export function addCustomResourceAttributeValue(resource: string, attribute: string, value: any){
-    let attrType = determineValueType(value);
-    let oldSpec = {};
+    let attrType = inferValueType(value, []);
+
     let newSpec = {
       'Attributes': {
         [attribute]: {
@@ -131,53 +141,13 @@ export function addCustomResourceAttributeValue(resource: string, attribute: str
       }
     };
 
-    // extend defintion for existing resource type
+    // register resource type or logical name override
     if (!!~resource.indexOf('::')) {
-      try {
-        oldSpec = resourcesSpec.getResourceType(resource);
-      } catch (e) {}
-      newSpec = mergeOptions(oldSpec, newSpec);
+        resourcesSpec.registerTypeOverride(resource, newSpec);
+    } else {
+        resourcesSpec.registerLogicalNameOverride(resource, newSpec);
     }
-
-    resourcesSpec.extendSpecification({
-      'ResourceTypes': {[resource]: newSpec}
-    });
 };
-
-function determineValueType(val: any) {
-  // check descendants of object
-  if (val instanceof Object) {
-    if (Array.isArray(val)) {
-      return 'List';
-    }
-    if (val instanceof Map) {
-      return 'Map';
-    }
-    return 'ComplexObject';
-  }
-
-  // check primitives
-  switch (typeof val) {
-    case 'string':
-      try {
-          JSON.parse(val);
-          return 'Json';
-      } catch (e) {}
-      if (!!Date.parse(val)) {
-          return 'Timestamp';
-      }
-      if (RegExp(/arn:/i).test(val)) {
-          return 'Arn';
-      }
-      return 'String';
-    case 'number':
-      return (val % 1 == 0) ? 'Integer' : 'Double';
-    case 'boolean':
-      return 'Boolean';
-  }
-
-  throw new Error ('Invalid KnownType!');
-}
 
 function addParameterOverride(parameter: string, value: ParameterValue){
     parameterRuntimeOverride[parameter] = value;
@@ -209,18 +179,33 @@ function validateWorkingInput(passedOptions?: Partial<ValidateOptions>) {
 
     }
 
+    // Check Transform
+    if (workingInput.hasOwnProperty(['Transform'])) {
+      // assign defined transforms to the validator
+      workingInputTransform = workingInput['Transform'];
+      // initialize transform output
+      if (!!~workingInputTransform.indexOf('AWS::Serverless-2016-10-31')) {
+          workingInput['SAMOutput'] = {}
+      }
+    }
+
 
     // TODO: Check keys for parameter are valid, ex. MinValue/MaxValue
 
+    // Apply specification overrides
+    applySpecificationOverrides();
+
+    // Process SAM Globals section
+    processSAMGlobals();
+
+    // Apply template overrides
+    applyTemplateOverrides();
 
     // Check parameters and assign outputs
     assignParametersOutput(options.guessParameters);
 
     // Evaluate Conditions
     assignConditionsOutputs();
-
-    // Apply resource specification overrides
-    assignCustomResources();
 
     // Assign outputs to all the resources
     assignResourcesOutputs();
@@ -235,6 +220,9 @@ function validateWorkingInput(passedOptions?: Partial<ValidateOptions>) {
     // Use the outputs assigned to resources to resolve references
     resolveReferences();
 
+    // Re-Apply template overrides
+    applyTemplateOverrides();
+
     // Go through the hopefully resolved properties of each resource
     checkResourceProperties();
 
@@ -243,6 +231,497 @@ function validateWorkingInput(passedOptions?: Partial<ValidateOptions>) {
 
     return errorObject;
 
+}
+
+function applySpecificationOverrides() {
+
+    // extend resources specification with SAM specifics
+    if (!!~workingInputTransform.indexOf('AWS::Serverless-2016-10-31')) {
+        resourcesSpec.extendSpecification(samData.samResources20161031);
+    }
+
+    // normalize Tag property type access
+    let tagPropertyTypes: any = {};
+    for (let resourceKey of Object.keys(awsData.awsResources['ResourceTypes'])) {
+        tagPropertyTypes[`${resourceKey}.Tag`] = awsData.awsResources['PropertyTypes']['Tag'];
+    }
+
+    resourcesSpec.extendSpecification({'PropertyTypes': tagPropertyTypes});
+}
+
+/*
+ * Validation and processing of the Globals section in SAM templates
+ * Based on https//github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+ */
+function processSAMGlobals() {
+    if (!~workingInputTransform.indexOf('AWS::Serverless-2016-10-31')) { return; }
+    // process input
+    if (workingInput.hasOwnProperty('Globals')) {
+        let workingInputGlobals = workingInput['Globals'];
+        if (!!workingInputGlobals && (typeof workingInputGlobals == 'object')) {
+            for (let resourceType of Object.keys(workingInputGlobals)) {
+                let resourceTemplate = workingInputGlobals[resourceType];
+                if (!!resourceTemplate) {
+                    let targetType: string | undefined;
+                    let allowedProperties: string[] = [];
+                    switch(resourceType) {
+                        case 'Function':
+                            targetType = 'AWS::Serverless::Function';
+                            allowedProperties = samData.samGlobals20161031.AllowedProperties[resourceType];
+                            break;
+                        case 'Api':
+                            targetType = 'AWS::Serverless::Api';
+                            allowedProperties = samData.samGlobals20161031.AllowedProperties[resourceType];
+                            break;
+                        case 'SimpleTable':
+                            targetType = 'AWS::Serverless::SimpleTable';
+                            allowedProperties = samData.samGlobals20161031.AllowedProperties[resourceType];
+                            break;
+                    }
+                    if (!!targetType) {
+                        let resourceProperties: any = Object.keys(resourceTemplate);
+                        let inheritableProperties: any = {};
+
+                        // validate and extract properties that are inheritable by the given type
+                        for (let resourceProperty of resourceProperties) {
+                            if (!!~allowedProperties.indexOf(resourceProperty)) {
+                                inheritableProperties[resourceProperty] = resourceTemplate[resourceProperty];
+                            } else {
+                                addError('crit', `Invalid or unsupported SAM Globals property name: ${resourceProperty}`,
+                                         ['Globals', resourceType], 'Globals');
+                            }
+                        }
+
+                        // override inheritable properties of matching resource type in template
+                        let templateOverride = {
+                          'Properties': inheritableProperties
+                        };
+                        if (workingInput.hasOwnProperty('Resources')) {
+                            let workingInputResources = workingInput['Resources'];
+                            if (!!workingInputResources && (typeof workingInputResources == 'object')) {
+                                for (let workingInputResource of Object.keys(workingInputResources)) {
+                                    let WIRTemplate = workingInputResources[workingInputResource];
+                                    if (!!WIRTemplate && (typeof WIRTemplate == 'object')) {
+                                        if (WIRTemplate.hasOwnProperty('Type') &&
+                                            WIRTemplate['Type'] == targetType) {
+                                              Object.assign(WIRTemplate, mergeOptions(templateOverride, WIRTemplate));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        addError('crit', `Invalid SAM Globals resource type: ${resourceType}.`, ['Globals'], 'Globals');
+                    }
+                }
+            }
+        }
+    }
+}
+
+function inferPrimitiveValueType(v: any) {
+
+    if (isInteger(v)) {
+      return 'Integer';
+    }
+    if (isDouble(v)) {
+      return 'Double';
+    }
+    if (isBoolean(v)) {
+      return 'Boolean';
+    }
+    if (isJson(v)) {
+      return 'Json';
+    }
+    if (isTimestamp(v)) {
+      return 'Timestamp';
+    }
+    if (isString(v)) {
+      return 'String';
+    }
+
+    return null;
+}
+
+function inferStructureValueType(v: any, candidateTypes: string[]) {
+    let type: string | null = null;
+    if (isObject(v)) {
+        if (v.hasOwnProperty('Type')) {
+          let objectType = v['Type'];
+          for (let candidateType of candidateTypes!) {
+            if (!!~candidateType.indexOf(objectType)) {
+              type = candidateType;
+            }
+          }
+        } else {
+          let objectKeys = [];
+          if (v.hasOwnProperty('Properties')) {
+            objectKeys = Object.keys(v['Properties']);
+          } else {
+            objectKeys = Object.keys(v);
+          }
+          let lastMatchCount = 0;
+          for (let candidateType of candidateTypes!) {
+              let candidate = resourcesSpec.getType(candidateType);
+              let candidateKeys = Object.keys(candidate['Properties']);
+              let matchCount = arrayIntersection(objectKeys, candidateKeys).length;
+              if (matchCount > lastMatchCount) {
+                type = candidateType;
+                lastMatchCount = matchCount;
+              }
+          }
+        }
+    }
+    return type;
+}
+
+function inferAggregateValueType(v: any, candidateItemTypes: string[]): string | null {
+    let item: any = null;
+    let type: string | null = null;
+    let itemType: string | null = null;
+
+    if (isList(v)) {
+        type = 'List';
+        item = v.pop();
+    }
+    else if (isObject(v)) {
+        type = 'Map';
+        item = v[Object.keys(v).pop()!];
+    }
+
+    if (!!item) {
+      itemType = inferValueType(item, candidateItemTypes);
+      // aggregate type nesting is not currently supported
+      if (!!itemType && resourcesSpec.isComplexType(itemType)) {
+          return 'Json';
+      }
+    }
+
+    return (!!type && !!itemType) ? `${type}<${itemType}>` : null;
+}
+
+function inferValueType(v: any, candidateTypes: string[]) {
+     candidateTypes = candidateTypes.filter((x) => !resourcesSpec.isPrimitiveType(x));
+     let candidateStructureTypes: string[] = candidateTypes.filter((x) => {
+        if (resourcesSpec.isParameterizedTypeFormat(x) &&
+            resourcesSpec.isComplexType(resourcesSpec.getParameterizedTypeName(x))) {
+            return false;
+        }
+        return true;
+    });
+    let candidateAggregateTypes: string[] = candidateTypes.filter((x) => {
+       if (resourcesSpec.isParameterizedTypeFormat(x) &&
+           resourcesSpec.isComplexType(resourcesSpec.getParameterizedTypeName(x))) {
+           return true;
+       }
+       return false;
+    });
+    candidateAggregateTypes = candidateAggregateTypes.map((x) => resourcesSpec.getParameterizedTypeArgument(x));
+
+    let type: string | null = inferStructureValueType(v, candidateStructureTypes);
+    if (!type) {
+        type = inferAggregateValueType(v, candidateAggregateTypes);
+        if (!type) {
+            type = inferPrimitiveValueType(v);
+        }
+    }
+    return type;
+}
+
+function formatCandidateTypes(baseType: string, candidateTypes: string[]) {
+    // remove generic name part
+    candidateTypes = candidateTypes.map((x) => resourcesSpec.getParameterizedTypeArgument(x));
+
+    // format property types
+    candidateTypes = candidateTypes.map((x) => resourcesSpec.rebaseTypeFormat(baseType, x));
+
+    return candidateTypes;
+}
+
+function applySAMPropertyOverrides(baseType: string, baseName: string, type: string, name: string,
+                                                spec: awsData.Property, template: any) {
+    // early exit for unsupported template or base type
+    if (!~workingInputTransform.indexOf('AWS::Serverless-2016-10-31') || !~baseType.indexOf('AWS::Serverless')) { return; }
+
+    let localizedType = baseType == type ? type : `${baseType}.${type}<${name}>`;
+
+    // specialize property based on inferred Type
+    let specType: any = spec['Type'];
+    if (Array.isArray(specType)) {
+
+        // skip if template has unresolved intrinsic functions
+        if (arrayIntersection(Object.keys(awsIntrinsicFunctions), Object.keys(template)).length > 0) {
+            return;
+        }
+        let candidateTypes = formatCandidateTypes(baseType, specType);
+
+        // infer property spec based on value in template
+        let inferredCandidateType: string | null;
+        if (!!(inferredCandidateType = inferValueType(template, candidateTypes))) {
+            inferredCandidateType = inferredCandidateType.replace(`${baseType}.`, '');
+
+            // determine spec based on a parameterized type matching the inferred candidate type
+            if (resourcesSpec.hasProperty(localizedType, `${name}<${inferredCandidateType}>`)) {
+                let candidateSpec = resourcesSpec.getProperty(localizedType, `${name}<${inferredCandidateType}>`);
+
+                // override property spec
+                for (let property of Object.keys(spec)) {
+                    if (!candidateSpec.hasOwnProperty(property)) {
+                      delete (<any>spec)[property];
+                    }
+                }
+
+                Object.assign(spec, clone(candidateSpec));
+            }
+        }
+    }
+}
+
+function doSAMTransform(baseType:string, type: string, name: string, template: any, parentTemplate: any) {
+    // early exit for unsupported template or base type
+    if (!~workingInputTransform.indexOf('AWS::Serverless-2016-10-31') || !~baseType.indexOf('AWS::Serverless')) { return; }
+
+    // destructure name
+    let nameParts = name.split('#');
+    let logicalID = nameParts.shift();
+    let propertyName = nameParts.shift();
+    let itemID = nameParts.shift();
+
+    // determine transform key
+    let transformKey = baseType;
+    if (!!propertyName) {
+        transformKey = `${transformKey}#${propertyName}`;
+    }
+    if (!!itemID) {
+        let itemType = type;
+        transformKey = `${transformKey}#ItemID<${itemType}>`;
+    }
+
+    // determine available properties
+    let localProperties: any = null;
+    if (!!template && template.hasOwnProperty('Properties')) {
+      localProperties = template['Properties'];
+    }
+
+    let parentProperties: any = null;
+    if (!!parentTemplate && parentTemplate.hasOwnProperty('Properties')) {
+      parentProperties = parentTemplate['Properties'];
+    }
+
+    // create supporting resources
+    let output = workingInput['SAMOutput'];
+    let transform = samData.samImplicitResources20161031[transformKey];
+    if (!!transform) {
+        let resourceTypes = Object.keys(transform);
+        for (let resourceType of resourceTypes) {
+
+            // build resource logical ID
+            let resourceLogicalID = transform[resourceType]['logicalId'];
+            resourceLogicalID = resourceLogicalID.replace('<LogicalID>', logicalID);
+            resourceLogicalID = resourceLogicalID.replace('<ItemID>', itemID);
+
+            switch (transformKey) {
+              case 'AWS::Serverless::Function#AutoPublishAlias':
+                switch (resourceType) {
+                  case 'AWS::Lambda::Alias':
+                    if (!!parentProperties && parentProperties.hasOwnProperty('AutoPublishAlias')) {
+                      let autoPublishAlias = parentProperties['AutoPublishAlias'];
+                      resourceLogicalID = resourceLogicalID.replace('<AutoPublishAlias>', autoPublishAlias);
+                    }
+                    break;
+
+                  case 'AWS::Lambda::Version':
+                    // TODO: this may be non-deterministic and does not handle the case when CodeUri refers to local path
+                    let codeDict: any = null;
+
+                    if (!!parentProperties && parentProperties.hasOwnProperty('CodeUri')) {
+                      if (parentProperties['CodeUri'].hasOwnProperty('Bucket')) {
+                        codeDict['S3Bucket'] = parentProperties['CodeUri']['Bucket'];
+                      }
+                      if (parentProperties['CodeUri'].hasOwnProperty('Key')) {
+                        codeDict['S3Key'] = parentProperties['CodeUri']['Key'];
+                      }
+                      if (parentProperties['CodeUri'].hasOwnProperty('Version')) {
+                        codeDict['S3ObjectVersion'] = parentProperties['CodeUri']['Version'];
+                      }
+                    } else if (!!parentProperties && parentProperties.hasOwnProperty('InlineCode')) {
+                      codeDict['ZipFile'] = parentProperties['InlineCode'];
+                    } else {
+                      // TODO: perhaps raise validation error if neither CodeUri or InlineCode have been provided
+                    }
+
+                    if (!!codeDict) {
+                      codeDict = JSON.stringify(codeDict);
+                      let codeID = shajs('sha256').update(codeDict).digest('hex').substr(0, 10);
+                      resourceLogicalID = resourceLogicalID.replace('<CodeID>', codeID);
+                    }
+                    break;
+                }
+                break;
+
+              case 'AWS::Serverless::Function#Events#ItemID<ApiEvent>':
+                // TODO: we currently have no way of knowing the DefinitionID
+                break;
+
+              case 'AWS::Serverless::Api':
+                // TODO: this may be non-deterministic and does not handle the case when DefinitionUri refers to local path
+                switch (resourceType) {
+                  case 'AWS::ApiGateway::Deployment':
+                    let definition: any = null;
+
+                    if (!!localProperties && localProperties.hasOwnProperty('DefinitionUri')) {
+
+                      // S3 object type
+                      if (!!localProperties['DefinitionUri'] && (typeof localProperties['DefinitionUri'] == 'object')) {
+                          definition = {};
+                          if (localProperties['DefinitionUri'].hasOwnProperty('Bucket')) {
+                            definition['Bucket'] = localProperties['DefinitionUri']['Bucket'];
+                          }
+                          if (localProperties['DefinitionUri'].hasOwnProperty('Key')) {
+                            definition['Key'] = localProperties['DefinitionUri']['Key'];
+                          }
+                          if (localProperties['DefinitionUri'].hasOwnProperty('Version')) {
+                            definition['Version'] = localProperties['DefinitionUri']['Version'];
+                          }
+
+                      // S3 protocol string
+                      } else {
+                          definition = localProperties['DefinitionUri'];
+                      }
+
+                    } else if (!!localProperties && localProperties.hasOwnProperty('DefinitionBody')) {
+                      definition = localProperties['DefinitionBody'];
+                    } else {
+                      // TODO: perhaps raise validation error if neither DefinitionUri or DefinitionBody have been provided
+                    }
+
+                    if (!!definition) {
+                      definition = JSON.stringify(definition);
+                      let definitionID = shajs('sha256').update(definition).digest('hex').substr(0, 10);
+                      resourceLogicalID = resourceLogicalID.replace('<DefinitionID>', definitionID);
+                    }
+                    break;
+
+                  case 'AWS::ApiGateway::Stage':
+                    if (!!localProperties && localProperties.hasOwnProperty('StageName')) {
+                      let stageName = localProperties['StageName'];
+                      resourceLogicalID = resourceLogicalID.replace('<StageName>', stageName);
+                    }
+                    break;
+                }
+                break;
+            }
+
+            // build resource template
+            let resourceTemplate: any = {
+              'Type': resourceType,
+              'Attributes': {}
+            };
+            let resourceSpec: any = resourcesSpec.getType(resourceType);
+            if (resourceSpec.hasOwnProperty('Attributes')) {
+                for (let attribute of Object.keys(resourceSpec['Attributes'])) {
+                    let attributeValue = `mockAttr_${attribute}`;
+                    if (!!~attribute.indexOf('Arn')) {
+                        attributeValue = mockArnPrefix;
+                    }
+                    resourceTemplate['Attributes'][attribute] = attributeValue;
+                    resourceTemplate['Attributes']['Ref'] = attributeValue;
+                }
+            }
+
+            // assign resource output
+            output[resourceLogicalID] = resourceTemplate;
+
+            // link supporting resource to referable property of source
+            let sourceRefProperty = transform[resourceType]['refProperty']
+            if (!!sourceRefProperty) {
+                output[`${logicalID}.${sourceRefProperty}`] = output[resourceLogicalID];
+            }
+        }
+    }
+}
+
+function applyTemplatePropertyOverrides(baseType: string, baseName:string, type: string, name: string, spec: awsData.Property,
+                                        template: any, parentTemplate: any) {
+    applySAMPropertyOverrides(baseType, baseName, type, name, spec, template);
+    doSAMTransform(baseType, type, `${baseName}#${name}`, template, parentTemplate);
+}
+
+function applyTemplateTypeOverrides(baseType: string, type: string, name: string, template: any, parentTemplate: any) {
+
+    // process type overrides
+    doSAMTransform(baseType, type, name, template, parentTemplate);
+
+    // early exit for invalid type
+    let localizedType = baseType == type ? type : `${baseType}.${type}<${name}>`;
+    if (!resourcesSpec.hasType(localizedType)) {
+      return;
+    }
+
+    // initialize specification override
+    let originalSpec = resourcesSpec.getType(localizedType);
+    let overrideSpec = clone(originalSpec);
+
+    // determine properties section
+    let templateProperties = template;
+    if (baseType == type) {
+        templateProperties = template['Properties'];
+    }
+
+    // apply property overrides
+    if (!!templateProperties && (typeof templateProperties == 'object')) {
+        for (let propertyName of Object.keys(templateProperties)) {
+
+            // acquire property template
+            let templateProperty = templateProperties[propertyName];
+            if (!templateProperty) {
+              continue;
+            }
+
+            // process property
+            let specProperty = overrideSpec['Properties'][propertyName] as awsData.Property;
+            if (!!specProperty) {
+                applyTemplatePropertyOverrides(baseType, name, type, propertyName, specProperty, templateProperty, template);
+
+                // descend into nested types
+                if (specProperty.hasOwnProperty('ItemType')) {
+                    let subType = specProperty['ItemType'] as string;
+                    for (let subKey of Object.keys(templateProperty)) {
+                        let subTemplate = templateProperty[subKey];
+                        applyTemplateTypeOverrides(baseType, subType, `${name}#${propertyName}#${subKey}`, subTemplate, template);
+                    }
+                } else if (specProperty.hasOwnProperty('Type')) {
+                    let subType = specProperty['Type'] as string;
+                    applyTemplateTypeOverrides(baseType, subType, `${name}#${propertyName}`, templateProperty, template);
+                }
+            }
+        }
+    }
+
+    // register specification overrides
+    if (JSON.stringify(originalSpec) !== JSON.stringify(overrideSpec)) {
+        resourcesSpec.registerLogicalNameOverride(name, overrideSpec);
+    }
+}
+
+function applyTemplateOverrides() {
+    // process input
+    if (workingInput.hasOwnProperty('Resources')) {
+        let workingInputResources = workingInput['Resources'];
+        if (!!workingInputResources && (typeof workingInputResources == 'object')) {
+            for (let name of Object.keys(workingInputResources)) {
+                let template = workingInputResources[name];
+                if (!!template) {
+                    if (template.hasOwnProperty('Type')) {
+                        let type = template['Type'];
+                        if (!!type) {
+                            applyTemplateTypeOverrides(type, type, name, template, null);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 function assignParametersOutput(guessParameters?: string[]) {
@@ -300,7 +779,7 @@ function assignParametersOutput(guessParameters?: string[]) {
         // Assign an Attribute Ref regardless of any failures above
         workingInput['Parameters'][parameterName]['Attributes'] = {};
         workingInput['Parameters'][parameterName]['Attributes']['Ref'] = parameterValue;
-    
+
     }
 }
 
@@ -367,11 +846,11 @@ function inferParameterValue(parameterName: string, parameter: any, okToGuess: b
 
 type Severity = keyof typeof errorObject.errors;
 
-function addError(severity: Severity, message : string, resourceStack: typeof placeInTemplate = [], help?: string){
+function addError(severity: Severity, message : string, resourceStack: typeof placeInTemplate = [], help: string = ''){
     let obj = {
-        'message': message,
+        'message': resourcesSpec.stripTypeParameters(message),
         'resource': resourceStack.join(' > '),
-        'documentation': docs.getUrls(help).join(', ')
+        'documentation': docs.getUrls(resourcesSpec.stripTypeParameters(help)).join(', ')
     };
 
     // Set the information
@@ -443,23 +922,6 @@ function assignConditionsOutputs(){
 
 }
 
-function assignCustomResources() {
-  for(let res in workingInput['Resources']){
-      if(workingInput['Resources'].hasOwnProperty(res)){
-          // Apply resource specification overrides based on logical name
-          try {
-              let type = workingInput['Resources'][res]['Type'];
-              let spec = resourcesSpec.getResourceType(type);
-              let logicalNameSpec = resourcesSpec.getResourceType(res);
-              resourcesSpec.extendSpecification({
-                  'ResourceTypes': {[res]: mergeOptions(spec, logicalNameSpec)}
-              });
-              workingInput['Resources'][res]['Type'] = res;
-          } catch(e) {}
-      }
-  }
-}
-
 function assignResourcesOutputs(){
     if(!workingInput.hasOwnProperty('Resources')){
         addError('crit', 'Resources section is not defined', [], "Resources");
@@ -478,7 +940,7 @@ function assignResourcesOutputs(){
         if(workingInput['Resources'].hasOwnProperty(res)){
 
             // Check if Type is defined
-            let resourceType = null;
+            let resourceType = '';
             let spec = null;
             if(!workingInput['Resources'][res].hasOwnProperty('Type')){
                 stopValidation = true;
@@ -489,9 +951,9 @@ function assignResourcesOutputs(){
                 );
             }else{
                 // Check if Type is valid
-                resourceType = workingInput['Resources'][res]['Type'];
+                resourceType = `${workingInput['Resources'][res]['Type']}<${res}>`;
                 try {
-                    spec = resourcesSpec.getResourceType(workingInput['Resources'][res]['Type']);
+                    spec = resourcesSpec.getResourceType(resourceType);
                 } catch (e) {
                     if (e instanceof resourcesSpec.NoSuchResourceType) {
                         addError('crit',
@@ -529,14 +991,6 @@ function assignResourcesOutputs(){
                     // use user-defined attribute value if provided for the specific type
                     try {
                         let attrSpec: any = resourcesSpec.getResourceTypeAttribute(resourceType, attr);
-                        if (attrSpec.hasOwnProperty('Value')) {
-                            value = attrSpec['Value'];
-                        }
-                    } catch(e) {}
-
-                    // use user-defined attribute value if provided for the specific logical name
-                    try {
-                        let attrSpec: any = resourcesSpec.getResourceTypeAttribute(res, attr);
                         if (attrSpec.hasOwnProperty('Value')) {
                             value = attrSpec['Value'];
                         }
@@ -1255,11 +1709,25 @@ function fnJoin(join: any, parts: any){
 }
 
 export function fnGetAtt(reference: string, attributeName: string){
-    if(workingInput['Resources'].hasOwnProperty(reference)){
-        const resource = workingInput['Resources'][reference];
+    // determine resource template
+    let resource: any;
+    if (!!~workingInputTransform.indexOf('AWS::Serverless-2016-10-31') &&
+               workingInput['SAMOutput'].hasOwnProperty(reference)) {
+        resource = workingInput['SAMOutput'][reference];
+    } else if (workingInput['Resources'].hasOwnProperty(reference)) {
+        resource = workingInput['Resources'][reference];
+    } else {
+      addError('crit',
+          `No resource with logical name of ${reference}!`,
+          placeInTemplate,
+          reference);
+    }
+    // determine attribute value
+    if (!!resource) {
+        const resourceType = `${resource['Type']}<${reference}>`;
         try {
             // Lookup attribute
-            const attribute = resourcesSpec.getResourceTypeAttribute(resource['Type'], attributeName)
+            const attribute = resourcesSpec.getResourceTypeAttribute(resourceType, attributeName)
             const primitiveAttribute = attribute as PrimitiveAttribute
             if(!!primitiveAttribute['PrimitiveType']) {
                 return resource['Attributes'][attributeName];
@@ -1270,27 +1738,22 @@ export function fnGetAtt(reference: string, attributeName: string){
             }
         } catch (e) {
             // Coerce missing custom resource attribute value to string
-            if ((resource['Type'].indexOf('Custom::') === 0) ||
-                (resource['Type'] === 'AWS::CloudFormation::CustomResource') ||
-                (resource['Type'] === 'AWS::CloudFormation::Stack')) {
-                return `mockAttr_${reference}_${attributeName}`;;
+            if ((resourceType.indexOf('Custom::') == 0) ||
+                (resourceType.indexOf('AWS::CloudFormation::CustomResource') == 0) ||
+                (resourceType.indexOf('AWS::CloudFormation::Stack') == 0)) {
+                return `mockAttr_${reference}_${attributeName}`;
             }
 
             if (e instanceof resourcesSpec.NoSuchResourceTypeAttribute) {
                 addError('crit',
                     e.message,
                     placeInTemplate,
-                    resource['Type']
+                    resourceType
                 );
             } else {
                 throw e;
             }
         }
-    } else {
-      addError('crit',
-          `No resource with logical name of ${reference}!`,
-          placeInTemplate,
-          reference);
     }
 
     // Return null if not found
@@ -1311,8 +1774,14 @@ function fnFindInMap(map: any, first: string, second: string){
 }
 
 function getRef(reference: string){
+
+    // Check in SAMOutput
+    if (!!~workingInputTransform.indexOf('AWS::Serverless-2016-10-31') &&
+        workingInput['SAMOutput'].hasOwnProperty(reference)) {
+          return workingInput['SAMOutput'][reference]['Attributes']['Ref'];
+
     // Check in Resources
-    if(workingInput['Resources'].hasOwnProperty(reference)){
+    } else if(workingInput['Resources'].hasOwnProperty(reference)){
         return workingInput['Resources'][reference]['Attributes']['Ref'];
     }
 
@@ -1443,10 +1912,11 @@ function checkResourceProperties() {
 
     // Go through each resource
     for (let res in resources) {
+        const resourceType = `${resources[res]['Type']}<${res}>`;
 
         // Check the property exists
         try {
-            let spec = resourcesSpec.getType(resources[res]['Type']);
+            let spec = resourcesSpec.getType(resourceType);
         } catch (e) {
             if (e instanceof resourcesSpec.NoSuchResourceType) {
                 continue;
@@ -1459,7 +1929,7 @@ function checkResourceProperties() {
         placeInTemplate.push(res);
 
         // Set the baseResourceType for PropertyType derivation
-        baseResourceType = resources[res]['Type'];
+        baseResourceType = resourceType;
 
         // Do property validation if Properties in present
         if(resources[res].hasOwnProperty('Properties')) {
@@ -1467,7 +1937,6 @@ function checkResourceProperties() {
             // Add Properties to the location stack
             placeInTemplate.push('Properties');
 
-            let resourceType = resources[res]['Type'];
             check({type: 'RESOURCE', resourceType}, resources[res]['Properties']);
 
             // Remove Properties
@@ -1578,7 +2047,7 @@ function check(objectType: ObjectType, objectToCheck: any) {
             addError('crit', e.message+`, got ${util.inspect(objectToCheck)}`, placeInTemplate, objectType.resourceType);
         } else {
             // generic error handler; let us keep checking what we can instead of crashing.
-            addError('crit', `Unexpected error: ${e.message} while checking ${util.inspect(objectToCheck)} against ${objectType}`, placeInTemplate, objectType.resourceType);
+            addError('crit', `Unexpected error: ${e.message} while checking ${util.inspect(objectToCheck)} against ${util.inspect(objectType)}`, placeInTemplate, objectType.resourceType);
             console.error(e);
         }
     }
@@ -1776,13 +2245,29 @@ function _checkForMissingProperties(properties: {[k: string]: any}, objectTypeNa
     }
 }
 
-function checkComplexObject(objectType: ResourceType | NamedProperty | PropertyType,  objectToCheck: any) {
-    const objectTypeName = getTypeName(objectType);
+function localizeType(type: string) {
+    // determine localized name
+    let typePlaceInTemplate: any = clone(placeInTemplate);
+    typePlaceInTemplate.splice(0, 1); // remove 'Resources'
+    typePlaceInTemplate.splice(1, 1); // remove 'Properties'
+    typePlaceInTemplate = typePlaceInTemplate.join('#');
+    // don't localize primitive, complex or already localized types
+    let localType = type;
+    if (!resourcesSpec.isPrimitiveType(type) &&
+        !resourcesSpec.isComplexType(type) &&
+        !resourcesSpec.isParameterizedTypeFormat(type)) {
+        localType = `${type}<${typePlaceInTemplate}>`;
+    }
+    return localType
+}
 
+function checkComplexObject(objectType: ResourceType | NamedProperty | PropertyType,  objectToCheck: any) {
+    let objectTypeName = getTypeName(objectType);
     if (!objectTypeName) {
         const namedProperty = objectType as NamedProperty;
         throw new Error(`${namedProperty.parentType}.${namedProperty.propertyName} is not a ResourceType or PropertyType, but we tried to get its type anyway.`);
     }
+    objectTypeName = localizeType(objectTypeName);
 
     // Check for missing required properties
     _checkForMissingProperties(objectToCheck, objectTypeName);
@@ -1816,10 +2301,13 @@ function checkComplexObject(objectType: ResourceType | NamedProperty | PropertyT
 }
 
 function checkList(objectType: NamedProperty, listToCheck: any[]) {
-    const itemType = getItemType(objectType);
     for (const [index, item] of listToCheck.entries()) {
         placeInTemplate.push(index);
         if(!util.isUndefined(item)){
+            let itemType = getItemType(objectType);
+            if (itemType.type == 'PROPERTY_TYPE') {
+                itemType.propertyType = localizeType(itemType.propertyType);
+            }
             check(itemType, item);
         }
         placeInTemplate.pop();
@@ -1827,12 +2315,24 @@ function checkList(objectType: NamedProperty, listToCheck: any[]) {
 }
 
 function checkMap(objectType: NamedProperty, mapToCheck: {[k: string]: any}) {
-    const itemType = getItemType(objectType);
     for (let key in mapToCheck) {
         placeInTemplate.push(key);
         const item = mapToCheck[key];
-        check( itemType, item);
+        let itemType = getItemType(objectType);
+        if (itemType.type == 'PROPERTY_TYPE') {
+            itemType.propertyType = localizeType(itemType.propertyType);
+        }
+        check(itemType, item);
         placeInTemplate.pop();
     }
 }
 
+
+// EXPOSE INTERNAL FUNCTIONS FOR TESTING PURPOSES
+export const __TESTING__: any = {
+  'resourcesSpec': resourcesSpec,
+  'inferPrimitiveValueType': inferPrimitiveValueType,
+  'inferStructureValueType': inferStructureValueType,
+  'inferAggregateValueType': inferAggregateValueType,
+  'inferValueType': inferValueType
+};

@@ -2,6 +2,10 @@ type AWSExtraDocs = {[k: string]: string}
 
 export const awsExtraDocs = require('../data/aws_extra_docs.json') as AWSExtraDocs;
 
+export const awsPrimitiveTypes = ['String', 'Integer', 'Boolean', 'Json', 'Double', 'Long', 'Timestamp'];
+
+export const awsComplexTypes = ['Map', 'List'];
+
 export type AWSPrimitiveType = 'String' | 'Integer' | 'Boolean' | 'Json' | 'Double' | 'Long' | 'Timestamp';
 
 export interface PropertyBase {
@@ -19,7 +23,7 @@ export interface PrimitiveProperty extends PropertyBase {
 }
 
 export interface ComplexProperty extends PropertyBase {
-    Type: string,
+    Type: string | string[],
 
     PrimitiveType: undefined
     ItemType: undefined
@@ -52,18 +56,22 @@ export interface MapPropertyBase extends PropertyBase {
     DuplicatesAllowed: boolean,
 
     PrimitiveType: undefined
-    ItemType: undefined
 }
 
 export type MapProperty = MapPropertyBase & (PrimitiveItemType | ItemType)
 
 export type Property = PrimitiveProperty | ComplexProperty | ListProperty | MapProperty
 
+export const awsPropertyTemplate: PropertyBase = {
+  Documentation: '',
+  Required: false,
+  UpdateType: 'Mutable'
+};
+
 export interface ResourcePropertyType {
     Documentation: string,
     Properties: {[propertyName: string]: Property | undefined}
-    
-    AdditionalProperties: undefined;
+    AdditionalProperties?: undefined;
 }
 
 export interface ResourceType {
@@ -72,6 +80,19 @@ export interface ResourceType {
     Attributes?: {[attributeName: string]: Attribute | undefined},
     AdditionalProperties?: boolean
 }
+
+export type Type = ResourceType | ResourcePropertyType;
+
+export const awsResourceTypeTemplate: ResourceType = {
+  Documentation: '',
+  AdditionalProperties: false,
+  Properties: {}
+};
+
+export const awsResourcePropertyTypeTemplate: ResourcePropertyType = {
+  Documentation: '',
+  Properties: {}
+};
 
 export interface PrimitiveAttribute {
     PrimitiveType: AWSPrimitiveType
@@ -84,7 +105,7 @@ export interface ListAttribute {
 
 export type Attribute = PrimitiveAttribute | ListAttribute;
 
-type AWSResourcesSpecification = {
+export type AWSResourcesSpecification = {
     PropertyTypes: {[propertyName: string]: ResourcePropertyType | undefined}
     ResourceTypes: {[resourceName: string]: ResourceType | undefined}
 }
