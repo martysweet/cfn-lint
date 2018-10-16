@@ -1380,13 +1380,22 @@ function doIntrinsicSub(ref: any, key: string){
     let toGet = ref[key];
     let replacementStr = null;
     let definedParams = null;
+
     // We have a simple replace
+    // Ex. !Sub MyInput-${AWS::Region}
     if(typeof toGet == 'string'){
         replacementStr = toGet;
     }else{
-
         // We should have an array of parameters
+        // Ex.
+        // Prop: !Sub
+        // - "MyInput-${Something}-${Else}
+        // - Something: aa
+        //   Else: bb
         if(toGet[0]){
+
+            // Check the given values are the correct types for an array style Sub, otherwise
+            // throw errors.
 
             if(typeof toGet[0] == 'string'){
                 replacementStr = toGet[0];
@@ -1406,7 +1415,7 @@ function doIntrinsicSub(ref: any, key: string){
         }
     }
 
-    // Extract the replacement parts
+    // Extract the replacement parts within the ${} and store in matches
     let regex = /\${([A-Za-z0-9:.!]+)/gm;
     let matches = [];
     let match;
@@ -1415,16 +1424,17 @@ function doIntrinsicSub(ref: any, key: string){
     }
 
     // Resolve the replacement and replace into string using Ref or GetAtt
+    // TODO: We need a better way of testing this logic, the complexity here will be in managing the intrinsicResolves
     for(let m of matches){
         let replacementVal = "";
 
-        if(m.indexOf('!') == 1){
-            // Literal Value
-            replacementVal = m;
-        }else if(m.indexOf('.') != -1){
+        if(m.indexOf('!') == 0){
+            // Literal Value support: ${!Literal} will create ${Literal}
+            replacementVal = '${' + m.substring(1) + '}';
+        }else if(m.indexOf('.') != -1){ // If there is a period in the replacement value
             // Check if m is within the key value map
             if(definedParams !== null && definedParams.hasOwnProperty(m) && typeof definedParams[m] !== 'string'){
-                definedParams[m] = resolveIntrinsicFunction(definedParams[m], Object.keys(m)[0]);
+                definedParams[m] = resolveIntrinsicFunction(definedParams[m], Object.keys(definedParams[m])[0]);
                 replacementVal = definedParams[m];
             }else{
                 // Use Fn::GetAtt
@@ -1437,7 +1447,7 @@ function doIntrinsicSub(ref: any, key: string){
         }else{
             if(definedParams !== null && definedParams.hasOwnProperty(m)){
                 if(typeof definedParams[m] !== 'string') {
-                    replacementVal = resolveIntrinsicFunction(definedParams[m], Object.keys(m)[0]) as string;
+                    replacementVal = resolveIntrinsicFunction(definedParams[m], Object.keys(definedParams[m])[0]) as string;
                 }else{
                     replacementVal = definedParams[m];
                 }

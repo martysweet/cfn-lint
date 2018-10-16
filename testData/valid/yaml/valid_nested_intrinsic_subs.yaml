@@ -1,0 +1,18 @@
+
+Parameters:
+  InputA:
+    Type: String
+    Default: testInput
+
+
+Resources:
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub
+            - service-${PartA}/${PartB}-${!LiteralValue}  # service-testInput/arn:aws:mock:region:123456789012:AnotherBucket-${LiteralValue}
+            - PartA: !Ref InputA
+              PartB: !GetAtt AnotherBucket.Arn
+
+  AnotherBucket:
+    Type: AWS::S3::Bucket
