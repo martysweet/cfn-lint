@@ -1396,7 +1396,6 @@ function doIntrinsicSub(ref: any, key: string){
 
             // Check the given values are the correct types for an array style Sub, otherwise
             // throw errors.
-
             if(typeof toGet[0] == 'string'){
                 replacementStr = toGet[0];
             }else{
