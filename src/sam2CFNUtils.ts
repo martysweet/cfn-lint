@@ -33,11 +33,19 @@ export function toAWSPrimitiveTypes(x: string): string[] {
 
 export function buildResourceProperty(propertyTypes: string[], isRequired=false) {
     let property: any;
+
+    // normalize type names
+    propertyTypes = propertyTypes.map((x: string) => x.replace(/\w*::\w*::\w*(\.)?/g, ''));
+
     if (propertyTypes.length > 1) {
         property = resourcesSpec.makeProperty();
         property['Type'] = propertyTypes;
     } else {
-        property = resourcesSpec.makeProperty(propertyTypes.pop()!);
+        let propertyType: any = propertyTypes.pop()!;
+        if (resourcesSpec.isPropertyTypeFormat(propertyType)) {
+          propertyType = resourcesSpec.getPropertyTypePropertyName(propertyType);
+        }
+        property = resourcesSpec.makeProperty(propertyType);
     }
     property['Required'] = isRequired;
     return property as awsData.Property;
@@ -120,13 +128,10 @@ function resolveTypes(propertyDefinition: any, baseName?: string): string[] {
 
     }
 
-    // this is a property type
+    // this is a resource property type
     if (propertyDefinition.hasOwnProperty('$ref')) {
         propertyTypes.push(propertyDefinition['$ref'].split('/').pop());
     }
-
-    // normalize property type names
-    propertyTypes = propertyTypes.map((x: string) => x.replace(/\w*::\w*::\w*(\.)?/, ''));
 
     // if this is a parameterized type then format its' specializations accordingly
     if (!!baseName && (propertyTypes.length > 1)) {
@@ -136,26 +141,58 @@ function resolveTypes(propertyDefinition: any, baseName?: string): string[] {
     return propertyTypes;
 }
 
+export function resolveTypeProperties(typeDef: any) {
+    const resolvedProperties = { 'properties': {} };
+
+    let operatorItems: any = null;
+
+    // determine if there is a JSON Schema operator being applied
+    switch(true) {
+      case ( typeDef.hasOwnProperty('allOf') ):
+        operatorItems = typeDef['allOf'];
+        break;
+      case ( typeDef.hasOwnProperty('anyOf') ):
+        operatorItems = typeDef['anyOf'];
+        break;
+      case ( typeDef.hasOwnProperty('oneOf') ):
+        operatorItems = typeDef['oneOf'];
+        break;
+    }
+
+    // combine recursively resolved properties
+    if (operatorItems) {
+        for (const operatorItem of operatorItems) {
+            const operatorItemProperties = resolveTypeProperties(operatorItem);
+            Object.assign(resolvedProperties['properties'], operatorItemProperties);
+        }
+
+    // otherwise just use the static properties section
+    } else {
+        resolvedProperties['properties'] = typeDef['properties'];
+    }
+
+    return resolvedProperties['properties'];
+}
+
 export function processDefinition(type: string, typeDef: any, awsResourcesSpec: any) {
 
     // create and register the type
-    let typePropertyName = '';
     let typeProperties: any;
     let typeRequired: any;
     let typeAdditionalProperties: any;
 
     let resource: awsData.Type;
 
+    // determine definition's properties section
     if (resourcesSpec.isPropertyTypeFormat(type)) {
         resource = resourcesSpec.makePropertyTypeSpec();
         awsResourcesSpec['PropertyTypes'][type] = resource;
-        typePropertyName = resourcesSpec.getPropertyTypePropertyName(type);
-        typeProperties = typeDef['properties'];
+        typeProperties = resolveTypeProperties(typeDef);
         typeRequired = typeDef['required'];
     } else {
         resource = resourcesSpec.makeResourceTypeSpec();
         awsResourcesSpec['ResourceTypes'][type] = resource;
-        typeProperties = typeDef['properties']['Properties']['properties'];
+        typeProperties = resolveTypeProperties(typeDef['properties']['Properties']);
         typeRequired = typeDef['properties']['Properties']['required'];
         typeAdditionalProperties = typeDef['properties']['Properties']['additionalProperties'];
     }
@@ -165,17 +202,18 @@ export function processDefinition(type: string, typeDef: any, awsResourcesSpec: 
         for (let propertyName of Object.keys(typeProperties)) {
             let propertyDef = typeProperties[propertyName];
             let propertyIsRequired = !!typeRequired ? !!~typeRequired.indexOf(propertyName) : false;
-
             let propertyTypes = [];
-            // nested property type
-            if (propertyDef.hasOwnProperty('properties')) {
-                propertyTypes = [`${typePropertyName}.${propertyName}`];
-                processDefinition(`${type}.${propertyName}`, propertyName, awsResourcesSpec);
 
-            // direct or so it might seem ($ref ???)
+            // nested definition
+            if (propertyDef.hasOwnProperty('properties')) {
+                propertyTypes = [`${propertyName}`];
+                processDefinition(`${type}.${propertyName}`, propertyDef, awsResourcesSpec);
+
+            // simple property or referenced top-level definition
             } else {
-                propertyTypes = resolveTypes(propertyDef, `${typePropertyName}#${propertyName}`);
+                propertyTypes = resolveTypes(propertyDef, `${type}#${propertyName}`);
             }
+
             let resourceProperty = buildResourceProperty(propertyTypes, propertyIsRequired);
             resource['Properties'][propertyName] = resourceProperty;
             if (!!typeAdditionalProperties) {

@@ -92,6 +92,104 @@ describe('sam2CFNUtils', () => {
 
     });
 
+    describe('resolveTypeProperties', () => {
+
+        it('should be able to resolve type properties from a definition that contains the JSON schema "allOf" operator', () => {
+          const inputTypeDef = {
+            "allOf": [
+              {
+                "properties": {
+                  "somethingPrimitive": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            ]
+          };
+          const result = sam2CFNUtils.resolveTypeProperties(inputTypeDef);
+          expect(result).to.deep.equal({
+            "somethingPrimitive": {
+              "type": "boolean"
+            }
+          });
+        });
+
+        it('should be able to resolve type properties from a definition that contains the JSON schema "anyOf" operator', () => {
+          const inputTypeDef = {
+            "anyOf": [
+              {
+                "properties": {
+                  "somethingPrimitive": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            ]
+          };
+          const result = sam2CFNUtils.resolveTypeProperties(inputTypeDef);
+          expect(result).to.deep.equal({
+            "somethingPrimitive": {
+              "type": "boolean"
+            }
+          });
+        });
+
+        it('should be able to resolve type properties from a definition that contains the JSON schema "oneOf" operator', () => {
+          const inputTypeDef = {
+            "oneOf": [
+              {
+                "properties": {
+                  "somethingPrimitive": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            ]
+          };
+          const result = sam2CFNUtils.resolveTypeProperties(inputTypeDef);
+          expect(result).to.deep.equal({
+            "somethingPrimitive": {
+              "type": "boolean"
+            }
+          });
+        });
+
+        it('should be able to resolve type properties from a definition that contains a JSON schema with nested operators', () => {
+          const inputTypeDef = {
+            "allOf": [
+              {
+                "anyOf": [
+                  {
+                    "properties": {
+                      "somethingTooPrimitive": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "properties": {
+                  "somethingPrimitive": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            ]
+          };
+          const result = sam2CFNUtils.resolveTypeProperties(inputTypeDef);
+          expect(result).to.deep.equal({
+            "somethingPrimitive": {
+              "type": "boolean"
+            },
+            "somethingTooPrimitive": {
+              "type": "number"
+            }
+          });
+        });
+
+    });
+
     describe('processDefinition', () => {
 
       describe('given a SAM schema definition with properties that employ primitive types', () => {

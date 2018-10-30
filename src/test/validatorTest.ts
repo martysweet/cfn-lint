@@ -1693,8 +1693,8 @@ describe('validator', () => {
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(1);
-            expect(result['errors']['crit'][0]).to.have.property('message', 'Required property CodeUri missing for type AWS::Serverless::Function');
-            expect(result['errors']['crit'][0]).to.have.property('resource', 'Resources > HelloWorldFunction > Properties');
+            expect(result['errors']['crit'][0]).to.have.property('message', 'Required property StageName missing for type AWS::Serverless::Api');
+            expect(result['errors']['crit'][0]).to.have.property('resource', 'Resources > HelloWorldApi > Properties');
         });
 
         it('a template containing an aggregate-type that has items with different types (sam_20161031_heterogenous_aggregation.yaml) should validate successfully', () => {
