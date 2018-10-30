@@ -7,6 +7,10 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.9.1] - 2018-10-30
+### Changed
+- Update CloudFormation specification (downloaded 30-Oct-2018) - version: 2.10.0
+
 ## [1.9.0] - 2018-10-30
 ### Added
 - Merge PR #167, adding support for SAM template validation
@@ -180,7 +184,8 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Added
 - Add pseudo parameter support
 
-[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.9.0...HEAD
+[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.9.1...HEAD
+[1.9.1]: https://github.com/martysweet/cfn-lint/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/martysweet/cfn-lint/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/martysweet/cfn-lint/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/martysweet/cfn-lint/compare/v1.7.4...v1.8.0
