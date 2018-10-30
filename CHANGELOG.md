@@ -9,6 +9,9 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Added
 - Merge PR #167, adding support for SAM template validation
 
+### Fixed
+- Merge PR #197, fixing Fn::Sub fixed nested Intrinsic functions and Literal Values
+
 ## [1.8.1] - 2018-09-07
 ### Changed
 - Update CloudFormation specification (downloaded 05-Sep-2018) - version: 2.6.0
