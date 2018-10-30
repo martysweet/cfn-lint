@@ -1,0 +1,19 @@
+
+Parameters:
+  ASecurityGroup:
+    Type: String
+    Default: "sg-mysggroup"
+
+Conditions:
+  SomeOtherCondition: !Equals ["a", "a"]
+  MyAndCondition: !And
+    - !Equals ["sg-mysggroup", !Ref ASecurityGroup]
+    - "true"
+  MyCondition: !And
+      - !Condition MyAndCondition
+      - "true"
+
+Resources:
+  S3:
+    Type: AWS::S3::Bucket
+    Condition: MyAndCondition

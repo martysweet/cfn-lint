@@ -1128,6 +1128,8 @@ function resolveIntrinsicFunction(ref: any, key: string) : string | boolean | st
             return doIntrinsicEquals(ref, key);
         case 'Fn::Or':
             return doIntrinsicOr(ref, key);
+        case 'Fn::And':
+            return doIntrinsicAnd(ref, key);
         case 'Fn::Not':
             return doIntrinsicNot(ref, key);
         case 'Fn::ImportValue':
@@ -1607,6 +1609,38 @@ function doIntrinsicOr(ref: any, key: string) {
 
     }else{
         addError('crit', `Expecting Fn::Or to have between 2 and 10 arguments`, placeInTemplate, 'Fn::Or');
+    }
+}
+
+function doIntrinsicAnd(ref: any, key: string) {
+    let toGet = ref[key];
+
+    // Check the value of the condition
+    if (toGet.length > 1 && toGet.length < 11) {
+        let argumentIsTrue = false;
+
+        // Resolve each argument
+        for(let arg in toGet){
+            if(toGet.hasOwnProperty(arg)) {
+                if (typeof toGet[arg] == 'object') {
+                    let keys = Object.keys(toGet[arg]);
+                    if(awsIntrinsicFunctions['Fn::And']['supportedFunctions'].indexOf(keys[0]) != -1) {
+                        toGet[arg] = resolveIntrinsicFunction(toGet[arg], keys[0]);
+                    }else{
+                        addError('crit', `Fn::And does not support function '${keys[0]}' here`, placeInTemplate, 'Fn::And');
+                    }
+                }
+                // Set to true if needed
+                if (toGet[arg] === true) {
+                    argumentIsTrue = true;
+                }
+            }
+        }
+
+        return argumentIsTrue;
+
+    }else{
+        addError('crit', `Expecting Fn::And to have between 2 and 10 arguments`, placeInTemplate, 'Fn::And');
     }
 }
 
