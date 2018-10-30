@@ -615,7 +615,9 @@ function doSAMTransform(baseType:string, type: string, name: string, template: a
             // build resource template
             let resourceTemplate: any = {
               'Type': resourceType,
-              'Attributes': {}
+              'Attributes': {
+                'Ref': 'mockAttr_Ref' // some CFN definitions are missing the Ref attribute, so we force it here
+              }
             };
             let resourceSpec: any = resourcesSpec.getType(resourceType);
             if (resourceSpec.hasOwnProperty('Attributes')) {
@@ -625,7 +627,6 @@ function doSAMTransform(baseType:string, type: string, name: string, template: a
                         attributeValue = mockArnPrefix;
                     }
                     resourceTemplate['Attributes'][attribute] = attributeValue;
-                    resourceTemplate['Attributes']['Ref'] = attributeValue;
                 }
             }
 
@@ -1376,6 +1377,57 @@ function doIntrinsicSelect(ref: any, key: string){
 
 }
 
+
+/**
+ * Resolves the string part of the `Fn::Sub` intrinsic function into mappings of placeholders and their corresponding CFN
+ * literal values or intrinsic functions, according to the provided list of `Fn::Sub` specific variables; the resulting intrinsic
+ * functions are compatible with and can later be resolved using the `resolveIntrinsicFunction` function.
+ * e.g.: `{ '${AWS::Region}': {'Ref': 'AWS::Region'} }`.
+ */
+function parseFnSubStr(sub: string, vars: any = {}) {
+    // Extract the placeholders within the ${} and store in matches
+    const regex = /\${([A-Za-z0-9:.!]+)}/gm;
+    const matches = [];
+    let match;
+    while (match = regex.exec(sub)) {
+        matches.push(match[1]);
+    }
+
+    // Process each of the matches into a literal value or an intrinsic function
+    const results: any = {};
+    for (let m of matches) {
+        let result: any = null;
+
+        // literal value
+        if(m.indexOf('!') == 0) {
+            result = m.substring(1);
+
+        // Fn::Sub variable value
+        } else if(vars.hasOwnProperty(m)) {
+            result = m;
+
+        // Fn::GetAtt intrinsic function
+        } else if(resourcesSpec.isPropertyTypeFormat(m)) {
+            result = {
+              'Fn::GetAtt': [
+                resourcesSpec.getPropertyTypeBaseName(m),
+                resourcesSpec.getPropertyTypePropertyName(m),
+              ]
+            };
+
+        // Ref intrinsic function
+        } else {
+            result = {
+              'Ref': m
+            };
+        }
+
+        results[m] = result;
+    }
+
+    return results;
+}
+
 function doIntrinsicSub(ref: any, key: string){
     let toGet = ref[key];
     let replacementStr = null;
@@ -1414,54 +1466,24 @@ function doIntrinsicSub(ref: any, key: string){
         }
     }
 
-    // Extract the replacement parts within the ${} and store in matches
-    let regex = /\${([A-Za-z0-9:.!]+)/gm;
-    let matches = [];
-    let match;
-    while (match = regex.exec(replacementStr)) {
-        matches.push(match[1]);
-    }
+    const placeholderValues = parseFnSubStr(replacementStr, definedParams ? definedParams : {});
 
-    // Resolve the replacement and replace into string using Ref or GetAtt
-    // TODO: We need a better way of testing this logic, the complexity here will be in managing the intrinsicResolves
-    for(let m of matches){
-        let replacementVal = "";
+    // do rendition
+    for(const placeholder in placeholderValues){
+        let placeholderValue: any = placeholderValues[placeholder];
 
-        if(m.indexOf('!') == 0){
-            // Literal Value support: ${!Literal} will create ${Literal}
-            replacementVal = '${' + m.substring(1) + '}';
-        }else if(m.indexOf('.') != -1){ // If there is a period in the replacement value
-            // Check if m is within the key value map
-            if(definedParams !== null && definedParams.hasOwnProperty(m) && typeof definedParams[m] !== 'string'){
-                definedParams[m] = resolveIntrinsicFunction(definedParams[m], Object.keys(definedParams[m])[0]);
-                replacementVal = definedParams[m];
-            }else{
-                // Use Fn::GetAtt
-                let parts = m.split('.');
-                replacementVal = fnGetAtt(parts[0], parts[1]);
-                if(replacementVal === null){
-                    addError('crit', `Intrinsic Sub does not reference valid resource attribute '${m}'`, placeInTemplate, 'Fn::Sub');
-                }
-            }
-        }else{
-            if(definedParams !== null && definedParams.hasOwnProperty(m)){
-                if(typeof definedParams[m] !== 'string') {
-                    replacementVal = resolveIntrinsicFunction(definedParams[m], Object.keys(definedParams[m])[0]) as string;
-                }else{
-                    replacementVal = definedParams[m];
-                }
-            }else {
-                // Use Ref
-                replacementVal = getRef(m);
-                if(replacementVal === null){
-                    addError('crit', `Intrinsic Sub does not reference valid resource or mapping '${m}'`, placeInTemplate, 'Fn::Sub');
-                }
-            }
+        // resolve intrinsics
+        if(typeof placeholderValue == 'object'){
+            const fnName = Object.keys(placeholderValue)[0];
+            placeholderValue = resolveIntrinsicFunction(placeholderValue, fnName);
         }
 
-        // Do a string replace on the string
-        replacementStr = replacementStr.replace("${" + m + "}", replacementVal);
+        if(placeholderValue == 'INVALID_REFERENCE_OR_ATTR_ON_GET_ATT' || placeholderValue == null){
+            addError('crit', `Intrinsic Sub does not reference a valid resource, attribute nor mapping '${placeholder}'.`,
+                     placeInTemplate, 'Fn::Sub');
+        }
 
+        replacementStr = replacementStr.replace(placeholder, placeholderValue);
     }
 
     // Set the resolved value as a string
