@@ -7,7 +7,7 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [1.9.0] - 2018-10-07
+## [1.9.0] - 2018-10-30
 ### Added
 - Merge PR #167, adding support for SAM template validation
 
