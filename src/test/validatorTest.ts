@@ -421,6 +421,14 @@ describe('validator', () => {
             expect(result['errors']['warn']).to.have.lengthOf(0);
         });
 
+        it('a sub with nested intrinsic values should result in validTemplate = true, 0 crit errors, no warnings', () => {
+            const input = 'testData/valid/yaml/valid_nested_intrinsic_subs.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
+        });
+
     });
 
     describe('Fn::ImportValue', () => {

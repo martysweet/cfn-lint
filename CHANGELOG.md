@@ -16,6 +16,7 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 - Fix CHANGELOG broken link for v1.8.1
+- Merge PR #197, fixing Fn::Sub fixed nested Intrinsic functions and Literal Values
 
 ## [1.8.1] - 2018-09-07
 ### Changed
