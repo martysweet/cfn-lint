@@ -1527,6 +1527,15 @@ describe('validator', () => {
               expect(result).to.equal('List<String>');
           });
 
+          it('should be able to infer a List of Json aggregate value type', () => {
+              let input = [
+                { 1: 'somethingBeautiful' }, { 2: 'somethingAwesome' }, { 3: 'somethingCool' }
+              ];
+              let candidateTypes: string[] = [];
+              let result = validator.__TESTING__.inferAggregateValueType(input, candidateTypes);
+              expect(result).to.equal('List<Json>');
+          });
+
           it('should be able to infer a Map of Strings aggregate value type', () => {
               let input = {
                 1: 'somethingBeautiful',
@@ -1536,6 +1545,17 @@ describe('validator', () => {
               let candidateTypes: string[] = [];
               let result = validator.__TESTING__.inferAggregateValueType(input, candidateTypes);
               expect(result).to.equal('Map<String>');
+          });
+
+          it('should be able to infer a Map of Json aggregate value type', () => {
+              let input = {
+                1: { 1: 'somethingBeautiful' },
+                2: { 2: 'somethingAwesome' },
+                3: { 3: 'somethingCool' }
+              };
+              let candidateTypes: string[] = [];
+              let result = validator.__TESTING__.inferAggregateValueType(input, candidateTypes);
+              expect(result).to.equal('Map<Json>');
           });
 
           it('should not be able to infer a non-aggregate value type', () => {

@@ -393,7 +393,7 @@ function inferAggregateValueType(v: any, candidateItemTypes: string[]): string |
       itemType = inferValueType(item, candidateItemTypes);
       // aggregate type nesting is not currently supported
       if (!!itemType && resourcesSpec.isComplexType(itemType)) {
-          return 'Json';
+          itemType = 'Json';
       }
     }
 
@@ -438,6 +438,20 @@ function formatCandidateTypes(baseType: string, candidateTypes: string[]) {
     return candidateTypes;
 }
 
+function templateHasUnresolvedIntrinsics(template: any): boolean {
+    if (typeof template == 'object') {
+        const templateKeys = Object.keys(template);
+        const awsIntrinsicFunctionNames = Object.keys(awsIntrinsicFunctions);
+        for (const templateKey of templateKeys) {
+            const nestedTemplate: any = template[templateKey];
+            if (!!~awsIntrinsicFunctionNames.indexOf(templateKey) || templateHasUnresolvedIntrinsics(nestedTemplate)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 function applySAMPropertyOverrides(baseType: string, baseName: string, type: string, name: string,
                                                 spec: awsData.Property, template: any) {
     // early exit for unsupported template or base type
@@ -450,9 +464,10 @@ function applySAMPropertyOverrides(baseType: string, baseName: string, type: str
     if (Array.isArray(specType)) {
 
         // skip if template has unresolved intrinsic functions
-        if (arrayIntersection(Object.keys(awsIntrinsicFunctions), Object.keys(template)).length > 0) {
+        if (templateHasUnresolvedIntrinsics(template)) {
             return;
         }
+
         let candidateTypes = formatCandidateTypes(baseType, specType);
 
         // infer property spec based on value in template

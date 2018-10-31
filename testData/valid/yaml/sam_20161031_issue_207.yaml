@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  somethingBeautiful:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: somethingCool
+      Handler: somethingAwesome
+      Policies:
+        -
+          Statement:
+            -
+              Effect: "Allow"
+              Action: "*"
+              Resource: "*"
+      Runtime: someRuntime
+      Timeout: 300
