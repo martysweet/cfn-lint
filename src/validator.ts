@@ -392,7 +392,7 @@ function inferAggregateValueType(v: any, candidateItemTypes: string[]): string |
     if (!!item) {
       itemType = inferValueType(item, candidateItemTypes);
       // aggregate type nesting is not currently supported
-      if (!!itemType && resourcesSpec.isComplexType(itemType)) {
+      if (!!itemType && resourcesSpec.isAggregateType(itemType)) {
           itemType = 'Json';
       }
     }
@@ -404,14 +404,14 @@ function inferValueType(v: any, candidateTypes: string[]) {
      candidateTypes = candidateTypes.filter((x) => !resourcesSpec.isPrimitiveType(x));
      let candidateStructureTypes: string[] = candidateTypes.filter((x) => {
         if (resourcesSpec.isParameterizedTypeFormat(x) &&
-            resourcesSpec.isComplexType(resourcesSpec.getParameterizedTypeName(x))) {
+            resourcesSpec.isAggregateType(resourcesSpec.getParameterizedTypeName(x))) {
             return false;
         }
         return true;
     });
     let candidateAggregateTypes: string[] = candidateTypes.filter((x) => {
        if (resourcesSpec.isParameterizedTypeFormat(x) &&
-           resourcesSpec.isComplexType(resourcesSpec.getParameterizedTypeName(x))) {
+           resourcesSpec.isAggregateType(resourcesSpec.getParameterizedTypeName(x))) {
            return true;
        }
        return false;
@@ -2300,7 +2300,7 @@ function localizeType(type: string) {
     // don't localize primitive, complex or already localized types
     let localType = type;
     if (!resourcesSpec.isPrimitiveType(type) &&
-        !resourcesSpec.isComplexType(type) &&
+        !resourcesSpec.isAggregateType(type) &&
         !resourcesSpec.isParameterizedTypeFormat(type)) {
         localType = `${type}<${typePlaceInTemplate}>`;
     }

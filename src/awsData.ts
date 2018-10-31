@@ -4,7 +4,7 @@ export const awsExtraDocs = require('../data/aws_extra_docs.json') as AWSExtraDo
 
 export const awsPrimitiveTypes = ['String', 'Integer', 'Boolean', 'Json', 'Double', 'Long', 'Timestamp'];
 
-export const awsComplexTypes = ['Map', 'List'];
+export const awsAggregateTypes = ['Map', 'List'];
 
 export type AWSPrimitiveType = 'String' | 'Integer' | 'Boolean' | 'Json' | 'Double' | 'Long' | 'Timestamp';
 
