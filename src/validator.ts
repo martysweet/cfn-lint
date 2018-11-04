@@ -9,9 +9,7 @@ import {
     awsParameterTypes as parameterTypesSpec,
     awsRefOverrides,
     awsIntrinsicFunctions,
-    PrimitiveAttribute,
-    ListAttribute,
-    AWSResourcesSpecification,
+    AWSResourcesSpecification
 } from './awsData';
 import * as awsData from './awsData';
 import * as samData from './samData';
@@ -40,6 +38,7 @@ let parameterRuntimeOverride: {[parameter: string]: ParameterValue | undefined} 
 let importRuntimeOverride: {[parameter: string]: ImportValue | undefined} = {};
 // Todo: Allow override for RefOverrides ex. Regions
 
+let options: any;
 let mockRegister: {[parameter: string]: any} = {};
 
 
@@ -73,6 +72,7 @@ let errorObject: ErrorObject = {
 export function resetValidator(){
     errorObject = {"templateValid": true, "errors": {"info": [], "warn": [], "crit": []}, outputs: {}, exports: {}};
     stopValidation = false;
+    options = {};
     parameterRuntimeOverride = {};
     importRuntimeOverride = {};
     mockRegister = {};
@@ -166,8 +166,9 @@ function addImportOverride(parameter: string, value: ImportValue){
 
 function validateWorkingInput(passedOptions?: Partial<ValidateOptions>) {
     // Ensure we are working from a clean slate
-    //exports.resetValidator();
-    const options = Object.assign({}, defaultValidateOptions, passedOptions);
+    // TODO: is this still needed?
+    // exports.resetValidator();
+    options = Object.assign({}, defaultValidateOptions, passedOptions);
 
     // Check AWS Template Format Version
     if(workingInput.hasOwnProperty(['AWSTemplateFormatVersion'])){
@@ -209,7 +210,7 @@ function validateWorkingInput(passedOptions?: Partial<ValidateOptions>) {
     applyTemplateOverrides();
 
     // Check parameters and assign outputs
-    assignParametersOutput(options.guessParameters);
+    assignParametersOutput();
 
     // Evaluate Conditions
     assignConditionsOutputs();
@@ -732,22 +733,30 @@ function applyTemplateOverrides() {
     }
 }
 
-function assignParametersOutput(guessParameters?: string[]) {
+function assignParametersOutput() {
     if(!workingInput.hasOwnProperty('Parameters')){
         return false; // This isn't an issue
     }
-
+    const guessParameters = options.guessParameters;
     const guessAll = (guessParameters === undefined);
     const guessParametersSet = new Set(guessParameters || []);
 
     // For through each parameter
     for(let parameterName in workingInput['Parameters']) {
 
-        const parameter = workingInput['Parameters'][parameterName];
+        const parameter = workingInput['Parameters'][parameterName] as awsData.Parameter;
 
+        // check that the parameter has a type and otherwise we are going to assume type is a string to continue validation and
+        // throw a critical error.
         if (!parameter.hasOwnProperty('Type')) {
-            // We are going to assume type if a string to continue validation, but will throw a critical
             addError('crit', `Parameter ${parameterName} does not have a Type defined.`, ['Parameters', parameterName], "Parameters");
+            parameter['Type'] = 'String';
+        }
+
+        // check that the parameter's type is a valid parameter type otherwise we are going to assume type is a string to continue
+        // validation and throw a critical error.
+        if (!parameterTypesSpec.hasOwnProperty(parameter['Type'])) {
+            addError('crit', `Parameter ${parameterName} has an invalid type of ${parameter['Type']}.`, ['Parameters', parameterName], "Parameters");
             parameter['Type'] = 'String';
         }
 
@@ -756,32 +765,36 @@ function assignParametersOutput(guessParameters?: string[]) {
         const okToGuess = (guessAll) || (guessParametersSet.has(parameterName));
 
         let parameterValue = inferParameterValue(parameterName, parameter, okToGuess);
+        if (parameterValue != null) {
+            registerMockValue(parameterName, parameterValue);
 
+            if (parameter.hasOwnProperty('AllowedValues') && parameter['AllowedValues']!.indexOf(parameterValue) < 0) {
+                addError('crit', `Parameter value '${parameterValue}' for ${parameterName} is`
+                                + ` not within the parameters AllowedValues`, ['Parameters', parameterName], "Parameters");
 
-        if (parameter.hasOwnProperty('AllowedValues') && parameter['AllowedValues'].indexOf(parameterValue) < 0) {
-            addError('crit', `Parameter value '${parameterValue}' for ${parameterName} is`
-                            + ` not within the parameters AllowedValues`, ['Parameters', parameterName], "Parameters");
+            }
 
-        }
+            if(parameter['Type'] === "CommaDelimitedList" && typeof parameterValue === 'string') {
+                parameterValue = parameterValue.split(',').map(x => x.trim());
+                parameterValue.forEach(val => {
+                  if (val === ""){
+                    addError('crit', `Parameter ${parameterName} contains a CommaDelimitedList where the number of commas appears to be equal or greater than the list of items.`, ['Parameters', parameterName], "Parameters");
+                  }
+                })
+            }
 
-        if(parameter['Type'] === "CommaDelimitedList" && typeof parameterValue === 'string') {
-            parameterValue = parameterValue.split(',').map(x => x.trim());
-            parameterValue.forEach(val => {
-              if (val === ""){
-                addError('crit', `Parameter ${parameterName} contains a CommaDelimitedList where the number of commas appears to be equal or greater than the list of items.`, ['Parameters', parameterName], "Parameters");
-              }
-            })
-        }
-
-        // The List<type> parameter value is inferred as string with comma delimited values and must be converted to array
-        let listParameterTypesSpec = Object.keys(parameterTypesSpec).filter((x) => !!x.match(/List<.*>/));
-        if (!!~listParameterTypesSpec.indexOf(parameter['Type']) && (typeof parameterValue === 'string')) {
-            parameterValue = parameterValue.split(',').map(x => x.trim());
-            parameterValue.forEach(val => {
-              if (val === ""){
-                addError('crit', `Parameter ${parameterName} contains a List<${parameter['Type']}> where the number of commas appears to be equal or greater than the list of items.`, ['Parameters', parameterName], "Parameters");
-              }
-            })
+            // The List<type> parameter value is inferred as string with comma delimited values and must be converted to array
+            let listParameterTypesSpec = Object.keys(parameterTypesSpec).filter((x) => !!x.match(/List<.*>/));
+            if (!!~listParameterTypesSpec.indexOf(parameter['Type']) && (typeof parameterValue === 'string')) {
+                parameterValue = parameterValue.split(',').map(x => x.trim());
+                parameterValue.forEach(val => {
+                  if (val === ""){
+                    addError('crit', `Parameter ${parameterName} contains a List<${parameter['Type']}> where the number of commas appears to be equal or greater than the list of items.`, ['Parameters', parameterName], "Parameters");
+                  }
+                })
+            }
+        } else {
+            addError('crit', 'Value for parameter was not provided', ['Parameters', parameterName], 'Parameters')
         }
 
         // Assign an Attribute Ref regardless of any failures above
@@ -791,65 +804,30 @@ function assignParametersOutput(guessParameters?: string[]) {
     }
 }
 
-
-function inferParameterValue(parameterName: string, parameter: any, okToGuess: boolean): string | string[] {
-
-    const parameterDefaultsByType = {
-        'string': `string_input_${parameterName}`,
-        'array': undefined,
-        'number': '42'
-    }
+function inferParameterValue(parameterName: string, parameter: awsData.Parameter, okToGuess: boolean): string | string[] | null {
+    let parameterValue = null;
 
     // Check if the Ref for the parameter has been defined at runtime
-    const parameterOverride = parameterRuntimeOverride[parameterName]
+    const parameterOverride = parameterRuntimeOverride[parameterName];
+
+    // Check the parameter provided at runtime is within the allowed property list (if specified)
     if (parameterOverride !== undefined) {
-        // Check the parameter provided at runtime is within the allowed property list (if specified)
-        return parameterOverride;
+        parameterValue =  parameterOverride;
+
+    // See if Default property is present and populate
     } else if (parameter.hasOwnProperty('Default')) {
-        // See if Default property is present and populate
-        return parameter['Default'];
-    } else {
-        if (!okToGuess) {
-            addError('crit', 'Value for parameter was not provided', ['Parameters', parameterName], 'Parameters')
-        }
-        if (parameter.hasOwnProperty('AllowedValues') && parameter['AllowedValues'].length > 0) {
-            // See if AllowedValues has been specified
-            return parameter['AllowedValues'][0];
-        } else {
-            const rawParameterType = parameter['Type'];
+        parameterValue =  parameter['Default'];
 
-            const listMatch = /^List<(.+)>$/.exec(rawParameterType);
-            let isList: boolean;
-            let parameterType: string;
+    // See if we can get the value from AllowedValues
+    } else if (parameter.hasOwnProperty('AllowedValues') && parameter['AllowedValues']!.length > 0) {
+        parameterValue =  parameter['AllowedValues']![0];
 
-            if (listMatch) {
-                isList = true;
-                parameterType = listMatch[1];
-            } else {
-                parameterType = rawParameterType;
-                isList = false;
-            }
-
-            if (!parameterTypesSpec.hasOwnProperty(parameterType)) {
-                addError('crit', `Parameter ${parameterName} has an invalid type of ${rawParameterType}.`, ['Parameters', parameterName], "Parameters");
-                parameterType = 'String';
-            }
-
-            let normalizedType = parameterTypesSpec[parameterType!];
-            if (normalizedType == 'array') {
-                isList = true;
-                parameterType = 'String';
-                normalizedType = 'string';
-            }
-
-            const parameterDefault = parameterDefaultsByType[parameterTypesSpec[parameterType]!]!
-            if (isList) {
-                return registerMockValue(parameterName, [parameterDefault]);
-            } else {
-                return registerMockValue(parameterName, parameterDefault);
-            }
-        }
+    // Attempt to guess the value based on the parameter's type
+    } else if (okToGuess) {
+        parameterValue = getMockByParameter(parameterName, parameter);
     }
+
+    return parameterValue;
 }
 
 type Severity = keyof typeof errorObject.errors;
@@ -994,29 +972,26 @@ function assignResourcesOutputs(){
             //  Go through the attributes of the specification, and assign them
             if(spec != null && spec.Attributes){
                 for(let attr in spec.Attributes){
-                    let value: any = null;
 
-                    // use user-defined attribute value if provided for the specific type
+                    // determine attribute value
+                    let value: any = null;
                     try {
-                        let attrSpec: any = resourcesSpec.getResourceTypeAttribute(resourceType, attr);
+                        const attrSpec: any = resourcesSpec.getResourceTypeAttribute(resourceType, attr);
+
+                        // use user-defined attribute value if provided for the specific type
                         if (attrSpec.hasOwnProperty('Value')) {
                             value = attrSpec['Value'];
+
+                        // otherwise use an implicit mock value
+                        } else {
+                            value = getMockByAttribute(attr, attrSpec);
                         }
                     } catch(e) {}
 
-                    // otherwise use an implicit mock value
-                    if (!value) {
-                      if (attr.indexOf('Arn') != -1) {
-                          value = mockArnPrefix + res;
-                      }else {
-                          value = "mockAttr_" + res;
-                      }
-                    }
-
+                    registerMockValue(`${res}.${attr}`, value);
                     workingInput['Resources'][res]['Attributes'][attr] = value;
                 }
             }
-
 
         }
     }
@@ -1029,7 +1004,7 @@ function resolveReferences(){
 
     // Resolve all Ref
     lastPositionInTemplate = workingInput;
-    recursiveDecent(lastPositionInTemplate);
+    recursiveDescent(lastPositionInTemplate);
 
 
     let stop = workingInput;
@@ -1040,7 +1015,7 @@ let placeInTemplate: (string|number)[] = [];
 let lastPositionInTemplate: any = null;
 let lastPositionInTemplateKey: string | null = null;
 
-function recursiveDecent(ref: any){
+function recursiveDescent(ref: any){
 
     // Save the current variables to allow for nested decents
     let placeInTemplateX = placeInTemplate;
@@ -1075,7 +1050,7 @@ function recursiveDecent(ref: any){
             placeInTemplate.push(key);
             lastPositionInTemplate = ref;
             lastPositionInTemplateKey = key;
-            recursiveDecent(ref[key]);
+            recursiveDescent(ref[key]);
         }
 
 
@@ -1533,7 +1508,7 @@ function doIntrinsicIf(ref: any, key: string){
                 return resolveIntrinsicFunction(value, keys[0]);
             }else{
                 // TODO: Do we need to make sure this isn't an attempt at an invalid supportedFunction?
-                recursiveDecent(value);
+                recursiveDescent(value);
                 return value
             }
         }else {
@@ -1747,7 +1722,7 @@ function fnJoin(join: any, parts: any){
 }
 
 export function registerMockValue(name: string, value: any) {
-  addError('info', `Assuming value "${value}" for ${name}`, placeInTemplate);
+  addError('info', `Assuming value ${util.inspect(value, false, null)} for ${name}`, placeInTemplate);
   if (mockRegister.hasOwnProperty(name)) {
     if (mockRegister[name] !== value) {
       addError('warn', `Mock value mismatch for ${name}!`, placeInTemplate);
@@ -1755,6 +1730,315 @@ export function registerMockValue(name: string, value: any) {
   }
   mockRegister[name] = value;
   return value;
+}
+
+function getMockByPrimitiveType(type: KnownTypes | string) {
+    // normalize type
+    if (typeof type == 'string') {
+      type = (<any>KnownTypes)[type];
+    }
+
+    let value: any = null;
+
+    switch(type) {
+      case KnownTypes.Double:
+        value = 1234567.89;
+        break;
+      case KnownTypes.Integer:
+        value = 1234567890;
+        break;
+      case KnownTypes.Boolean:
+        value = true;
+        break;
+      case KnownTypes.Json:
+        value = {};
+        break;
+      case KnownTypes.Timestamp:
+        value = '2011-10-10T14:48:00';
+        break;
+      case KnownTypes.Arn:
+        value = mockArnPrefix;
+        break;
+      case KnownTypes.String:
+        value = 'mockAttrValue';
+        break;
+      default:
+        throw TypeError('Unknown primitive type!');
+    }
+
+    return value;
+}
+
+function getMockByAggregateType(type: KnownTypes | string, itemType: KnownTypes | string) {
+    // normalize type
+    if (typeof type == 'string') {
+      type = (<any>KnownTypes)[type];
+    }
+
+    // normalize itemType
+    if (typeof itemType == 'string') {
+      itemType = (<any>KnownTypes)[itemType];
+    }
+
+    let value: any = null;
+    const itemValue = getMockByPrimitiveType(itemType);
+
+    switch(type) {
+      case KnownTypes.List:
+        value = [itemValue, itemValue];
+        break;
+      case KnownTypes.Map:
+        value = { test: itemValue };
+        break;
+      default:
+        throw TypeError('Unknown aggregate type!');
+    }
+
+    return value;
+}
+
+function getMockByParameter(name: string, parameter: awsData.Parameter): any {
+    const parameterType = parameter['Type'];
+
+    let parameterValue = null;
+
+    // some primitive type
+    if (!!~awsData.awsPrimitiveTypes.indexOf(parameterType)) {
+      if (RegExp(/arn/i).test(name)) {
+        parameterValue = getMockByPrimitiveType(KnownTypes.Arn);
+      } else {
+        parameterValue = getMockByPrimitiveType(parameterType);
+      }
+
+    // AWS-Specific Parameter Types
+    } else
+    if (parameterTypesSpec.hasOwnProperty(parameterType)) {
+        const parameterNativeType = parameterTypesSpec[parameterType];
+        switch(parameterNativeType) {
+            case 'string':
+                parameterValue = getMockByPrimitiveType(KnownTypes.String);
+                break;
+            case 'number':
+                parameterValue = getMockByPrimitiveType(KnownTypes.Integer);
+                break;
+            case 'array':
+                parameterValue = getMockByAggregateType(KnownTypes.List, KnownTypes.String);
+                break;
+        }
+    }
+
+    return parameterValue;
+}
+
+function getMockByAttribute(name: string, attribute: awsData.Attribute): any {
+    let _attribute: awsData.Attribute;
+    let _attributeType: string | KnownTypes;
+
+    _attribute = attribute as awsData.ComplexAttribute;
+    if (_attribute.hasOwnProperty('Type')) {
+
+      // if the attribute has multiple forms, use the first one available
+      if (Array.isArray(_attribute['Type'])) {
+          _attributeType = (_attribute['Type'] as string[]).pop()!;
+      } else {
+          _attributeType = _attribute['Type'] as string;
+      }
+
+      // destructure parameterized type
+      if (resourcesSpec.isParameterizedTypeFormat(_attributeType)) {
+          _attributeType = resourcesSpec.getParameterizedTypeName(_attributeType);
+      }
+
+      // aggregate type
+      if (!!~['List', 'Map'].indexOf(_attributeType)) {
+        _attribute = attribute as awsData.ListAttribute | awsData.MapAttribute;
+
+        // this may actually be a structure type however, we currently assume it's JSON
+        let itemType = _attribute.hasOwnProperty('ItemType') ? 'Json' : _attribute['PrimitiveItemType'];
+
+        return getMockByAggregateType(_attributeType, itemType as string);
+      }
+
+      // this may actually be a structure type however, we currently assume it's JSON
+      return getMockByPrimitiveType(KnownTypes.Json);
+    }
+
+    _attribute = attribute as awsData.PrimitiveAttribute;
+    if (_attribute.hasOwnProperty('PrimitiveType')) {
+      let primitiveType: any = _attribute['PrimitiveType'];
+      if (RegExp(/arn/i).test(name)) {
+        primitiveType = KnownTypes.Arn;
+      }
+      return getMockByPrimitiveType(primitiveType);
+    }
+}
+
+function getIntrinsicMarkerMock(context: any, marker: any) {
+
+    // recursive subsearch for marker parent intrinsic
+    const getMarkerParent = function (context: any, marker: any): any {
+      let match, submatch: any = null;
+      if (context instanceof Object) {
+        // check if marker is still in context
+        let contextString = JSON.stringify(context);
+        let markerString = JSON.stringify(marker);
+        if ((contextString != markerString) && !!~contextString.indexOf(markerString)) {
+          // narrow down the scope
+          for (let key in context) {
+            // update last known intrinsic
+            if (RegExp(/(fn::)|(ref)/i).test(key)) {
+              match = {[key]: context[key]};
+            }
+            // continue down the rabbit hole or return the last match
+            submatch = getMarkerParent(context[key], marker);
+            if (submatch != null) {
+              match = submatch;
+            }
+          }
+        }
+      }
+      return match;
+    }
+
+    // lookup marker parent and determine contextual value
+    let mock: any = null;
+    let intrinsic = getMarkerParent(context, marker);
+    let intrinsicFn = Object.keys(intrinsic)[0];
+    switch(intrinsicFn.toLowerCase()) {
+      case 'fn::join':
+      case 'fn::select':
+        if (JSON.stringify(marker) == JSON.stringify(intrinsic[intrinsicFn][1])) {
+          mock = getMockByAggregateType(KnownTypes.List, KnownTypes.String);
+        } else {
+          mock = getMockByPrimitiveType(KnownTypes.String);
+        }
+        break;
+      case 'fn::sub':
+        if (JSON.stringify(marker) == JSON.stringify(intrinsic[intrinsicFn][1])) {
+          mock = getMockByAggregateType(KnownTypes.Map, KnownTypes.String);
+        } else {
+          mock = getMockByPrimitiveType(KnownTypes.String);
+        }
+        break;
+      case 'fn::transform':
+        if (JSON.stringify(marker) == JSON.stringify(intrinsic[intrinsicFn]['Parameters'])) {
+          mock = getMockByAggregateType(KnownTypes.Map, KnownTypes.String);
+        } else {
+          mock = getMockByPrimitiveType(KnownTypes.String);
+        }
+        break;
+      default:
+        mock = getMockByPrimitiveType(KnownTypes.String);
+        break;
+    }
+
+    return mock;
+}
+
+function getPlaceInTypeMock(baseType: string, propertyChain: any[]) {
+
+    // search a chain of properties for the last valid property
+    const getDeepestProperty = function(baseType: string, propertyChain: any[]): any {
+
+        let property: any = {
+          key: baseType,
+          spec: null,
+          propertyChain: propertyChain
+        };
+
+        try {
+            property.spec = resourcesSpec.getType(baseType);
+        } catch(e) { return property; }
+
+        let item: string;
+        while (item = propertyChain.shift()) {
+            property.key = item;
+            property.spec = property.spec['Properties'][item];
+            property.propertyChain = propertyChain;
+            // console.log(property);
+            if (!property.spec || !property.spec.hasOwnProperty('Properties')) {
+                break;
+            }
+        }
+
+        // Skip over list or map keys that contain property types
+        if (!!property.spec) {
+            if (property.spec.hasOwnProperty('ItemType')) {
+                propertyChain.shift();
+            }
+
+            // Attempt to resolve sub property type
+            if (propertyChain.length > 0) {
+
+              // sub property type is within a list or an object
+              let subPropertyType: string;
+              if (!!property.spec.ItemType) {
+                  subPropertyType = property.spec.ItemType;
+              } else {
+                  subPropertyType = property.spec.Type;
+              }
+
+              try {
+                  baseType = [baseType.split('.')[0], subPropertyType].join('.');
+                  property = getDeepestProperty(baseType, propertyChain);
+              } catch(e) {}
+
+            }
+        }
+
+        return property;
+    }
+
+    // last property of the chain is the parent of subject
+    const property = getDeepestProperty(baseType, propertyChain);
+    // console.log('getDeepestProperty=', property);
+
+    // get a mock value based on the last property type
+    let mock: any = null;
+    if (!!property.spec) {
+      mock = getMockByAttribute(property.key, property.spec);
+    }
+
+    // reduce the mock value to the part corresponding to the subject
+    if (!!mock) {
+      for (const key of property.propertyChain) {
+        mock = mock[key];
+      }
+    }
+
+    return mock;
+}
+
+function getContextualMock(marker?: any): any {
+    let mock: any;
+
+    let subject: any;
+    if (lastPositionInTemplateKey) {
+        subject = lastPositionInTemplate[lastPositionInTemplateKey];
+    }
+
+    let subjectString = JSON.stringify(subject);
+    let markerString = JSON.stringify(marker);
+
+    // resolve mock via parent of marker in a chain of intrinsic functions
+    if (!!marker && (subject instanceof Object) && (subjectString != markerString)) {
+
+        mock = getIntrinsicMarkerMock(subject, marker);
+
+    // resolve mock via property value type based on placeInTemplate
+    } else if (placeInTemplate[0] == 'Resources') {
+
+        // build the chain of properties
+        const propertyChain = placeInTemplate.slice(0);
+        propertyChain.splice(0, 1); // remove 'Resources'
+        propertyChain.splice(1, 1); // remove 'Properties'
+        const propertyChainBase = propertyChain.shift() as any; // remove the resource
+        const propertyChainBaseType = workingInput['Resources'][propertyChainBase]['Type'];
+
+        mock = getPlaceInTypeMock(propertyChainBaseType, propertyChain);
+    }
+
+    return mock;
 }
 
 export function fnGetAtt(reference: string, attributeName: string){
@@ -1777,30 +2061,34 @@ export function fnGetAtt(reference: string, attributeName: string){
     let value = null;
     if (!!resource) {
         const resourceType = `${resource['Type']}<${reference}>`;
+
+        // if this is a real attribute present in template or user-defined then return it's predefined value
         try {
-            // Lookup attribute
             const attribute = resourcesSpec.getResourceTypeAttribute(resourceType, attributeName)
-            const primitiveAttribute = attribute as PrimitiveAttribute
-            if(!!primitiveAttribute['PrimitiveType']) {
-                value = resource['Attributes'][attributeName];
-            }
-            const listAttribute = attribute as ListAttribute
-            if(listAttribute['Type'] == 'List') {
-                value = [ resource['Attributes'][attributeName], resource['Attributes'][attributeName] ]
-            }
+            value = resource['Attributes'][attributeName];
+
+        // otherwise this is a virtual attribute and it's value needs to be inferred or no such attribute exists
         } catch (e) {
-            // Coerce missing custom resource attribute value to string
+
+            // guess virtual attribute value
             if ((resourceType.indexOf('Custom::') == 0) ||
                 (resourceType.indexOf('AWS::CloudFormation::CustomResource') == 0) ||
                 (resourceType.indexOf('AWS::CloudFormation::Stack') == 0)) {
-                value = `mockAttr_${reference}_${attributeName}`;
-            } else
-            if (e instanceof resourcesSpec.NoSuchResourceTypeAttribute) {
+                const marker = { 'Fn::GetAtt': [ reference ] };
+                attributeName.split('.').map((x) => {
+                  marker['Fn::GetAtt'].push(x);
+                });
+                value = getContextualMock(marker);
+
+            // attribute does not exist
+            } else if (e instanceof resourcesSpec.NoSuchResourceTypeAttribute) {
                 addError('crit',
                     e.message,
                     placeInTemplate,
                     resourceType
                 );
+
+            // something else happened
             } else {
                 throw e;
             }
@@ -2381,9 +2669,15 @@ function checkMap(objectType: NamedProperty, mapToCheck: {[k: string]: any}) {
 
 // EXPOSE INTERNAL FUNCTIONS FOR TESTING PURPOSES
 export const __TESTING__: any = {
-  'resourcesSpec': resourcesSpec,
-  'inferPrimitiveValueType': inferPrimitiveValueType,
-  'inferStructureValueType': inferStructureValueType,
-  'inferAggregateValueType': inferAggregateValueType,
-  'inferValueType': inferValueType
+    'resourcesSpec': resourcesSpec,
+    'inferPrimitiveValueType': inferPrimitiveValueType,
+    'inferStructureValueType': inferStructureValueType,
+    'inferAggregateValueType': inferAggregateValueType,
+    'inferValueType': inferValueType,
+    'getMockByPrimitiveType': getMockByPrimitiveType,
+    'getMockByAggregateType': getMockByAggregateType,
+    'getMockByParameter': getMockByParameter,
+    'getMockByAttribute': getMockByAttribute,
+    'getIntrinsicMarkerMock': getIntrinsicMarkerMock,
+    'getPlaceInTypeMock': getPlaceInTypeMock
 };

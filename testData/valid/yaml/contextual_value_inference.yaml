@@ -1,0 +1,16 @@
+Resources:
+  Custom:
+    Type: AWS::CloudFormation::CustomResource
+
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !GetAtt Custom.SomeMagicalAttribute
+      LoggingConfiguration: !GetAtt Custom.AnotherBeautifulUndMagicalAttribute
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins: !GetAtt Custom.SayItIsntSoAttribute
+            AllowedMethods:
+              - Fn::Join:
+                  - !GetAtt Custom.Delimeter
+                  - !GetAtt Custom.ListOfStrings

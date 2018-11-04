@@ -41,6 +41,8 @@
     "chai": "latest",
     "mocha": "latest",
     "typescript": "~2.6.2",
+    "chai-date-string": "^0.1.0",
+    "chai-match": "^1.1.1",
     "dependency-check": "^2.9.1",
     "proxyquire-2": "^1.0.7"
   },

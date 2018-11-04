@@ -1,6 +1,10 @@
 import chai = require('chai');
 const expect = chai.expect;
 const assert = chai.assert;
+const chaiDateString = require('chai-date-string');
+chai.use(chaiDateString);
+const chaiMatch = require('chai-match');
+chai.use(chaiMatch);
 import validator = require('../validator');
 import yaml = require('js-yaml');
 
@@ -8,6 +12,9 @@ import {samResources20161031} from '../samData';
 import {awsResources} from '../awsData';
 import util = require('util');
 import { isObject } from 'util';
+
+const clone = require('clone');
+const arnFormat = /^((([a-z]|[0-9]|-)*(:|\/)?){6,8})$/;
 
 describe('validator', () => {
 
@@ -471,8 +478,11 @@ describe('validator', () => {
             const input = 'testData/valid/yaml/valid_getatt_custom_resource.yaml';
             let result = validator.validateFile(input);
             expect(result).to.have.property('templateValid', true);
-            expect(validator.fnGetAtt('Custom', 'SomeAttribute')).to.equal('mockAttr_Custom_SomeAttribute');
-            expect(validator.fnGetAtt('Custom2', 'SomeAttribute')).to.equal('mockAttr_Custom2_SomeAttribute');
+            expect(result['errors']['info']).to.have.lengthOf(6);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
+            expect(result['errors']['info'][4]).to.have.property('message', 'Assuming value \'mockAttrValue\' for Custom.SomeAttribute');
+            expect(result['errors']['info'][5]).to.have.property('message', 'Assuming value \'mockAttrValue\' for Custom2.SomeAttribute');
         })
 
         it("should pass validation where !GetAtt returns a list", () => {
@@ -640,7 +650,6 @@ describe('validator', () => {
                 result = validator.validateFile(input);
             });
             it('should have no errors', () => {
-                console.dir(result['errors']);
                 expect(result).to.have.deep.property('templateValid', true);
                 expect(result['errors']['crit']).to.have.lengthOf(0);
             });
@@ -827,8 +836,6 @@ describe('validator', () => {
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
-            expect(result['errors']['warn']).to.have.lengthOf(0);
-            expect(result['errors']['info']).to.have.lengthOf(4);
         });
 
         it('a valid (valid_minus_one_as_string.yaml) template should return an object with validTemplate = true, no crit errors', () => {
@@ -946,23 +953,25 @@ describe('validator', () => {
             const input = 'testData/valid/yaml/parameters.yaml';
             let result = validator.validateFile(input, {guessParameters: []});
             expect(result).to.have.deep.property('templateValid', false);
-            expect(result['errors']['crit']).to.have.lengthOf(1);
+            expect(result['errors']['crit']).to.have.lengthOf(2);
             expect(result['errors']['crit'][0]).to.has.property('message', 'Value for parameter was not provided');
+            expect(result['errors']['crit'][1]).to.has.property('message', 'Referenced value Env does not exist');
         });
 
         it('parameters in guessParameters should be permitted to be guessed', () => {
             const input = 'testData/valid/yaml/parameters.yaml';
             let result = validator.validateFile(input, {guessParameters: ['Env']});
             expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['info']).to.have.lengthOf(5);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
             expect(result['errors']['crit']).to.have.lengthOf(0);
-            expect(result['errors']['info']).to.have.lengthOf(1);
+            expect(result['errors']['info'][0]).to.has.property('message', 'Assuming value \'mockAttrValue\' for Env');
         })
 
         it('List<AWS::EC2::AvailabilityZone::Name> should return a list', () => {
             const input = './testData/valid/yaml/parameters_type_list_aws_ec2_availabilityzone_name.yaml';
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', true);
-            expect(result['errors']['info']).to.have.lengthOf(0);
             expect(result['errors']['warn']).to.have.lengthOf(0);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
@@ -971,7 +980,6 @@ describe('validator', () => {
             const input = './testData/valid/yaml/parameters_type_list_aws_ec2_image_id.yaml';
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', true);
-            expect(result['errors']['info']).to.have.lengthOf(0);
             expect(result['errors']['warn']).to.have.lengthOf(0);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
@@ -980,7 +988,6 @@ describe('validator', () => {
             const input = './testData/valid/yaml/parameters_type_list_aws_ec2_instance_id.yaml';
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', true);
-            expect(result['errors']['info']).to.have.lengthOf(0);
             expect(result['errors']['warn']).to.have.lengthOf(0);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
@@ -989,7 +996,6 @@ describe('validator', () => {
             const input = './testData/valid/yaml/parameters_type_list_aws_ec2_securitygroup_groupname.yaml';
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', true);
-            expect(result['errors']['info']).to.have.lengthOf(0);
             expect(result['errors']['warn']).to.have.lengthOf(0);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
@@ -998,7 +1004,6 @@ describe('validator', () => {
             const input = './testData/valid/yaml/parameters_type_list_aws_ec2_securitygroup_id.yaml';
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', true);
-            expect(result['errors']['info']).to.have.lengthOf(0);
             expect(result['errors']['warn']).to.have.lengthOf(0);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
@@ -1007,7 +1012,6 @@ describe('validator', () => {
             const input = './testData/valid/yaml/parameters_type_list_aws_ec2_subnet_id.yaml';
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', true);
-            expect(result['errors']['info']).to.have.lengthOf(0);
             expect(result['errors']['warn']).to.have.lengthOf(0);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
@@ -1016,7 +1020,6 @@ describe('validator', () => {
             const input = './testData/valid/yaml/parameters_type_list_aws_ec2_volume_id.yaml';
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', true);
-            expect(result['errors']['info']).to.have.lengthOf(0);
             expect(result['errors']['warn']).to.have.lengthOf(0);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
@@ -1025,7 +1028,6 @@ describe('validator', () => {
             const input = './testData/valid/yaml/parameters_type_list_aws_ec2_vpc_id.yaml';
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', true);
-            expect(result['errors']['info']).to.have.lengthOf(0);
             expect(result['errors']['warn']).to.have.lengthOf(0);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
@@ -1034,7 +1036,6 @@ describe('validator', () => {
             const input = './testData/valid/yaml/parameters_type_list_aws_route53_hostedzone_id.yaml';
             let result = validator.validateFile(input);
             expect(result).to.have.deep.property('templateValid', true);
-            expect(result['errors']['info']).to.have.lengthOf(0);
             expect(result['errors']['warn']).to.have.lengthOf(0);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
@@ -1170,6 +1171,462 @@ describe('validator', () => {
             expect(result['errors']['crit'][0]).to.have.property('message', 'Output BucketArn exported with no Name');
             expect(result['errors']['crit'][0]).to.have.property('resource', 'Outputs > BucketArn');
         })
+
+    });
+
+    describe('value mocking', () => {
+
+      describe('getMockByPrimitiveType', () => {
+
+        it('should return a number when mocking the "Double" type', () => {
+            const input = 'Double';
+            const result = validator.__TESTING__.getMockByPrimitiveType(input);
+            expect(result).to.be.a('number');
+        });
+
+        it('should return a number when mocking the "Integer" type', () => {
+            const input = 'Integer';
+            const result = validator.__TESTING__.getMockByPrimitiveType(input);
+            expect(result).to.be.a('number');
+        });
+
+        it('should return a boolean when mocking the "Boolean" type', () => {
+            const input = 'Boolean';
+            const result = validator.__TESTING__.getMockByPrimitiveType(input);
+            expect(result).to.be.a('boolean');
+        });
+
+        it('should return an object when mocking the "Json" type', () => {
+            const input = 'Json';
+            const result = validator.__TESTING__.getMockByPrimitiveType(input);
+            expect(result).to.be.an('object');
+        });
+
+        it('should return a string that is ISO8601 compatible when mocking the "Timestamp" type', () => {
+            const input = 'Timestamp';
+            const result = validator.__TESTING__.getMockByPrimitiveType(input);
+            // @ts-ignore -- no @types/chai-date-string
+            expect(result).to.be.a.dateString();
+        });
+
+        it('should return a string that has valid CFN ARN format when mocking the "Arn" type', () => {
+            const input = 'Arn';
+            const result = validator.__TESTING__.getMockByPrimitiveType(input);
+            // @ts-ignore -- no @types/chai-match
+            expect(result).to.match(arnFormat);
+        });
+
+        it('should return a string when mocking the "String" type', () => {
+            const input = 'String';
+            const result = validator.__TESTING__.getMockByPrimitiveType(input);
+            expect(result).to.be.a('string');
+        });
+
+        it('should throw an error for unsupported primitive type', () => {
+            const input = 'Unknown';
+            const result = () => { validator.__TESTING__.getMockByPrimitiveType(input) };
+            expect(result).to.throw('Unknown primitive type!');
+        });
+
+      });
+
+      describe('getMockByAggregateType', () => {
+
+        it('should return a string array when mocking the "List" type and "String" itemType', () => {
+            const inputType = 'List';
+            const inputItemType = 'String';
+            const result = validator.__TESTING__.getMockByAggregateType(inputType, inputItemType);
+            expect(result).to.be.a('array');
+            expect(result).to.have.lengthOf.at.least(1);
+            expect(result[0]).to.be.a('string');
+        });
+
+        it('should return an object when mocking the "Map" type and "String" itemType', () => {
+            const inputType = 'Map';
+            const inputItemType = 'String';
+            const result = validator.__TESTING__.getMockByAggregateType(inputType, inputItemType);
+            expect(result).to.be.an('object');
+        });
+
+        it('should throw an error for unsupported aggregate type', () => {
+            const input = 'Unknown';
+            const inputItemType = 'String';
+            const result = () => { validator.__TESTING__.getMockByAggregateType(input, inputItemType) };
+            expect(result).to.throw('Unknown aggregate type!');
+        });
+
+      });
+
+      describe('getMockByParameter', () => {
+
+        it('should return a string when mocking a parameter with a type of "String"', () => {
+            const inputName = 'param1';
+            const inputSpec = {
+              'Type': 'String'
+            };
+            const result = validator.__TESTING__.getMockByParameter(inputName, inputSpec);
+            expect(result).to.be.a('string');
+        });
+
+        it('should return a number when mocking a parameter with a type of "Number"', () => {
+            const inputName = 'param1';
+            const inputSpec = {
+              'Type': 'Number'
+            };
+            const result = validator.__TESTING__.getMockByParameter(inputName, inputSpec);
+            expect(result).to.be.a('number');
+        });
+
+        it('should return a string array when mocking a parameter with a type of "List"', () => {
+            const inputName = 'param1';
+            const inputSpec = {
+              'Type': 'List<AWS::EC2::AvailabilityZone::Name>'
+            };
+            const result = validator.__TESTING__.getMockByParameter(inputName, inputSpec);
+            expect(result).to.be.a('array');
+            expect(result).to.have.lengthOf.at.least(1);
+            expect(result[0]).to.be.a('string');
+        });
+
+        it('should return a string that is a valid CFN Arn when mocking a parameter with a type of "String" and a name containing "Arn"', () => {
+            const inputName = 'paramArn1';
+            const inputSpec = {
+              'Type': 'String'
+            };
+            const result = validator.__TESTING__.getMockByParameter(inputName, inputSpec);
+            expect(result).to.be.a('string');
+            // @ts-ignore -- no @types/chai-match
+            expect(result).to.match(arnFormat);
+        });
+
+      });
+
+      describe('getMockByAttribute', () => {
+
+        it('should return a string when mocking an attribute with a PrimitiveType of "String"', () => {
+            const inputName = 'attr1';
+            const inputSpec = {
+              'PrimitiveType': 'String'
+            };
+            const result = validator.__TESTING__.getMockByAttribute(inputName, inputSpec);
+            expect(result).to.be.a('string');
+        });
+
+        it('should return a string that is a valid CFN Arn when mocking a parameter with a PrimitiveType of "String" and a name containing "Arn"', () => {
+            const inputName = 'attrArn1';
+            const inputSpec = {
+              'PrimitiveType': 'String'
+            };
+            const result = validator.__TESTING__.getMockByAttribute(inputName, inputSpec);
+            expect(result).to.be.a('string');
+            // @ts-ignore -- no @types/chai-match
+            expect(result).to.match(arnFormat);
+        });
+
+        it('should return a string array when mocking an attribute with an Type of "List" and "String" PrimitiveItemType', () => {
+            const inputName = 'attr1';
+            const inputSpec = {
+              'Type': 'List',
+              'PrimitiveItemType': 'String'
+            };
+            const result = validator.__TESTING__.getMockByAttribute(inputName, inputSpec);
+            expect(result).to.be.a('array');
+            expect(result).to.have.lengthOf.at.least(1);
+            expect(result[0]).to.be.a('string');
+        });
+
+        it('should return an object when mocking an attribute with an Type of "Map" and "String" PrimitiveItemType', () => {
+            const inputName = 'attr1';
+            const inputSpec = {
+              'Type': 'Map',
+              'PrimitiveItemType': 'String'
+            };
+            const result = validator.__TESTING__.getMockByAttribute(inputName, inputSpec);
+            expect(result).to.be.a('object');
+        });
+
+        it('should return an object array when mocking an attribute with an Type of "List" and with any ItemType', () => {
+            const inputName = 'attr1';
+            const inputSpec = {
+              'Type': 'List',
+              'ItemType': 'AWS::S3::Bucket'
+            };
+            const result = validator.__TESTING__.getMockByAttribute(inputName, inputSpec);
+            expect(result).to.be.a('array');
+            expect(result).to.have.lengthOf.at.least(1);
+            expect(result[0]).to.be.an('object');
+        });
+
+        it('should return an object when mocking an attribute with a Type that is a structure', () => {
+            const inputName = 'attr1';
+            const inputSpec = {
+              'Type': 'AWS::S3::Bucket',
+            };
+            const result = validator.__TESTING__.getMockByAttribute(inputName, inputSpec);
+            expect(result).to.be.a('object');
+        });
+
+      });
+
+      describe('getIntrinsicMarkerMock', () => {
+
+          it('should be able to resolve a marker within "Fn::Join" - top level', () => {
+              const inputMarker = { 'Fn::GetAtt' : [ 'logicalNameOfResource', 'attributeName' ] };
+              const inputContext = {
+                'Fn::Join': [
+                  'delimiter',
+                  clone(inputMarker)
+                ]
+              };
+              const result = validator.__TESTING__.getIntrinsicMarkerMock(inputContext, inputMarker);
+              expect(result).to.be.an('array');
+              expect(result).to.have.length.at.least(1);
+              expect(result[0]).to.be.a('string');
+          });
+
+          it('should be able to resolve a marker within "Fn::Join" - nested', () => {
+              const inputMarker = { 'Fn::GetAtt' : [ 'logicalNameOfResource', 'attributeName' ] };
+              const inputContext = {
+                'Fn::Join': [
+                  'delimiter',
+                  [clone(inputMarker)]
+                ]
+              };
+              const result = validator.__TESTING__.getIntrinsicMarkerMock(inputContext, inputMarker);
+              expect(result).to.be.a('string');
+          });
+
+          it('should be able to resolve a marker within "Fn::Base64"', () => {
+              const inputMarker = { 'Fn::GetAtt' : [ 'logicalNameOfResource', 'attributeName' ] };
+              const inputContext = {
+                'Fn::Base64': clone(inputMarker)
+              };
+              const result = validator.__TESTING__.getIntrinsicMarkerMock(inputContext, inputMarker);
+              expect(result).to.be.a('string');
+          });
+
+          it('should be able to resolve a marker within "Fn::Cidr"', () => {
+              const inputMarker = { 'Fn::GetAtt' : [ 'logicalNameOfResource', 'attributeName' ] };
+              const inputContext = {
+                'Fn::Cidr': [
+                  clone(inputMarker),
+                  '6',
+                  '5'
+                ]
+              };
+              const result = validator.__TESTING__.getIntrinsicMarkerMock(inputContext, inputMarker);
+              expect(result).to.be.a('string');
+          });
+
+          it('should be able to resolve a marker within "Fn::FindInMap"', () => {
+              const inputMarker = { 'Fn::GetAtt' : [ 'logicalNameOfResource', 'attributeName' ] };
+              const inputContext = {
+                'Fn::FindInMap': [
+                  'RegionMap',
+                  clone(inputMarker),
+                  'HVM64'
+                ]
+              };
+              const result = validator.__TESTING__.getIntrinsicMarkerMock(inputContext, inputMarker);
+              expect(result).to.be.a('string');
+          });
+
+          it('should be able to resolve a marker within "Fn::GetAtt"', () => {
+              const inputMarker = { 'Fn::GetAtt' : [ 'logicalNameOfResource', 'attributeName' ] };
+              const inputContext = {
+                'Fn::GetAtt': [
+                  'logicalNameOfResource',
+                  clone(inputMarker)
+                ]
+              };
+              const result = validator.__TESTING__.getIntrinsicMarkerMock(inputContext, inputMarker);
+              expect(result).to.be.a('string');
+          });
+
+          it('should be able to resolve a marker within "Fn::GetAZs"', () => {
+              const inputMarker = { 'Fn::GetAtt' : [ 'logicalNameOfResource', 'attributeName' ] };
+              const inputContext = {
+                'Fn::GetAZs': clone(inputMarker)
+              };
+              const result = validator.__TESTING__.getIntrinsicMarkerMock(inputContext, inputMarker);
+              expect(result).to.be.a('string');
+          });
+
+          it('should be able to resolve a marker within "Fn::ImportValue"', () => {
+              const inputMarker = { 'Fn::GetAtt' : [ 'logicalNameOfResource', 'attributeName' ] };
+              const inputContext = {
+                'Fn::ImportValue': clone(inputMarker)
+              };
+              const result = validator.__TESTING__.getIntrinsicMarkerMock(inputContext, inputMarker);
+              expect(result).to.be.a('string');
+          });
+
+          it('should be able to resolve a marker within "Fn::Select" - "index" parameter', () => {
+              const inputMarker = { 'Fn::GetAtt' : [ 'logicalNameOfResource', 'attributeName' ] };
+              const inputContext = {
+                'Fn::Select': [
+                  clone(inputMarker),
+                  ['1', '2', '3']
+                ]
+              };
+              const result = validator.__TESTING__.getIntrinsicMarkerMock(inputContext, inputMarker);
+              expect(result).to.be.a('string');
+          });
+
+          it('should be able to resolve a marker within "Fn::Select" - "listOfObjects" parameter - top level', () => {
+              const inputMarker = { 'Fn::GetAtt' : [ 'logicalNameOfResource', 'attributeName' ] };
+              const inputContext = {
+                'Fn::Select': [
+                  '0',
+                  clone(inputMarker)
+                ]
+              };
+              const result = validator.__TESTING__.getIntrinsicMarkerMock(inputContext, inputMarker);
+              expect(result).to.be.an('array');
+              expect(result).to.have.length.at.least(1);
+              expect(result[0]).to.be.a('string');
+          });
+
+          it('should be able to resolve a marker within "Fn::Select" - "listOfObjects" parameter - nested', () => {
+              const inputMarker = { 'Fn::GetAtt' : [ 'logicalNameOfResource', 'attributeName' ] };
+              const inputContext = {
+                'Fn::Select': [
+                  '0',
+                  [clone(inputMarker)]
+                ]
+              };
+              const result = validator.__TESTING__.getIntrinsicMarkerMock(inputContext, inputMarker);
+              expect(result).to.be.a('string');
+          });
+
+          it('should be able to resolve a marker within "Fn::Split"', () => {
+              const inputMarker = { 'Fn::GetAtt' : [ 'logicalNameOfResource', 'attributeName' ] };
+              const inputContext = {
+                'Fn::Split': [
+                  '0',
+                  clone(inputMarker)
+                ]
+              };
+              const result = validator.__TESTING__.getIntrinsicMarkerMock(inputContext, inputMarker);
+              expect(result).to.be.a('string');
+          });
+
+          it('should be able to resolve a marker within "Fn::Sub" - "String" parameter', () => {
+              const inputMarker = { 'Fn::GetAtt' : [ 'logicalNameOfResource', 'attributeName' ] };
+              const inputContext = {
+                'Fn::Sub': [
+                  clone(inputMarker),
+                  { 'Var1Name': 'Var1Value', 'Var2Name': 'Var2Value' }
+                ]
+              };
+              const result = validator.__TESTING__.getIntrinsicMarkerMock(inputContext, inputMarker);
+              expect(result).to.be.a('string');
+          });
+
+          it('should be able to resolve a marker within "Fn::Sub" - "Variable map" parameter', () => {
+              const inputMarker = { 'Fn::GetAtt' : [ 'logicalNameOfResource', 'attributeName' ] };
+              const inputContext = {
+                'Fn::Sub': [
+                  'String',
+                  clone(inputMarker)
+                ]
+              };
+              const result = validator.__TESTING__.getIntrinsicMarkerMock(inputContext, inputMarker);
+              expect(result).to.be.an('object');
+          });
+
+          it('should be able to resolve a marker within "Fn::Transform" - "Name" parameter', () => {
+              const inputMarker = { 'Fn::GetAtt' : [ 'logicalNameOfResource', 'attributeName' ] };
+              const inputContext = {
+                'Fn::Transform': {
+                  'Name': clone(inputMarker),
+                  'Parameters': {'key' : 'value'}
+                }
+              };
+              const result = validator.__TESTING__.getIntrinsicMarkerMock(inputContext, inputMarker);
+              expect(result).to.be.a('string');
+          });
+
+          it('should be able to resolve a marker within "Fn::Transform" - "Parameters" parameter', () => {
+              const inputMarker = { 'Fn::GetAtt' : [ 'logicalNameOfResource', 'attributeName' ] };
+              const inputContext = {
+                'Fn::Transform': {
+                  'Name': 'AWS::Include',
+                  'Parameters': clone(inputMarker)
+                }
+              };
+              const result = validator.__TESTING__.getIntrinsicMarkerMock(inputContext, inputMarker);
+              expect(result).to.be.an('object');
+          });
+
+          it('should be able to resolve a marker within "Ref"', () => {
+              const inputMarker = { 'Fn::GetAtt' : [ 'logicalNameOfResource', 'attributeName' ] };
+              const inputContext = {
+                'Ref': clone(inputMarker)
+              };
+              const result = validator.__TESTING__.getIntrinsicMarkerMock(inputContext, inputMarker);
+              expect(result).to.be.a('string');
+          });
+
+      });
+
+      describe('getPlaceInTypeMock', () => {
+
+          it('should be able to resolve and mock a top-level property', () => {
+              const inputBaseType = 'AWS::S3::Bucket';
+              const inputPropertyChain = ['BucketName'];
+              const result = validator.__TESTING__.getPlaceInTypeMock(inputBaseType, inputPropertyChain);
+              expect(result).to.be.a('string');
+          });
+
+          it('should be able to resolve and mock a nested property', () => {
+              const inputBaseType = 'AWS::S3::Bucket';
+              const inputPropertyChain = [ 'CorsConfiguration', 'CorsRules' ];
+              const result = validator.__TESTING__.getPlaceInTypeMock(inputBaseType, inputPropertyChain);
+              expect(result).to.be.an('array');
+          });
+
+          it('should be able to resolve and mock a deeply-nested property within an aggregate type', () => {
+              const inputBaseType = 'AWS::S3::Bucket';
+              const inputPropertyChain = [ 'CorsConfiguration', 'CorsRules', [0], 'Id'];
+              const result = validator.__TESTING__.getPlaceInTypeMock(inputBaseType, inputPropertyChain);
+              expect(result).to.be.a('string');
+          });
+
+      });
+
+      describe('registerMockValue', () => {
+          it('should notify if a mocked value has been registered', () => {
+              validator.registerMockValue('someMockedAttribute', 'value');
+              let result = validator.validateJsonObject({ Resources: {} });
+              expect(result).to.have.deep.property('templateValid', true);
+              expect(result['errors']['info']).to.have.lengthOf(1);
+              expect(result['errors']['info'][0]['message']).to.contain('Assuming value \'value\' for someMockedAttribute');
+          });
+
+          it('should notify if a conflicting mocked value has been registered', () => {
+              validator.registerMockValue('someMockedAttribute', 'value');
+              validator.registerMockValue('someMockedAttribute', 'test');
+              let result = validator.validateJsonObject({ Resources: {} });
+              expect(result).to.have.deep.property('templateValid', true);
+              expect(result['errors']['info']).to.have.lengthOf(2);
+              expect(result['errors']['warn']).to.have.lengthOf(1);
+              expect(result['errors']['info'][0]['message']).to.contain('Assuming value \'value\' for someMockedAttribute');
+              expect(result['errors']['info'][1]['message']).to.contain('Assuming value \'test\' for someMockedAttribute');
+              expect(result['errors']['warn'][0]['message']).to.contain('Mock value mismatch for someMockedAttribute!');
+          });
+      });
+
+      describe('integration', () => {
+
+        it('a template (contextual_value_inference.yaml) containing references to non-existing attributes on a custom resource should validate successfully', () => {
+            const input = 'testData/valid/yaml/contextual_value_inference.yaml';
+            const result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
+
+      });
 
     });
 
@@ -1577,30 +2034,6 @@ describe('validator', () => {
 
         });
 
-    });
-
-    describe('registerMockValue', () => {
-        it('should notify if a mocked value has been registered', () => {
-            const input = 'testData/valid/yaml/smoke.yaml';
-            validator.registerMockValue('someMockedAttribute', 'value');
-            let result = validator.validateFile(input);
-            expect(result).to.have.deep.property('templateValid', true);
-            expect(result['errors']['info']).to.have.lengthOf(1);
-            expect(result['errors']['info'][0]['message']).to.contain('Assuming value "value" for someMockedAttribute');
-        });
-
-        it('should notify if a conflicting mocked value has been registered', () => {
-            const input = 'testData/valid/yaml/smoke.yaml';
-            validator.registerMockValue('someMockedAttribute', 'value');
-            validator.registerMockValue('someMockedAttribute', 'test');
-            let result = validator.validateFile(input);
-            expect(result).to.have.deep.property('templateValid', true);
-            expect(result['errors']['info']).to.have.lengthOf(2);
-            expect(result['errors']['warn']).to.have.lengthOf(1);
-            expect(result['errors']['info'][0]['message']).to.contain('Assuming value "value" for someMockedAttribute');
-            expect(result['errors']['info'][1]['message']).to.contain('Assuming value "test" for someMockedAttribute');
-            expect(result['errors']['warn'][0]['message']).to.contain('Mock value mismatch for someMockedAttribute!');
-        });
     });
 
     describe('SAM-20161031', function() {

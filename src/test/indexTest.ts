@@ -116,7 +116,7 @@ describe('index', () => {
 
         it('only-guess-parameters should allow opting in to parameter mocking', (done) => {
             exec('node lib/index.js validate testData/valid/yaml/no-guess-parameters.yaml --only-guess-parameters Param1', function(error, stdout, stderr) {
-                expect(stdout).to.contain('1 crit');
+                expect(stdout).to.contain('2 crit');
                 expect(stdout).to.contain('Value for parameter was not provided');
                 done();
             });
