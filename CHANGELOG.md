@@ -6,6 +6,8 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Merge PR #208, fixing invalid parameterized type resolution for properties containing nested aggregate types
 
 ## [1.9.1] - 2018-10-30
 ### Changed
