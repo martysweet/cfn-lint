@@ -284,7 +284,7 @@ export function rebaseTypeFormat(baseType: string, type: string): string {
         return parameterizeTypeFormat(typeName, typeArgument);
     }
 
-    if (isPrimitiveType(type) || isComplexType(type)) {
+    if (isPrimitiveType(type) || isAggregateType(type)) {
       return type;
     }
 
@@ -301,11 +301,11 @@ export function isPrimitiveType(type: string) {
     return false;
 }
 
-export function isComplexType(type: string) {
+export function isAggregateType(type: string) {
     if (isParameterizedTypeFormat(type)) {
         type = getParameterizedTypeName(type);
     }
-    if (!!~awsData.awsComplexTypes.indexOf(type)) {
+    if (!!~awsData.awsAggregateTypes.indexOf(type)) {
         return true;
     }
     return false;
@@ -445,7 +445,7 @@ export function getItemType(baseType: string, propType: string, key: string) {
     const property = getProperty(propType, key);
     if (!property.ItemType) {
         return undefined;
-    } else if (isComplexType(property.ItemType)) {
+    } else if (isAggregateType(property.ItemType)) {
         return property.ItemType;
     } else {
         return baseType + '.' + property.ItemType;

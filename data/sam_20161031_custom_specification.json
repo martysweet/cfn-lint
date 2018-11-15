@@ -1,5 +1,15 @@
 {
   "PropertyTypes": {
+    "AWS::Serverless::Function.IAMPolicyDocument": {
+      "Documentation": "",
+      "Properties": {
+        "Version": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::Serverless::Function.EventSource": {
       "Properties": {
         "Properties": {

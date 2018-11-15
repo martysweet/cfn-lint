@@ -9,6 +9,8 @@ import {awsResources} from '../awsData';
 import util = require('util');
 import { isObject } from 'util';
 
+const clone = require('clone');
+
 describe('validator', () => {
 
     before(() => {
@@ -915,6 +917,13 @@ describe('validator', () => {
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
+
+        it('a template with properties containing nested aggregate types should be validated successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_issue_207.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
     });
 
     describe('parameters-validation', () => {
@@ -1472,6 +1481,30 @@ describe('validator', () => {
               expect(result).to.equal('Timestamp');
           });
 
+          it('should be nullipotent upon input data - typeof number', () => {
+              let input = 1;
+              let result = validator.__TESTING__.inferPrimitiveValueType(input);
+              expect(input).to.equal(1);
+          });
+
+          it('should be nullipotent upon input data - typeof string', () => {
+              let input = 'someString';
+              let result = validator.__TESTING__.inferPrimitiveValueType(input);
+              expect(input).to.equal('someString');
+          });
+
+          it('should be nullipotent upon input data - typeof boolean', () => {
+              let input = true;
+              let result = validator.__TESTING__.inferPrimitiveValueType(input);
+              expect(input).to.equal(true);
+          });
+
+          it('should be nullipotent upon input data - typeof object', () => {
+              let input = {someKey: 'someValue'};
+              let result = validator.__TESTING__.inferPrimitiveValueType(input);
+              expect(input).to.deep.equal({someKey: 'someValue'});
+          });
+
         });
 
         describe('inferStructureValueType', () => {
@@ -1514,6 +1547,26 @@ describe('validator', () => {
               expect(result).to.equal(null);
           });
 
+          it('should be nullipotent upon input data', () => {
+              let input = {
+                'Type': 'AWS::Serverless::Function',
+                'Properties': {
+                  'Variables': {
+                    'someKey': 'someValue'
+                  },
+                }
+              };
+              let result = validator.__TESTING__.inferPrimitiveValueType(input);
+              expect(input).to.deep.equal({
+                'Type': 'AWS::Serverless::Function',
+                'Properties': {
+                  'Variables': {
+                    'someKey': 'someValue'
+                  },
+                }
+              });
+          });
+
         });
 
         describe('inferAggregateValueType', () => {
@@ -1527,6 +1580,15 @@ describe('validator', () => {
               expect(result).to.equal('List<String>');
           });
 
+          it('should be able to infer a List of Json aggregate value type', () => {
+              let input = [
+                { 1: 'somethingBeautiful' }, { 2: 'somethingAwesome' }, { 3: 'somethingCool' }
+              ];
+              let candidateTypes: string[] = [];
+              let result = validator.__TESTING__.inferAggregateValueType(input, candidateTypes);
+              expect(result).to.equal('List<Json>');
+          });
+
           it('should be able to infer a Map of Strings aggregate value type', () => {
               let input = {
                 1: 'somethingBeautiful',
@@ -1538,11 +1600,74 @@ describe('validator', () => {
               expect(result).to.equal('Map<String>');
           });
 
+          it('should be able to infer a Map of Json aggregate value type', () => {
+              let input = {
+                1: { 1: 'somethingBeautiful' },
+                2: { 2: 'somethingAwesome' },
+                3: { 3: 'somethingCool' }
+              };
+              let candidateTypes: string[] = [];
+              let result = validator.__TESTING__.inferAggregateValueType(input, candidateTypes);
+              expect(result).to.equal('Map<Json>');
+          });
+
           it('should not be able to infer a non-aggregate value type', () => {
               let input = {};
               let candidateTypes: string[] = [];
               let result = validator.__TESTING__.inferAggregateValueType(input, candidateTypes);
               expect(result).to.equal(null);
+          });
+
+          it('should be nullipotent upon input data - List of Strings aggregate value type', () => {
+              let input = [
+                'somethingBeautiful', 'somethingAwesome', 'somethingCool'
+              ];
+              let candidateTypes: string[] = [];
+              let result = validator.__TESTING__.inferAggregateValueType(input, candidateTypes);
+              expect(input).to.deep.equal([
+                'somethingBeautiful', 'somethingAwesome', 'somethingCool'
+              ]);
+          });
+
+          it('should be nullipotent upon input data - List of Json aggregate value type', () => {
+              let input = [
+                { 1: 'somethingBeautiful' }, { 2: 'somethingAwesome' }, { 3: 'somethingCool' }
+              ];
+              let candidateTypes: string[] = [];
+              let result = validator.__TESTING__.inferAggregateValueType(input, candidateTypes);
+              expect(input).to.deep.equal([
+                { 1: 'somethingBeautiful' }, { 2: 'somethingAwesome' }, { 3: 'somethingCool' }
+              ]);
+          });
+
+          it('should be nullipotent upon input data - Map of Strings aggregate value type', () => {
+              let input = {
+                1: 'somethingBeautiful',
+                2: 'somethingAwesome',
+                3: 'somethingCool'
+              };
+              let candidateTypes: string[] = [];
+              let result = validator.__TESTING__.inferAggregateValueType(input, candidateTypes);
+              expect(input).to.deep.equal({
+                1: 'somethingBeautiful',
+                2: 'somethingAwesome',
+                3: 'somethingCool'
+              });
+          });
+
+          it('should be nullipotent upon input data - Map of Json aggregate value type', () => {
+              let input = {
+                1: { 1: 'somethingBeautiful' },
+                2: { 2: 'somethingAwesome' },
+                3: { 3: 'somethingCool' }
+              };
+              let candidateTypes: string[] = [];
+              let result = validator.__TESTING__.inferAggregateValueType(input, candidateTypes);
+              expect(input).to.deep.equal({
+                1: { 1: 'somethingBeautiful' },
+                2: { 2: 'somethingAwesome' },
+                3: { 3: 'somethingCool' }
+              });
           });
 
         });
@@ -1576,6 +1701,49 @@ describe('validator', () => {
           });
 
         });
+
+    });
+
+    describe('templateHasUnresolvedIntrinsics', () => {
+
+      it('should be able to detect if a given template has top-level unresolved intrinsics', () => {
+          const input = {
+            'Ref': 'AWS::Region'
+          };
+          const result = validator.__TESTING__.templateHasUnresolvedIntrinsics(clone(input));
+          expect(result).to.equal(true);
+          expect(input).to.deep.equal(input);
+      });
+
+      it('should be able to detect if a given template has nested unresolved intrinsics', () => {
+          const input = {
+            'Resources': {
+              'MyBucket': {
+                'Type': 'AWS::S3::Bucket',
+                'BucketName': {
+                  'Ref': 'AWS::Region'
+                }
+              }
+            }
+          };
+          const result = validator.__TESTING__.templateHasUnresolvedIntrinsics(clone(input));
+          expect(result).to.equal(true);
+          expect(input).to.deep.equal(input);
+      });
+
+      it('should be able to detect if a given template does not contain unresolved intrinsics', () => {
+          const input = {
+            'Resources': {
+              'MyBucket': {
+                'Type': 'AWS::S3::Bucket',
+                'BucketName': 'somethingCool'
+              }
+            }
+          };
+          const result = validator.__TESTING__.templateHasUnresolvedIntrinsics(clone(input));
+          expect(result).to.equal(false);
+          expect(input).to.deep.equal(input);
+      });
 
     });
 

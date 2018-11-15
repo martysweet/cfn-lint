@@ -69,6 +69,8 @@ let errorObject: ErrorObject = {
 
 export function resetValidator(){
     errorObject = {"templateValid": true, "errors": {"info": [], "warn": [], "crit": []}, outputs: {}, exports: {}};
+    workingInput = null;
+    workingInputTransform = [];
     stopValidation = false;
     parameterRuntimeOverride = {};
     importRuntimeOverride = {};
@@ -382,18 +384,18 @@ function inferAggregateValueType(v: any, candidateItemTypes: string[]): string |
 
     if (isList(v)) {
         type = 'List';
-        item = v.pop();
+        item = v[0];
     }
     else if (isObject(v)) {
         type = 'Map';
-        item = v[Object.keys(v).pop()!];
+        item = v[Object.keys(v)[0]!];
     }
 
     if (!!item) {
       itemType = inferValueType(item, candidateItemTypes);
       // aggregate type nesting is not currently supported
-      if (!!itemType && resourcesSpec.isComplexType(itemType)) {
-          return 'Json';
+      if (!!itemType && resourcesSpec.isAggregateType(itemType)) {
+          itemType = 'Json';
       }
     }
 
@@ -404,14 +406,14 @@ function inferValueType(v: any, candidateTypes: string[]) {
      candidateTypes = candidateTypes.filter((x) => !resourcesSpec.isPrimitiveType(x));
      let candidateStructureTypes: string[] = candidateTypes.filter((x) => {
         if (resourcesSpec.isParameterizedTypeFormat(x) &&
-            resourcesSpec.isComplexType(resourcesSpec.getParameterizedTypeName(x))) {
+            resourcesSpec.isAggregateType(resourcesSpec.getParameterizedTypeName(x))) {
             return false;
         }
         return true;
     });
     let candidateAggregateTypes: string[] = candidateTypes.filter((x) => {
        if (resourcesSpec.isParameterizedTypeFormat(x) &&
-           resourcesSpec.isComplexType(resourcesSpec.getParameterizedTypeName(x))) {
+           resourcesSpec.isAggregateType(resourcesSpec.getParameterizedTypeName(x))) {
            return true;
        }
        return false;
@@ -438,21 +440,36 @@ function formatCandidateTypes(baseType: string, candidateTypes: string[]) {
     return candidateTypes;
 }
 
+function templateHasUnresolvedIntrinsics(template: any): boolean {
+    if (typeof template == 'object') {
+        const templateKeys = Object.keys(template);
+        const awsIntrinsicFunctionNames = Object.keys(awsIntrinsicFunctions);
+        for (const templateKey of templateKeys) {
+            const nestedTemplate: any = template[templateKey];
+            if (!!~awsIntrinsicFunctionNames.indexOf(templateKey) || templateHasUnresolvedIntrinsics(nestedTemplate)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 function applySAMPropertyOverrides(baseType: string, baseName: string, type: string, name: string,
                                                 spec: awsData.Property, template: any) {
     // early exit for unsupported template or base type
     if (!~workingInputTransform.indexOf('AWS::Serverless-2016-10-31') || !~baseType.indexOf('AWS::Serverless')) { return; }
 
-    let localizedType = baseType == type ? type : `${baseType}.${type}<${name}>`;
+    const localizedType = (baseType == type) ? `${baseType}<${baseName}>` : `${baseType}.${type}<${baseName}>`;
 
     // specialize property based on inferred Type
-    let specType: any = spec['Type'];
+    const specType: any = spec['Type'];
     if (Array.isArray(specType)) {
 
         // skip if template has unresolved intrinsic functions
-        if (arrayIntersection(Object.keys(awsIntrinsicFunctions), Object.keys(template)).length > 0) {
+        if (templateHasUnresolvedIntrinsics(template)) {
             return;
         }
+
         let candidateTypes = formatCandidateTypes(baseType, specType);
 
         // infer property spec based on value in template
@@ -654,14 +671,14 @@ function applyTemplateTypeOverrides(baseType: string, type: string, name: string
     doSAMTransform(baseType, type, name, template, parentTemplate);
 
     // early exit for invalid type
-    let localizedType = baseType == type ? type : `${baseType}.${type}<${name}>`;
+    const localizedType = (baseType == type) ? `${baseType}<${name}>` : `${baseType}.${type}<${name}>`;
     if (!resourcesSpec.hasType(localizedType)) {
       return;
     }
 
     // initialize specification override
-    let originalSpec = resourcesSpec.getType(localizedType);
-    let overrideSpec = clone(originalSpec);
+    const originalSpec = resourcesSpec.getType(localizedType);
+    const overrideSpec = clone(originalSpec);
 
     // determine properties section
     let templateProperties = template;
@@ -671,28 +688,28 @@ function applyTemplateTypeOverrides(baseType: string, type: string, name: string
 
     // apply property overrides
     if (!!templateProperties && (typeof templateProperties == 'object')) {
-        for (let propertyName of Object.keys(templateProperties)) {
+        for (const propertyName of Object.keys(templateProperties)) {
 
             // acquire property template
-            let templateProperty = templateProperties[propertyName];
+            const templateProperty = templateProperties[propertyName];
             if (!templateProperty) {
               continue;
             }
 
             // process property
-            let specProperty = overrideSpec['Properties'][propertyName] as awsData.Property;
+            const specProperty = overrideSpec['Properties'][propertyName] as awsData.Property;
             if (!!specProperty) {
                 applyTemplatePropertyOverrides(baseType, name, type, propertyName, specProperty, templateProperty, template);
 
                 // descend into nested types
                 if (specProperty.hasOwnProperty('ItemType')) {
-                    let subType = specProperty['ItemType'] as string;
-                    for (let subKey of Object.keys(templateProperty)) {
-                        let subTemplate = templateProperty[subKey];
+                    const subType = specProperty['ItemType'] as string;
+                    for (const subKey of Object.keys(templateProperty)) {
+                        const subTemplate = templateProperty[subKey];
                         applyTemplateTypeOverrides(baseType, subType, `${name}#${propertyName}#${subKey}`, subTemplate, template);
                     }
                 } else if (specProperty.hasOwnProperty('Type')) {
-                    let subType = specProperty['Type'] as string;
+                    const subType = specProperty['Type'] as string;
                     applyTemplateTypeOverrides(baseType, subType, `${name}#${propertyName}`, templateProperty, template);
                 }
             }
@@ -2285,7 +2302,7 @@ function localizeType(type: string) {
     // don't localize primitive, complex or already localized types
     let localType = type;
     if (!resourcesSpec.isPrimitiveType(type) &&
-        !resourcesSpec.isComplexType(type) &&
+        !resourcesSpec.isAggregateType(type) &&
         !resourcesSpec.isParameterizedTypeFormat(type)) {
         localType = `${type}<${typePlaceInTemplate}>`;
     }
@@ -2365,5 +2382,6 @@ export const __TESTING__: any = {
   'inferPrimitiveValueType': inferPrimitiveValueType,
   'inferStructureValueType': inferStructureValueType,
   'inferAggregateValueType': inferAggregateValueType,
-  'inferValueType': inferValueType
+  'inferValueType': inferValueType,
+  'templateHasUnresolvedIntrinsics': templateHasUnresolvedIntrinsics
 };
