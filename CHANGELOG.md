@@ -6,8 +6,6 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-
-## [1.9.2] - 2018-11-15
 ### Fixed
 - Merge PR #208, fixing invalid parameterized type resolution for properties containing nested aggregate types
 
@@ -188,8 +186,7 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Added
 - Add pseudo parameter support
 
-[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.9.2...HEAD
-[1.9.2]: https://github.com/martysweet/cfn-lint/compare/v1.9.1...v1.9.2
+[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.9.1...HEAD
 [1.9.1]: https://github.com/martysweet/cfn-lint/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/martysweet/cfn-lint/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/martysweet/cfn-lint/compare/v1.8.0...v1.8.1

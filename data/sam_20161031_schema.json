@@ -619,9 +619,6 @@
       "properties": {
         "Topic": {
           "type": "string"
-        },
-        "FilterPolicy": {
-          "type": "object"
         }
       },
       "required": [
