@@ -6,6 +6,8 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Merge PR #213, add `validateString` API
 
 ## [1.9.2] - 2018-11-15
 ### Fixed
