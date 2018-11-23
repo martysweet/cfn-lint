@@ -3,6 +3,7 @@ const expect = chai.expect;
 const assert = chai.assert;
 import validator = require('../validator');
 import yaml = require('js-yaml');
+import fs = require('fs');
 
 import {samResources20161031} from '../samData';
 import {awsResources} from '../awsData';
@@ -1904,4 +1905,22 @@ describe('validator', () => {
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
     });
+
+  describe('validateString', () => {
+    it('a valid (1.json) template should return an object with validTemplate = true, no crit errors', () => {
+      const path = 'testData/valid/json/1.json';
+      const input = fs.readFileSync(path, 'utf8');
+      let result = validator.validateString(input, path);
+      expect(result).to.have.deep.property('templateValid', true);
+      expect(result['errors']['crit']).to.have.lengthOf(0);
+    });
+
+    it('a valid (1.yaml) template should return an object with validTemplate = true, no crit errors', () => {
+      const path = 'testData/valid/yaml/1.yaml';
+      const input = fs.readFileSync(path, 'utf8');
+      let result = validator.validateString(input, path);
+      expect(result).to.have.deep.property('templateValid', true);
+      expect(result['errors']['crit']).to.have.lengthOf(0);
+    });
+  });
 });

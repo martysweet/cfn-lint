@@ -139,6 +139,10 @@ cfnLint.validateFile(fileName: string, options?: ValidationOptions): ValidationR
 ```
 Validates a file, and returns an ValidationResult with the results.
 
+```ts
+cfnLint.validateString(contents: string, fileName: string, options?: ValidationOptions): ValidationResult
+```
+Validates a string, and returns an ValidationResult with the results.
 
 ```ts
 cfnLint.validateJsonObject(object: any, options?: ValidationOptions): ValidationResult
