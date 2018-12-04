@@ -7,6 +7,10 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.9.3] - 2018-12-04
+### Changed
+- Update CloudFormation specification (downloaded 04-Dec-2018) - version: 2.16.0
+
 ## [1.9.2] - 2018-11-15
 ### Fixed
 - Merge PR #208, fixing invalid parameterized type resolution for properties containing nested aggregate types
