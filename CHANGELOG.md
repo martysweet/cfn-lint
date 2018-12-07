@@ -6,6 +6,12 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Update CloudFormation specification (downloaded 07-Dec-2018) - version: 2.17.0
+- Manually edit specification to fix incorrect type setting on AWS::ServiceDiscovery::Instance.InstanceAttributes
+
+### Added
+- Merge PR #216, adding tests for SQS tags
 
 ## [1.9.3] - 2018-12-04
 ### Changed
