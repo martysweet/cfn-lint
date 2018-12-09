@@ -25262,7 +25262,8 @@
         "InstanceAttributes": {
           "Required": true,
           "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-servicediscovery-instance.html#cfn-servicediscovery-instance-instanceattributes",
-          "PrimitiveType": "Json",
+          "Type": "Map",
+          "PrimitiveItemType": "String",
           "UpdateType": "Mutable"
         },
         "InstanceId": {
@@ -31891,5 +31892,5 @@
       }
     }
   },
-  "ResourceSpecificationVersion": "2.16.0"
+  "ResourceSpecificationVersion": "2.17.0"
 }

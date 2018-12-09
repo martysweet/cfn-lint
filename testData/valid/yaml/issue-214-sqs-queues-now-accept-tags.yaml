@@ -1,0 +1,9 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "AWS CloudFormation Template to demonstrate AWS:SQS:Queue accepting Tags"
+Resources: 
+  DNSVPCDomain: 
+    Type: "AWS::SQS::Queue"
+    Properties: 
+      Tags:
+        - Key: Name
+          Value: TestName

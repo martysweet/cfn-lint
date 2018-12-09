@@ -924,6 +924,13 @@ describe('validator', () => {
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
+
+        it('Issue #214 - SQS Queues now accept Tags', function () {
+            var input = 'testData/valid/yaml/issue-214-sqs-queues-now-accept-tags.yaml';
+            var result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
     });
 
     describe('parameters-validation', () => {
