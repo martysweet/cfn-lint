@@ -6,9 +6,12 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.9.4] - 2018-12-09
 ### Changed
 - Update CloudFormation specification (downloaded 07-Dec-2018) - version: 2.17.0
 - Manually edit specification to fix incorrect type setting on AWS::ServiceDiscovery::Instance.InstanceAttributes
+- Update SAM specification (downloaded 09-Dec-2018)
 
 ### Added
 - Merge PR #216, adding tests for SQS tags
@@ -202,7 +205,8 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Added
 - Add pseudo parameter support
 
-[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.9.3...HEAD
+[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.9.4...HEAD
+[1.9.4]: https://github.com/martysweet/cfn-lint/compare/v1.9.3...v1.9.4
 [1.9.3]: https://github.com/martysweet/cfn-lint/compare/v1.9.2...v1.9.3
 [1.9.2]: https://github.com/martysweet/cfn-lint/compare/v1.9.1...v1.9.2
 [1.9.1]: https://github.com/martysweet/cfn-lint/compare/v1.9.0...v1.9.1
