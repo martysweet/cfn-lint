@@ -11,6 +11,7 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Changed
 - Update CloudFormation specification (downloaded 07-Dec-2018) - version: 2.17.0
 - Manually edit specification to fix incorrect type setting on AWS::ServiceDiscovery::Instance.InstanceAttributes
+- Update SAM specification (downloaded 09-Dec-2018)
 
 ### Added
 - Merge PR #216, adding tests for SQS tags
