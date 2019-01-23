@@ -39,10 +39,9 @@ Globals:
       VAR1: 1
     EndpointConfiguration: EDGE
     MethodSettings:
-      - HttpMethod: GET
-        ResourcePath: /*
-        MetricsEnabled: 'true'
-        DataTraceEnabled: 'true'
+      HttpMethod: GET
+      ResourcePath: /*
+      CacheDataEncrypted: True
     BinaryMediaTypes:
       - image~1gif
       - image~1png

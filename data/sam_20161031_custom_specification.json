@@ -113,7 +113,7 @@
         "HttpMethod": {
           "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-apitgateway-stage-methodsetting.html#cfn-apigateway-stage-methodsetting-httpmethod",
           "PrimitiveType": "String",
-          "Required": false,
+          "Required": true,
           "UpdateType": "Mutable"
         },
         "LoggingLevel": {
@@ -131,7 +131,7 @@
         "ResourcePath": {
           "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-apitgateway-stage-methodsetting.html#cfn-apigateway-stage-methodsetting-resourcepath",
           "PrimitiveType": "String",
-          "Required": false,
+          "Required": true,
           "UpdateType": "Mutable"
         },
         "ThrottlingBurstLimit": {
@@ -220,7 +220,8 @@
           "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-apigateway-deployment-stagedescription.html#cfn-apigateway-deployment-stagedescription-methodsettings",
           "DuplicatesAllowed": false,
           "Required": false,
-          "Type": "List<MethodSetting>",
+          "Type": "List",
+          "ItemType": "MethodSetting",
           "UpdateType": "Mutable"
         }
       }
