@@ -183,15 +183,15 @@ describe('validator', () => {
           let result = validator.validateJsonObject(input);
           expect(result).to.have.deep.property('templateValid', false);
           expect(result['errors']['crit']).to.have.lengthOf(1);
-          expect(result['errors']['crit'][0]['message'].indexOf('First element of Fn::Select exceeds the length of the list.')).to.be.greaterThan(-1);
+          expect(result['errors']['crit'][0]['message'].indexOf('First element of Fn::Select exceeds the length of the list.')).to.be.greaterThan(-1); 
           expect(result['errors']['warn']).to.have.lengthOf(0);
-        });
+        });       
         it("should error if second element is not a list or a function", () => {
           const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_2.json');
           let result = validator.validateJsonObject(input);
           expect(result).to.have.deep.property('templateValid', false);
           expect(result['errors']['crit']).to.have.lengthOf(1);
-          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select requires the second element to resolve to a list")).to.be.greaterThan(-1);
+          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select requires the second element to resolve to a list")).to.be.greaterThan(-1); 
           expect(result['errors']['warn']).to.have.lengthOf(0);
         });
         it("should error if first element is not a number or does not parse to a number", () => {
@@ -199,7 +199,7 @@ describe('validator', () => {
           let result = validator.validateJsonObject(input);
           expect(result).to.have.deep.property('templateValid', false);
           expect(result['errors']['crit']).to.have.lengthOf(1);
-          expect(result['errors']['crit'][0]['message'].indexOf("First element of Fn::Select must be a number, or it must use an intrinsic fuction that returns a number")).to.be.greaterThan(-1);
+          expect(result['errors']['crit'][0]['message'].indexOf("First element of Fn::Select must be a number, or it must use an intrinsic fuction that returns a number")).to.be.greaterThan(-1); 
           expect(result['errors']['warn']).to.have.lengthOf(0);
         });
         it("should error if first element is not defined or is null", () => {
@@ -207,7 +207,7 @@ describe('validator', () => {
           let result = validator.validateJsonObject(input);
           expect(result).to.have.deep.property('templateValid', false);
           expect(result['errors']['crit']).to.have.lengthOf(1);
-          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select first element cannot be null or undefined")).to.be.greaterThan(-1);
+          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select first element cannot be null or undefined")).to.be.greaterThan(-1); 
           expect(result['errors']['warn']).to.have.lengthOf(0);
         });
         it("should error if only one element as argument list", () => {
@@ -215,7 +215,7 @@ describe('validator', () => {
           let result = validator.validateJsonObject(input);
           expect(result).to.have.deep.property('templateValid', false);
           expect(result['errors']['crit']).to.have.lengthOf(1);
-          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select only supports an array of two elements")).to.be.greaterThan(-1);
+          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select only supports an array of two elements")).to.be.greaterThan(-1); 
           expect(result['errors']['warn']).to.have.lengthOf(0);
         });
         it("should error if second element is null or undefined", () => {
@@ -223,7 +223,7 @@ describe('validator', () => {
           let result = validator.validateJsonObject(input);
           expect(result).to.have.deep.property('templateValid', false);
           expect(result['errors']['crit']).to.have.lengthOf(1);
-          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select Second element cannot be null or undefined")).to.be.greaterThan(-1);
+          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select Second element cannot be null or undefined")).to.be.greaterThan(-1); 
           expect(result['errors']['warn']).to.have.lengthOf(0);
         });
         it("should error if second element does not resolve to a list", () => {
@@ -231,7 +231,7 @@ describe('validator', () => {
           let result = validator.validateJsonObject(input);
           expect(result).to.have.deep.property('templateValid', false);
           expect(result['errors']['crit']).to.have.lengthOf(1);
-          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select requires the second element to be a list, function call did not resolve to a list.")).to.be.greaterThan(-1);
+          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select requires the second element to be a list, function call did not resolve to a list.")).to.be.greaterThan(-1); 
           expect(result['errors']['warn']).to.have.lengthOf(0);
         });
         it("should error if first element does not resolve to a number", () => {
@@ -239,14 +239,14 @@ describe('validator', () => {
           let result = validator.validateJsonObject(input);
           expect(result).to.have.deep.property('templateValid', false);
           expect(result['errors']['crit']).to.have.lengthOf(1);
-          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select's first argument did not resolve to a string for parsing or a numeric value.")).to.be.greaterThan(-1);
+          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select's first argument did not resolve to a string for parsing or a numeric value.")).to.be.greaterThan(-1); 
           expect(result['errors']['warn']).to.have.lengthOf(0);
         });
         it("should error if first element attempts an invalid intrinsic function", () => {
           const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_9.json');
           let result = validator.validateJsonObject(input);
           expect(result).to.have.deep.property('templateValid', false);
-          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select does not support the Fn::Select function in argument 1")).to.be.greaterThan(-1);
+          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select does not support the Fn::Select function in argument 1")).to.be.greaterThan(-1); 
           expect(result['errors']['crit']).to.have.lengthOf(1);
           expect(result['errors']['warn']).to.have.lengthOf(0);
         });
@@ -254,28 +254,28 @@ describe('validator', () => {
           const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_10.json');
           let result = validator.validateJsonObject(input);
           expect(result).to.have.deep.property('templateValid', false);
-          expect(result['errors']['crit'][0]['message'].indexOf("Fn:Select's first argument must be a number or resolve to a number")).to.be.greaterThan(-1);
+          expect(result['errors']['crit'][0]['message'].indexOf("Fn:Select's first argument must be a number or resolve to a number")).to.be.greaterThan(-1); 
           expect(result['errors']['crit']).to.have.lengthOf(1);
           expect(result['errors']['warn']).to.have.lengthOf(0);
         });
-
+      
         it("should error if second element attempts an invalid intrinsic function", () => {
           const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_11.json');
           let result = validator.validateJsonObject(input);
           expect(result).to.have.deep.property('templateValid', false);
-          expect(result['errors']['crit'][0]['message'].indexOf("n::Select does not support the Fn::Select function in argument 2")).to.be.greaterThan(-1);
+          expect(result['errors']['crit'][0]['message'].indexOf("n::Select does not support the Fn::Select function in argument 2")).to.be.greaterThan(-1); 
           expect(result['errors']['crit']).to.have.lengthOf(1);
           expect(result['errors']['warn']).to.have.lengthOf(0);
         });
         it("should error if second element contains a list with null values", () => {
           const input = require('../../testData/invalid/json/5_invalid_intrinsic_select_12.json');
           let result = validator.validateJsonObject(input);
-          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select requires that the list be free of null values")).to.be.greaterThan(-1);
+          expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select requires that the list be free of null values")).to.be.greaterThan(-1); 
           expect(result).to.have.deep.property('templateValid', false);
           expect(result['errors']['crit']).to.have.lengthOf(1);
           expect(result['errors']['warn']).to.have.lengthOf(0);
         });
-
+       
     });
 
     describe('Fn::Select YAML', () => {
@@ -286,14 +286,14 @@ describe('validator', () => {
         expect(result['errors']['crit']).to.have.lengthOf(0);
         expect(result['errors']['warn']).to.have.lengthOf(0);
       });
-
+    
        it('should validate in yaml with Comma Separated List Param', () => {
         const input = './testData/valid/yaml/5_valid_intrinsic_select_2.yaml';
         let result = validator.validateFile(input);
         expect(result).to.have.deep.property('templateValid', true);
         expect(result['errors']['crit']).to.have.lengthOf(0);
         expect(result['errors']['warn']).to.have.lengthOf(0);
-       });
+       });  
 
 
       it("should error if index is greater than list size", () => {
@@ -301,9 +301,9 @@ describe('validator', () => {
         let result = validator.validateFile(input);
         expect(result).to.have.deep.property('templateValid', false);
         expect(result['errors']['crit']).to.have.lengthOf(1);
-        expect(result['errors']['crit'][0]['message'].indexOf('First element of Fn::Select exceeds the length of the list.')).to.be.greaterThan(-1);
+        expect(result['errors']['crit'][0]['message'].indexOf('First element of Fn::Select exceeds the length of the list.')).to.be.greaterThan(-1); 
         expect(result['errors']['warn']).to.have.lengthOf(0);
-      });
+      });       
       it("should error if second element is not a list or a function", () => {
         const input = './testData/invalid/yaml/5_invalid_intrinsic_select_2.yaml';
         let result = validator.validateFile(input);
@@ -317,7 +317,7 @@ describe('validator', () => {
         let result = validator.validateFile(input);
         expect(result).to.have.deep.property('templateValid', false);
         expect(result['errors']['crit']).to.have.lengthOf(1);
-        expect(result['errors']['crit'][0]['message'].indexOf("First element of Fn::Select must be a number, or it must use an intrinsic fuction that returns a number")).to.be.greaterThan(-1);
+        expect(result['errors']['crit'][0]['message'].indexOf("First element of Fn::Select must be a number, or it must use an intrinsic fuction that returns a number")).to.be.greaterThan(-1); 
         expect(result['errors']['warn']).to.have.lengthOf(0);
       });
       it("should error if first element is not defined or is null", () => {
@@ -325,7 +325,7 @@ describe('validator', () => {
         let result = validator.validateFile(input);
         expect(result).to.have.deep.property('templateValid', false);
         expect(result['errors']['crit']).to.have.lengthOf(1);
-        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select first element cannot be null or undefined")).to.be.greaterThan(-1);
+        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select first element cannot be null or undefined")).to.be.greaterThan(-1); 
         expect(result['errors']['warn']).to.have.lengthOf(0);
       });
       it("should error if only one element as argument list", () => {
@@ -333,7 +333,7 @@ describe('validator', () => {
         let result = validator.validateFile(input);
         expect(result).to.have.deep.property('templateValid', false);
         expect(result['errors']['crit']).to.have.lengthOf(1);
-        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select only supports an array of two elements")).to.be.greaterThan(-1);
+        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select only supports an array of two elements")).to.be.greaterThan(-1); 
         expect(result['errors']['warn']).to.have.lengthOf(0);
       });
       it("should error if second element is null or undefined", () => {
@@ -341,7 +341,7 @@ describe('validator', () => {
         let result = validator.validateFile(input);
         expect(result).to.have.deep.property('templateValid', false);
         expect(result['errors']['crit']).to.have.lengthOf(1);
-        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select Second element cannot be null or undefined")).to.be.greaterThan(-1);
+        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select Second element cannot be null or undefined")).to.be.greaterThan(-1); 
         expect(result['errors']['warn']).to.have.lengthOf(0);
       });
       it("should error if second element does not resolve to a list", () => {
@@ -349,7 +349,7 @@ describe('validator', () => {
         let result = validator.validateFile(input);
         expect(result).to.have.deep.property('templateValid', false);
         expect(result['errors']['crit']).to.have.lengthOf(1);
-        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select requires the second element to be a list, function call did not resolve to a list.")).to.be.greaterThan(-1);
+        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select requires the second element to be a list, function call did not resolve to a list.")).to.be.greaterThan(-1); 
         expect(result['errors']['warn']).to.have.lengthOf(0);
       });
       it("should error if first element does not resolve to a number", () => {
@@ -357,7 +357,7 @@ describe('validator', () => {
         let result = validator.validateFile(input);
         expect(result).to.have.deep.property('templateValid', false);
         expect(result['errors']['crit']).to.have.lengthOf(1);
-        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select's first argument did not resolve to a string for parsing or a numeric value.")).to.be.greaterThan(-1);
+        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select's first argument did not resolve to a string for parsing or a numeric value.")).to.be.greaterThan(-1); 
         expect(result['errors']['warn']).to.have.lengthOf(0);
       });
       it("should error if first element attempts an invalid intrinsic function", () => {
@@ -365,7 +365,7 @@ describe('validator', () => {
         let result = validator.validateFile(input);
         expect(result).to.have.deep.property('templateValid', false);
         expect(result['errors']['crit']).to.have.lengthOf(1);
-        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select does not support the Fn::Select function in argument 1")).to.be.greaterThan(-1);
+        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select does not support the Fn::Select function in argument 1")).to.be.greaterThan(-1); 
         expect(result['errors']['warn']).to.have.lengthOf(0);
       });
       it("should error if first element is anything other than non-array object, number or string", () => {
@@ -373,16 +373,16 @@ describe('validator', () => {
         let result = validator.validateFile(input);
         expect(result).to.have.deep.property('templateValid', false);
         expect(result['errors']['crit']).to.have.lengthOf(1);
-        expect(result['errors']['crit'][0]['message'].indexOf("Fn:Select's first argument must be a number or resolve to a number")).to.be.greaterThan(-1);
+        expect(result['errors']['crit'][0]['message'].indexOf("Fn:Select's first argument must be a number or resolve to a number")).to.be.greaterThan(-1); 
         expect(result['errors']['warn']).to.have.lengthOf(0);
       });
-
+    
       it("should error if second element attempts an invalid intrinsic function", () => {
         const input = './testData/invalid/yaml/5_invalid_intrinsic_select_11.yaml';
         let result = validator.validateFile(input);
         expect(result).to.have.deep.property('templateValid', false);
         expect(result['errors']['crit']).to.have.lengthOf(1);
-        expect(result['errors']['crit'][0]['message'].indexOf("n::Select does not support the Fn::Select function in argument 2")).to.be.greaterThan(-1);
+        expect(result['errors']['crit'][0]['message'].indexOf("n::Select does not support the Fn::Select function in argument 2")).to.be.greaterThan(-1); 
         expect(result['errors']['warn']).to.have.lengthOf(0);
       });
       it("should error if second element contains a list with null values", () => {
@@ -390,7 +390,7 @@ describe('validator', () => {
         let result = validator.validateFile(input);
         expect(result).to.have.deep.property('templateValid', false);
         expect(result['errors']['crit']).to.have.lengthOf(1);
-        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select requires that the list be free of null values")).to.be.greaterThan(-1);
+        expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select requires that the list be free of null values")).to.be.greaterThan(-1); 
         expect(result['errors']['warn']).to.have.lengthOf(0);
       });
 
@@ -1420,7 +1420,7 @@ describe('validator', () => {
             ];
 
             runTests(validator.isTimestamp, validTimestamps, invalidTimestamps);
-
+            
         })
     });
 
