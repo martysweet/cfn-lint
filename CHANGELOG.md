@@ -6,6 +6,8 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Merge PR #222, fixing AWS::Serverless::Api.MethodSettings
 
 ## [1.9.4] - 2018-12-09
 ### Changed

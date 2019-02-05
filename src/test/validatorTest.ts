@@ -1910,5 +1910,19 @@ describe('validator', () => {
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
+
+        it('a invalid APIGateway::Stage.MethodSettings type (sam_20161031_api_methodsettings_not_a_list.yaml) should invalidate successfully', () => {
+            const input = 'testData/invalid/yaml/sam_20161031_api_methodsettings_not_a_list.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+        });
+
+        it('a valid APIGateway::Stage.MethodSettings containing incomplete APIGateway::Stage.MethodSetting (sam_20161031_api_methodsettings_missing_required.yaml) should invalidate successfully', () => {
+            const input = 'testData/invalid/yaml/sam_20161031_api_methodsettings_missing_required.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(2);
+        });
     });
 });
