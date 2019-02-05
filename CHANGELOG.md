@@ -6,8 +6,14 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.9.5] - 2019-02-05
 ### Fixed
 - Merge PR #222, fixing AWS::Serverless::Api.MethodSettings
+
+### Changed
+- Update CloudFormation specification (downloaded 05-Feb-2019) - version: 2.21.0
+
 
 ## [1.9.4] - 2018-12-09
 ### Changed
