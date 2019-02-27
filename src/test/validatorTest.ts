@@ -1924,5 +1924,12 @@ describe('validator', () => {
             expect(result).to.have.deep.property('templateValid', false);
             expect(result['errors']['crit']).to.have.lengthOf(2);
         });
+
+        it('a valid template with Ref in Globals (sam_20161031_environment_ref.yaml) should validate successfully', () => {
+            const input = 'testData/valid/yaml/sam_20161031_environment_ref.yaml';
+            let result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
     });
 });
