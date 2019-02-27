@@ -931,6 +931,13 @@ describe('validator', () => {
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
+
+        it('Issue #212 - Ref does not account for resources that return ARNS', function () {
+            var input = 'testData/valid/yaml/issue-212-ref-arn.yaml';
+            var result = validator.validateFile(input);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+        });
     });
 
     describe('parameters-validation', () => {
