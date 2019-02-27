@@ -9,6 +9,11 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Added 
 - Merge PR #227, adding Depreciation/Retirement Notice to README.md
 
+### Fixed
+- Merge PR #226, fixing Ref return values for ARN resources
+- Merge PR #223, allowing Ref usage inside SAM Global
+
+
 ## [1.9.5] - 2019-02-05
 ### Fixed
 - Merge PR #222, fixing AWS::Serverless::Api.MethodSettings

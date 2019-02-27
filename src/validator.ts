@@ -852,7 +852,7 @@ function inferParameterValue(parameterName: string, parameter: any, okToGuess: b
                 normalizedType = 'string';
             }
 
-            const parameterDefault = parameterDefaultsByType[parameterTypesSpec[parameterType]!]! 
+            const parameterDefault = parameterDefaultsByType[parameterTypesSpec[parameterType]!]!
             if (isList) {
                 return [parameterDefault];
             } else {
@@ -988,7 +988,7 @@ function assignResourcesOutputs(){
 
             // Create a map for storing the output attributes for this Resource
             let refValue = "mock-ref-" + res;
-            let refOverride = resourcesSpec.getRefOverride(resourceType);
+            let refOverride = resourcesSpec.getRefOverride(resourcesSpec.getParameterizedTypeName(resourceType));
             if(refOverride !== null){
                 if(refOverride == "arn"){
                     refValue = mockArnPrefix + res;
@@ -1067,11 +1067,12 @@ function recursiveDecent(ref: any){
             // Check if an Intrinsic function is allowed here
             let inResourceProperty = (placeInTemplate[0] == "Resources" || placeInTemplate[2] == "Properties");
             let inResourceMetadata = (placeInTemplate[0] == "Resources" || placeInTemplate[2] == "Metadata");
+            let inGlobalEnvironment = (placeInTemplate[0] == "Globals" && placeInTemplate[2] == "Environment");
             let inOutputs = (placeInTemplate[0] == "Outputs");
             let inConditions = (placeInTemplate[0] == "Conditions");
             // TODO Check for usage inside update policy
 
-            if(!(inResourceProperty || inResourceMetadata || inOutputs || inConditions)){
+            if(!(inGlobalEnvironment || inResourceProperty || inResourceMetadata || inOutputs || inConditions)){
                 addError("crit", `Intrinsic function ${key} is not supported here`, placeInTemplate, key);
             }else {
                 // Resolve the function
@@ -1382,7 +1383,7 @@ function doIntrinsicSelect(ref: any, key: string){
         }
     } else if (list.indexOf(null) > -1) {
         addError('crit', "Fn::Select requires that the list be free of null values", placeInTemplate, "Fn::Select");
-    
+
     }
     if (index >= 0 && index < list.length) {
         return list[index];
@@ -1909,7 +1910,7 @@ export interface PrimitiveType {
     resourceType: string,
     primitiveType: string
 }
-  
+
 export type ObjectType = ResourceType | NamedProperty | PropertyType | PrimitiveType;
 
 /**
@@ -1929,7 +1930,7 @@ function getTypeName(objectType: ResourceType | NamedProperty | PropertyType ): 
 }
 
 /**
- * 
+ *
  */
 function getItemType(objectType: NamedProperty): PrimitiveType | PropertyType {
     const maybePrimitiveType = resourcesSpec.getPrimitiveItemType(objectType.parentType, objectType.propertyName);
@@ -2064,7 +2065,7 @@ function check(objectType: ObjectType, objectToCheck: any) {
                     verify(isList, objectToCheck);
                     checkList(objectType as NamedProperty, objectToCheck);
                     break;
-                case KnownTypes.Arn:                    
+                case KnownTypes.Arn:
                     verify(isArn, objectToCheck);
                     break;
                 case KnownTypes.String:
@@ -2338,7 +2339,7 @@ function checkComplexObject(objectType: ResourceType | NamedProperty | PropertyT
                 parentType: objectTypeName,
                 propertyName: subPropertyName
             } as NamedProperty;
-        
+
             check(subPropertyObjectType, propertyValue)
 
         } finally {
