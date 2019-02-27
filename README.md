@@ -11,6 +11,16 @@ The tool can be used over the commandline using `cfn-lint`, or can be used as a 
 
 *Note: This tool is currently case-sensitive in relation to AWS CloudFormation types, for example aws::lambda::function != AWS::Lambda::Function.*
 
+## Depreciation/Retirement Notice
+This tool was developed before AWS released `cfn-python-lint`, available at https://github.com/awslabs/cfn-python-lint. The AWS tool is better supported, provides additional checks and has best practice recommendations - **if you are looking at implementing a linting tool into your workflow, use https://github.com/awslabs/cfn-python-lint.**
+
+Due to the superiority of the alternative tool, this project, `cfn-lint` has entered retirement. To support the existing community using this tool (both the CLI and API), the `cfn-lint` npm package will remain and will be supported in the following ways:
+- Minor bug fixes
+- Updates to SAM and CloudFormation Specification
+- Security updates
+
+Additional features may be added at the discretion of the project maintainers, however, **we strongly advise you use `cfn-python-lint` at https://github.com/awslabs/cfn-python-lint instead of this project.**
+
 ## Installation
 
 You can install with `npm`:
