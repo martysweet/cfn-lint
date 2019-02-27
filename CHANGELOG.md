@@ -6,6 +6,8 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.9.6] - 2019-02-27
 ### Added 
 - Merge PR #227, adding Depreciation/Retirement Notice to README.md
 
@@ -14,8 +16,6 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 - Merge PR #223, allowing Ref usage inside SAM Global
 - Merge PR #228, allowing Fn::Sub within Fn::Split
 
-
-## [1.9.6] - 2019-02-27
 ### Changed
 - Update CloudFormation specification (downloaded 27-Feb-2019) - version: 2.24.0
 
