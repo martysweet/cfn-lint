@@ -6,6 +6,8 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Merge PR #226, fixing Ref return values for ARN resources
 
 ## [1.9.5] - 2019-02-05
 ### Fixed
