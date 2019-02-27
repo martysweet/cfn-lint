@@ -6,6 +6,8 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Merge PR #228, allowing Fn::Sub within Fn::Split
 
 ## [1.9.5] - 2019-02-05
 ### Fixed
