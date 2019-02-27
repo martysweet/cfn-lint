@@ -1,0 +1,24 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Resources:
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internal
+
+  DevNullTargetGroup:
+      Type: AWS::ElasticLoadBalancingV2::TargetGroup
+      Properties:
+        Port: 80
+        Protocol: HTTP
+        VpcId: "vpc-id"
+
+  LoadBalancerHTTPListener:
+      Type: AWS::ElasticLoadBalancingV2::Listener
+      Properties:
+        DefaultActions:
+          - TargetGroupArn: !Ref DevNullTargetGroup
+            Type: forward
+        LoadBalancerArn: !Ref LoadBalancer
+        Port: 80
+        Protocol: HTTP

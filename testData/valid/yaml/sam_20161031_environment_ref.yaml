@@ -1,0 +1,17 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Tests if Ref is allowed in Globals
+
+Parameters:
+  LocalVar:
+    Type: String
+
+Globals:
+    Function:
+        Environment:
+            Variables:
+                GLOB_ENV_VAR: !Ref LocalVar
+
+Resources:
+  Bucket:
+    Type: AWS::S3::Bucket
