@@ -1,6 +1,9 @@
 {
   "AWS::ApplicationAutoScaling::ScalingPolicy": "arn",
   "AWS::AutoScaling::ScalingPolicy": "arn",
+  "AWS::Batch::ComputeEnvironment": "arn",
+  "AWS::Batch::JobDefinition": "arn",
+  "AWS::Batch::JobQueue": "arn",
   "AWS::CertificateManager::Certificate": "arn",
   "AWS::CloudFormation::Stack": "arn",
   "AWS::CloudFormation::WaitCondition": "arn",
@@ -11,8 +14,18 @@
   "AWS::ElasticLoadBalancingV2::LoadBalancer": "arn",
   "AWS::ElasticLoadBalancingV2::TargetGroup": "arn",
   "AWS::IAM::ManagedPolicy": "arn",
+  "AWS::IoT1Click::Project": "arn",
+  "AWS::IoT1Click::Device": "arn",
+  "AWS::Kinesis::StreamConsumer": "arn",
   "AWS::Lambda::Alias": "arn",
+  "AWS::Lambda::LayerVersion": "arn",
+  "AWS::Lambda::LayerVersionPermission": "arn",
   "AWS::Lambda::Version": "arn",
   "AWS::OpsWorks::UserProfile": "arn",
-  "AWS::SNS::Topic": "arn"
+  "AWS::OpsWorksCM::Server": "arn",
+  "AWS::RAM::ResourceShare": "arn",
+  "AWS::SecretsManager::Secret": "arn",
+  "AWS::SNS::Topic": "arn",
+  "AWS::StepFunctions::Activity": "arn",
+  "AWS::StepFunctions::StateMachine": "arn"
 }
