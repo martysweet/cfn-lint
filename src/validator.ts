@@ -988,7 +988,7 @@ function assignResourcesOutputs(){
 
             // Create a map for storing the output attributes for this Resource
             let refValue = "mock-ref-" + res;
-            let refOverride = resourcesSpec.getRefOverride(resourceType);
+            let refOverride = resourcesSpec.getRefOverride(resourcesSpec.getParameterizedTypeName(resourceType));
             if(refOverride !== null){
                 if(refOverride == "arn"){
                     refValue = mockArnPrefix + res;
