@@ -7,6 +7,10 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.9.6] - 2019-02-27
+### Changed
+- Update CloudFormation specification (downloaded 27-Feb-2019) - version: 2.24.0
+
 ## [1.9.5] - 2019-02-05
 ### Fixed
 - Merge PR #222, fixing AWS::Serverless::Api.MethodSettings
