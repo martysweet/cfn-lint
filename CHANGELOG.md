@@ -6,6 +6,8 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added 
+- Merge PR #227, adding Depreciation/Retirement Notice to README.md
 
 ## [1.9.5] - 2019-02-05
 ### Fixed
