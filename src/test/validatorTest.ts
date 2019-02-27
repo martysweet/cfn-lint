@@ -393,6 +393,14 @@ describe('validator', () => {
         expect(result['errors']['crit'][0]['message'].indexOf("Fn::Select requires that the list be free of null values")).to.be.greaterThan(-1); 
         expect(result['errors']['warn']).to.have.lengthOf(0);
       });
+        it("should allow fn::cidr in select", () => {
+            const input = './testData/valid/yaml/issue-225.yaml';
+            let result = validator.validateFile(input);
+            console.log(result['errors']['warn']);
+            expect(result).to.have.deep.property('templateValid', true);
+            expect(result['errors']['crit']).to.have.lengthOf(0);
+            expect(result['errors']['warn']).to.have.lengthOf(0);
+        });
 
 
 

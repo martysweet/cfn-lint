@@ -1,0 +1,9 @@
+Resources:
+  PublicSubnet0:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: "us-east-1a"
+      CidrBlock: "10.15.0.0/24"
+      Ipv6CidrBlock: !Select [0, "Fn::Cidr": "2001:db8", 256, 64]
+      MapPublicIpOnLaunch: true
+      VpcId: "vpc-id"
