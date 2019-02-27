@@ -1,0 +1,15 @@
+Parameters:
+  Infra:
+    Type: String
+    Default: production
+
+Resources:
+  S3Bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName:
+           Fn::Join:
+            - "_"
+            - Fn::Split:
+              - "-"
+              - !Sub ${Infra}-b3-admin
