@@ -19,7 +19,6 @@
     "colors": "^1.2.1",
     "commander": "^2.15.0",
     "core-js": "^2.5.1",
-    "js-yaml": "^3.7.0",
     "merge-options": "^1.0.1",
     "opn": "^5.2.0",
     "winston": "^2.4.0",
@@ -39,10 +38,11 @@
     "@types/source-map-support": "^0.4.0",
     "@types/winston": "^2.3.7",
     "chai": "latest",
-    "mocha": "latest",
-    "typescript": "~2.6.2",
     "dependency-check": "^2.9.1",
-    "proxyquire-2": "^1.0.7"
+    "js-yaml": "^3.13.0",
+    "mocha": "latest",
+    "proxyquire-2": "^1.0.7",
+    "typescript": "~2.6.2"
   },
   "scripts": {
     "build": "tsc",
