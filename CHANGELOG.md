@@ -7,8 +7,12 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.9.7] - 2019-04-02
+### Changed
+- Merge PR #232, Update dependency `js-yaml` to fix DoS vulnerability
+
 ## [1.9.6] - 2019-02-27
-### Added 
+### Added
 - Merge PR #227, adding Depreciation/Retirement Notice to README.md
 
 ### Fixed
@@ -193,8 +197,8 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Fixed
 - Merge PR #60, allowing a single wildcard as a string within the template
 - Merge PR #65, allowing forked branches to run tests
-- Merge PR #71, fixing maps, see #69 and #68 
-- Merge PR #63, fixing if intrinsic functions, see 
+- Merge PR #71, fixing maps, see #69 and #68
+- Merge PR #63, fixing if intrinsic functions, see
 
 ## [1.1.7] - 2017-10-07
 ### Changed
