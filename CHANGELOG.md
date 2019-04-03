@@ -6,7 +6,10 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.9.7] - 2019-04-03
 ### Changed
+- Update CloudFormation specification (downloaded 03-Mar-2019) - version: 2.29.0
 - Merge PR #232, Update dependency `js-yaml` to fix DoS vulnerability
 
 ## [1.9.6] - 2019-02-27
@@ -227,7 +230,10 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Added
 - Add pseudo parameter support
 
-[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.9.4...HEAD
+[Unreleased]: https://github.com/martysweet/cfn-lint/compare/v1.9.7...HEAD
+[1.9.7]: https://github.com/martysweet/cfn-lint/compare/v1.9.6...v1.9.7
+[1.9.6]: https://github.com/martysweet/cfn-lint/compare/v1.9.5...v1.9.6
+[1.9.5]: https://github.com/martysweet/cfn-lint/compare/v1.9.4...v1.9.5
 [1.9.4]: https://github.com/martysweet/cfn-lint/compare/v1.9.3...v1.9.4
 [1.9.3]: https://github.com/martysweet/cfn-lint/compare/v1.9.2...v1.9.3
 [1.9.2]: https://github.com/martysweet/cfn-lint/compare/v1.9.1...v1.9.2
