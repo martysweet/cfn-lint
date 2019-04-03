@@ -6,13 +6,11 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-### Changed
-- Merge PR #232, Update dependency `js-yaml` to fix DoS vulnerability
 
 ## [1.9.7] - 2019-04-03
 ### Changed
 - Update CloudFormation specification (downloaded 03-Mar-2019) - version: 2.29.0
-
+- Merge PR #232, Update dependency `js-yaml` to fix DoS vulnerability
 
 ## [1.9.6] - 2019-02-27
 ### Added
