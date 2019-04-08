@@ -95,6 +95,13 @@ export function validateFile(path: string, options?: Partial<ValidateOptions>){
    return validateWorkingInput(options);
 };
 
+export function validateString(contents: string, filename: string, options?: Partial<ValidateOptions>){
+  // Convert to object, this will throw an exception on an error
+  workingInput = parser.openString(contents, filename);
+  // Let's go!
+  return validateWorkingInput(options);
+};
+
 export function validateJsonObject(obj: any, options?: Partial<ValidateOptions>){
     workingInput = obj;
     return validateWorkingInput(options);
