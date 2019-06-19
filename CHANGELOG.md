@@ -7,6 +7,10 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.9.8] - 2019-06-19
+### Changed
+- Update CloudFormation specification (downloaded 19-Jun-2019) - version: 2.31.0
+
 ## [1.9.7] - 2019-04-03
 ### Changed
 - Update CloudFormation specification (downloaded 03-Mar-2019) - version: 2.29.0
