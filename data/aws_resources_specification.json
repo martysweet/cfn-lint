@@ -28473,7 +28473,8 @@
         "InstanceAttributes": {
           "Required": true,
           "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-servicediscovery-instance.html#cfn-servicediscovery-instance-instanceattributes",
-          "PrimitiveType": "Map",
+          "Type": "Map",
+          "PrimitiveType": "String",
           "UpdateType": "Mutable"
         },
         "InstanceId": {
