@@ -4599,6 +4599,12 @@
           "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-batch-computeenvironment-computeresources.html#cfn-batch-computeenvironment-computeresources-desiredvcpus",
           "PrimitiveType": "Integer",
           "UpdateType": "Mutable"
+        },
+        "AllocationStrategy": {
+          "Required": false,
+          "Documentation": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-batch-computeenvironment-computeresources.html#cfn-batch-computeenvironment-computeresources-allocationstrategy",
+          "PrimitiveType": "String",
+          "UpdateType": "Immutable"
         }
       }
     },
