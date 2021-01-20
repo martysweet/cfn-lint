@@ -552,6 +552,7 @@ function doSAMTransform(baseType:string, type: string, name: string, template: a
                     let codeDict: any = null;
 
                     if (!!parentProperties && parentProperties.hasOwnProperty('CodeUri')) {
+                      codeDict = {};
                       if (parentProperties['CodeUri'].hasOwnProperty('Bucket')) {
                         codeDict['S3Bucket'] = parentProperties['CodeUri']['Bucket'];
                       }
@@ -562,7 +563,7 @@ function doSAMTransform(baseType:string, type: string, name: string, template: a
                         codeDict['S3ObjectVersion'] = parentProperties['CodeUri']['Version'];
                       }
                     } else if (!!parentProperties && parentProperties.hasOwnProperty('InlineCode')) {
-                      codeDict['ZipFile'] = parentProperties['InlineCode'];
+                      codeDict = { 'ZipFile': parentProperties['InlineCode'] };
                     } else {
                       // TODO: perhaps raise validation error if neither CodeUri or InlineCode have been provided
                     }

@@ -1,0 +1,31 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Lambda resource stack creation using Amplify CLI",
+  "Transform": "AWS::Serverless-2016-10-31",
+  "Parameters": {
+    "env": {
+      "Type": "String"
+    }
+  },
+  "Resources": {
+    "LambdaFunction": {
+      "Type": "AWS::Serverless::Function",
+      "Metadata": {
+        "aws:asset:path": "./src",
+        "aws:asset:property": "Code"
+      },
+      "Properties": {
+        "Handler": "index.handler",
+        "FunctionName": "myfunction",
+        "Runtime": "nodejs12.x",
+        "Timeout": 150,
+        "MemorySize": 512,
+        "AutoPublishAlias": "customalias",
+        "CodeUri": {
+          "Bucket": "amplify-myfunction-222350-deployment",
+          "Key": "amplify-builds/myfunction-3c656d2552663b6f216e-build.zip"
+        }
+      }
+    }
+  }
+}

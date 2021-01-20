@@ -1945,5 +1945,14 @@ describe('validator', () => {
             expect(result).to.have.deep.property('templateValid', true);
             expect(result['errors']['crit']).to.have.lengthOf(0);
         });
+
+        // This is failed because of the schema is outdated (since we *can* have an object instead of string for CodeUri)
+        it('an valid (6_unsupported_code_uri_autopublishalias.json) template because of outdated schema', () => {
+            const input = require('../../testData/invalid/json/6_unsupported_code_uri_autopublishalias.json');
+            let result = validator.validateJsonObject(input);
+            console.log(JSON.stringify(result));
+            expect(result).to.have.deep.property('templateValid', false);
+            expect(result['errors']['crit']).to.have.lengthOf(1);
+        });
     });
 });
